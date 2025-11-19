@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to ShlokaYug</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f8f9fa; 
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #ffffff; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        .header { 
+            text-align: center; 
+            padding: 20px 0; 
+            border-bottom: 2px solid #ff6b35; 
+        }
+        .logo { 
+            font-size: 32px; 
+            font-weight: bold; 
+            color: #ff6b35; 
+            margin-bottom: 10px; 
+        }
+        .content { 
+            padding: 30px 0; 
+        }
+        .button { 
+            display: inline-block; 
+            padding: 12px 30px; 
+            background-color: #ff6b35; 
+            color: #ffffff; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            margin: 20px 0; 
+            text-align: center; 
+        }
+        .button:hover { 
+            background-color: #e55530; 
+        }
+        .feature { 
+            display: flex; 
+            align-items: center; 
+            margin: 15px 0; 
+            padding: 10px; 
+            background-color: #f8f9fa; 
+            border-radius: 6px; 
+        }
+        .feature-icon { 
+            font-size: 24px; 
+            margin-right: 15px; 
+        }
+        .footer { 
+            text-align: center; 
+            padding: 20px 0; 
+            font-size: 12px; 
+            color: #666; 
+            border-top: 1px solid #eee; 
+        }
+        .sanskrit { 
+            font-style: italic; 
+            color: #ff6b35; 
+            text-align: center; 
+            margin: 20px 0; 
+            font-size: 18px; 
+            border-left: 4px solid #ff6b35; 
+            padding-left: 20px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🕉️ ShlokaYug</div>
+            <p>Your Journey to Sanskrit Wisdom Begins Now</p>
+        </div>
+        
+        <div class="content">
+            <h2>Namaste {{firstName}}! 🙏</h2>
+            
+            <p>Welcome to ShlokaYug! We're thrilled to have you join our community of Sanskrit learners and spiritual seekers.</p>
+            
+            <div class="sanskrit">
+                "सा विद्या या विमुक्तये"<br>
+                <small>That is education which liberates</small>
+            </div>
+            
+            <p>Your account <strong>{{username}}</strong> is now active and ready for your spiritual journey. Here's what awaits you:</p>
+            
+            <div class="feature">
+                <div class="feature-icon">🎵</div>
+                <div>
+                    <strong>Interactive Karaoke Chanting</strong><br>
+                    Perfect your pronunciation with our real-time feedback system
+                </div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">📚</div>
+                <div>
+                    <strong>Comprehensive Courses</strong><br>
+                    Learn from basics to advanced Sanskrit literature and philosophy
+                </div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🧠</div>
+                <div>
+                    <strong>AI-Powered Learning</strong><br>
+                    Get personalized explanations and compose your own verses
+                </div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">👥</div>
+                <div>
+                    <strong>Vibrant Community</strong><br>
+                    Connect with fellow learners and share your progress
+                </div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🏆</div>
+                <div>
+                    <strong>Gamified Experience</strong><br>
+                    Earn XP, unlock achievements, and climb the leaderboards
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{dashboardUrl}}" class="button">Start Your Journey</a>
+            </div>
+            
+            <h3>Quick Start Tips:</h3>
+            <ul>
+                <li>📖 Complete your profile to get personalized recommendations</li>
+                <li>🎯 Set your learning goals in the dashboard</li>
+                <li>🔄 Take our placement test to find the right starting level</li>
+                <li>📱 Download our mobile app for learning on the go</li>
+                <li>🔔 Enable notifications to stay consistent with your practice</li>
+            </ul>
+            
+            <p>Remember, learning Sanskrit is like planting a sacred tree - with regular practice and patience, it will bear the fruits of wisdom and inner peace.</p>
+            
+            <p style="color: #666; font-style: italic;">
+                "Every master was once a beginner. Every pro was once an amateur. Every icon was once an unknown."
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>© 2024 ShlokaYug. All rights reserved.</p>
+            <p>Ready to learn? Visit <a href="{{dashboardUrl}}" style="color: #ff6b35;">your dashboard</a></p>
+            <p>Questions? We're here to help at support@shlokayug.com</p>
+        </div>
+    </div>
+</body>
+</html>

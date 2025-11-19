@@ -47,6 +47,7 @@
     "redis": "^4.6.11",
     "nodemailer": "^6.9.7",
     "handlebars": "^4.7.8",
+    "google-auth-library": "^9.4.0",
     "razorpay": "^2.9.2",
     "stripe": "^14.7.0",
     "socket.io": "^4.7.4",
