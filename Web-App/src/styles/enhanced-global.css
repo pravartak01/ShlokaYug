@@ -1,0 +1,491 @@
+/* Enhanced Global Styles for Divine Sanskrit Experience */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+/* Root CSS Custom Properties for Dynamic Theming */
+:root {
+  --sacred-gold: #f97316;
+  --divine-orange: #ea580c;
+  --ancient-brown: #92400e;
+  --lotus-pink: #ec4899;
+  --sandalwood-beige: #d4a574;
+  --meditation-purple: #7c3aed;
+  
+  /* Sacred Gradients */
+  --gradient-divine: linear-gradient(135deg, var(--sacred-gold), var(--divine-orange), var(--ancient-brown));
+  --gradient-lotus: linear-gradient(135deg, var(--lotus-pink), #f472b6, #fb7185);
+  --gradient-meditation: linear-gradient(135deg, var(--meditation-purple), #8b5cf6, #a78bfa);
+  
+  /* Sacred Shadows */
+  --shadow-divine: 0 8px 32px rgba(249, 115, 22, 0.3);
+  --shadow-sacred: 0 4px 20px rgba(234, 88, 12, 0.25);
+  --shadow-mystical: 0 0 30px rgba(124, 58, 237, 0.4);
+}
+
+/* Global Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced Body Styling */
+body {
+  font-family: 'Cormorant Garamond', serif;
+  background: linear-gradient(135deg, #fdf6e3 0%, #faecc2 25%, #f5d780 50%, #faecc2 75%, #fdf6e3 100%);
+  background-size: 400% 400%;
+  animation: mantraFlow 8s ease-in-out infinite;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Sanskrit Text Enhancements */
+.font-sanskrit {
+  font-family: 'Noto Sans Devanagari', serif;
+  font-weight: 400;
+  line-height: 1.8;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Divine Scroll Bar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, #fdf6e3, #faecc2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gradient-divine);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gradient-meditation);
+  box-shadow: var(--shadow-mystical);
+}
+
+/* Enhanced Animation Classes */
+.animate-fadeIn {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.6s ease-out forwards;
+}
+
+.animate-divine-entrance {
+  animation: fadeInUp 1s ease-out forwards, sacredGlow 2s ease-in-out 1s infinite alternate;
+}
+
+.animate-lotus-bloom {
+  animation: lotusBloom 4s ease-in-out infinite;
+}
+
+.animate-om-sacred {
+  animation: omRotate 12s linear infinite, divinePulse 3s ease-in-out infinite;
+}
+
+/* Sacred Button Enhancements */
+.btn-divine {
+  background: var(--gradient-divine);
+  color: white;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-divine);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-divine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn-divine:hover::before {
+  left: 100%;
+}
+
+.btn-divine:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 40px rgba(249, 115, 22, 0.4);
+}
+
+.btn-divine:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Sacred Card Enhancements */
+.card-divine {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sacred);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-divine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-divine);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.card-divine:hover::before {
+  transform: scaleX(1);
+}
+
+.card-divine:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(249, 115, 22, 0.3);
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+/* Mystical Input Fields */
+.input-sacred {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(249, 115, 22, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-family: 'Noto Sans Devanagari', serif;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-sacred:focus {
+  outline: none;
+  border-color: var(--sacred-gold);
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 1);
+}
+
+.input-sacred::placeholder {
+  color: rgba(146, 64, 14, 0.6);
+  font-style: italic;
+}
+
+/* Sacred Text Animations */
+.text-reveal {
+  opacity: 0;
+  animation: textReveal 0.8s ease-out forwards;
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+  animation: sacredGlow 2s ease-in-out infinite alternate;
+}
+
+.text-sanskrit-large {
+  font-size: 2.5rem;
+  line-height: 1.4;
+  font-weight: 500;
+  background: var(--gradient-divine);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: mantraFlow 6s ease-in-out infinite;
+}
+
+/* Sacred Progress Bars */
+.progress-divine {
+  background: rgba(249, 115, 22, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-divine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--gradient-divine);
+  border-radius: 10px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
+}
+
+/* Karaoke Specific Styles */
+.karaoke-syllable {
+  display: inline-block;
+  padding: 4px 8px;
+  margin: 2px;
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Noto Sans Devanagari', serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.karaoke-syllable.active {
+  background: var(--gradient-divine);
+  color: white;
+  transform: scale(1.2);
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.8);
+  animation: glowPulse 0.6s ease-in-out;
+}
+
+.karaoke-syllable.guru {
+  border-bottom: 3px solid var(--sacred-gold);
+}
+
+.karaoke-syllable.laghu {
+  border-bottom: 3px solid var(--divine-orange);
+}
+
+/* Sacred Loader */
+.loader-divine {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(249, 115, 22, 0.3);
+  border-top: 4px solid var(--sacred-gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite, sacredGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Sacred Modal Overlay */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  box-shadow: var(--shadow-mystical);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Responsive Sacred Design */
+@media (max-width: 768px) {
+  .text-sanskrit-large {
+    font-size: 1.8rem;
+  }
+  
+  .btn-divine {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .card-divine {
+    border-radius: 12px;
+    margin: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-sanskrit-large {
+    font-size: 1.4rem;
+  }
+  
+  .karaoke-syllable {
+    font-size: 1.2rem;
+    padding: 3px 6px;
+  }
+}
+
+/* Print Styles for Sacred Texts */
+@media print {
+  body {
+    background: white;
+    font-family: 'Noto Sans Devanagari', serif;
+  }
+  
+  .no-print {
+    display: none;
+  }
+  
+  .font-sanskrit {
+    color: black;
+    font-size: 14pt;
+    line-height: 1.6;
+  }
+}
+
+/* Dark Mode Sacred Theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1a0f0a;
+    --bg-secondary: #2d1810;
+    --text-primary: #f5d780;
+    --text-secondary: #eab834;
+  }
+  
+  body {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+    color: var(--text-primary);
+  }
+  
+  .card-divine {
+    background: rgba(45, 24, 16, 0.9);
+    border-color: rgba(249, 115, 22, 0.3);
+    color: var(--text-primary);
+  }
+  
+  .input-sacred {
+    background: rgba(45, 24, 16, 0.9);
+    color: var(--text-primary);
+    border-color: rgba(249, 115, 22, 0.4);
+  }
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .btn-divine {
+    border: 2px solid #000;
+  }
+  
+  .card-divine {
+    border: 2px solid #000;
+  }
+  
+  .input-sacred {
+    border: 2px solid #000;
+  }
+}
+
+/* Focus Indicators for Accessibility */
+*:focus-visible {
+  outline: 3px solid var(--sacred-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Sacred Selection */
+::selection {
+  background: rgba(249, 115, 22, 0.3);
+  color: #92400e;
+}
+
+::-moz-selection {
+  background: rgba(249, 115, 22, 0.3);
+  color: #92400e;
+}
+
+/* Sacred Typography Scale */
+.text-sacred-xs { font-size: 0.75rem; line-height: 1.5; }
+.text-sacred-sm { font-size: 0.875rem; line-height: 1.6; }
+.text-sacred-base { font-size: 1rem; line-height: 1.7; }
+.text-sacred-lg { font-size: 1.125rem; line-height: 1.8; }
+.text-sacred-xl { font-size: 1.25rem; line-height: 1.8; }
+.text-sacred-2xl { font-size: 1.5rem; line-height: 1.8; }
+.text-sacred-3xl { font-size: 1.875rem; line-height: 1.8; }
+.text-sacred-4xl { font-size: 2.25rem; line-height: 1.8; }
+.text-sacred-5xl { font-size: 3rem; line-height: 1.8; }
+
+/* Sacred Spacing System */
+.space-sacred-xs { padding: 0.25rem; }
+.space-sacred-sm { padding: 0.5rem; }
+.space-sacred-md { padding: 1rem; }
+.space-sacred-lg { padding: 1.5rem; }
+.space-sacred-xl { padding: 2rem; }
+.space-sacred-2xl { padding: 3rem; }
+.space-sacred-3xl { padding: 4rem; }
+
+/* Full Width Layout Classes */
+.full-width-container {
+  width: 100vw !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.full-width-content {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Override any container constraints */
+.container-override {
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+}
+
+/* Particle System Styles */
+.particle-0 { left: 10%; top: 20%; width: 15px; height: 15px; animation-delay: 0s; animation-duration: 15s; }
+.particle-1 { left: 25%; top: 30%; width: 20px; height: 20px; animation-delay: 1s; animation-duration: 18s; }
+.particle-2 { left: 40%; top: 10%; width: 12px; height: 12px; animation-delay: 2s; animation-duration: 12s; }
+.particle-3 { left: 60%; top: 40%; width: 18px; height: 18px; animation-delay: 3s; animation-duration: 20s; }
+.particle-4 { left: 80%; top: 15%; width: 14px; height: 14px; animation-delay: 4s; animation-duration: 16s; }
+.particle-5 { left: 5%; top: 60%; width: 16px; height: 16px; animation-delay: 0.5s; animation-duration: 14s; }
+.particle-6 { left: 30%; top: 70%; width: 22px; height: 22px; animation-delay: 1.5s; animation-duration: 19s; }
+.particle-7 { left: 55%; top: 80%; width: 13px; height: 13px; animation-delay: 2.5s; animation-duration: 13s; }
+.particle-8 { left: 75%; top: 65%; width: 17px; height: 17px; animation-delay: 3.5s; animation-duration: 17s; }
+.particle-9 { left: 90%; top: 85%; width: 19px; height: 19px; animation-delay: 4.5s; animation-duration: 21s; }
+.particle-10 { left: 15%; top: 50%; width: 11px; height: 11px; animation-delay: 0.8s; animation-duration: 11s; }
+.particle-11 { left: 35%; top: 5%; width: 21px; height: 21px; animation-delay: 1.8s; animation-duration: 22s; }
+.particle-12 { left: 50%; top: 25%; width: 23px; height: 23px; animation-delay: 2.8s; animation-duration: 10s; }
+.particle-13 { left: 70%; top: 55%; width: 10px; height: 10px; animation-delay: 3.8s; animation-duration: 23s; }
+.particle-14 { left: 85%; top: 35%; width: 24px; height: 24px; animation-delay: 4.8s; animation-duration: 24s; }
+.particle-15 { left: 20%; top: 75%; width: 25px; height: 25px; animation-delay: 1.2s; animation-duration: 25s; }
+.particle-16 { left: 45%; top: 90%; width: 26px; height: 26px; animation-delay: 2.2s; animation-duration: 26s; }
+.particle-17 { left: 65%; top: 45%; width: 27px; height: 27px; animation-delay: 3.2s; animation-duration: 27s; }
+.particle-18 { left: 95%; top: 20%; width: 28px; height: 28px; animation-delay: 4.2s; animation-duration: 28s; }
+.particle-19 { left: 12%; top: 95%; width: 29px; height: 29px; animation-delay: 5s; animation-duration: 29s; }

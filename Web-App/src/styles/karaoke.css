@@ -1,0 +1,246 @@
+/* Enhanced Karaoke Player Styles */
+
+.karaoke-syllable {
+  display: inline-block;
+  padding: 0.5rem;
+  margin: 0.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.karaoke-syllable-active {
+  background: linear-gradient(to right, #fb923c, #ef4444);
+  color: white;
+  box-shadow: 0 10px 25px rgba(251, 146, 60, 0.5);
+  transform: scale(1.25);
+  animation: karaokePulse 0.6s ease-in-out;
+  font-weight: bold;
+}
+
+.karaoke-syllable-upcoming {
+  background-color: #fef3c7;
+  color: #d97706;
+  transform: scale(1.1);
+}
+
+.karaoke-syllable-current-word {
+  background-color: #fed7aa;
+  color: #ea580c;
+  transform: scale(1.05);
+}
+
+.karaoke-syllable-default {
+  color: #78716c;
+}
+
+.karaoke-syllable-default:hover {
+  background-color: #f5f5f4;
+}
+
+.karaoke-syllable-guru {
+  border-bottom: 4px solid #f97316;
+}
+
+.karaoke-syllable-laghu {
+  border-bottom: 2px solid #fdba74;
+}
+
+.karaoke-progress-container {
+  width: 100%;
+  background-color: #fed7aa;
+  border-radius: 9999px;
+  height: 0.5rem;
+  margin: 0 auto;
+  max-width: 28rem;
+}
+
+.karaoke-progress-bar {
+  background: linear-gradient(to right, #fb923c, #ef4444);
+  height: 0.5rem;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+}
+
+.karaoke-overall-progress {
+  background-color: #fed7aa;
+  border-radius: 9999px;
+  height: 1rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.karaoke-overall-progress-bar {
+  background: linear-gradient(to right, #f97316, #ef4444);
+  height: 100%;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.karaoke-overall-progress-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.3);
+  animation: pulse 2s ease-in-out infinite alternate;
+  border-radius: 9999px;
+}
+
+.karaoke-progress-text {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.karaoke-voice-analysis-bar {
+  background-color: #fed7aa;
+  border-radius: 9999px;
+  height: 0.5rem;
+}
+
+.karaoke-voice-analysis-fill {
+  height: 0.5rem;
+  border-radius: 9999px;
+  transition: all 0.5s ease;
+}
+
+.karaoke-voice-analysis-excellent {
+  background-color: #22c55e;
+}
+
+.karaoke-voice-analysis-good {
+  background-color: #eab308;
+}
+
+.karaoke-voice-analysis-fair {
+  background-color: #f97316;
+}
+
+.karaoke-voice-analysis-poor {
+  background-color: #ef4444;
+}
+
+@keyframes karaokePulse {
+  0% {
+    transform: scale(1.25);
+    box-shadow: 0 10px 25px rgba(251, 146, 60, 0.5);
+  }
+  50% {
+    transform: scale(1.35);
+    box-shadow: 0 15px 35px rgba(251, 146, 60, 0.7);
+  }
+  100% {
+    transform: scale(1.25);
+    box-shadow: 0 10px 25px rgba(251, 146, 60, 0.5);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .karaoke-syllable {
+    padding: 0.375rem;
+    margin: 0.125rem;
+    font-size: 1.25rem;
+  }
+  
+  .karaoke-syllable-active {
+    transform: scale(1.15);
+  }
+  
+  .karaoke-syllable-upcoming {
+    transform: scale(1.05);
+  }
+}
+
+@media (max-width: 480px) {
+  .karaoke-syllable {
+    padding: 0.25rem;
+    margin: 0.125rem;
+    font-size: 1rem;
+  }
+  
+  .karaoke-syllable-active {
+    transform: scale(1.1);
+  }
+}
+
+/* Enhanced Karaoke Real-time Effects */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0.3; }
+}
+
+/* Word progress indicator styles */
+.word-progress {
+  width: 100%;
+  background-color: #fed7aa;
+  border-radius: 9999px;
+  height: 0.75rem;
+  margin: 0 auto;
+  max-width: 28rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.word-progress-fill {
+  background: linear-gradient(to right, #fb923c, #ef4444, #ec4899);
+  height: 0.75rem;
+  border-radius: 9999px;
+  transition: width 0.1s ease-out;
+  position: relative;
+  overflow: hidden;
+  width: var(--progress-width, 0%);
+}
+
+.word-progress-fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: white;
+  opacity: 0.3;
+  animation: shimmer 0.8s infinite;
+}
+
+/* Overall progress bar styles */
+.overall-progress-bar {
+  background: linear-gradient(to right, #fb923c, #ef4444, #ec4899);
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.1s ease-out;
+  position: relative;
+  overflow: hidden;
+  width: var(--overall-progress, 0%);
+}
+
+.overall-progress-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: white;
+  opacity: 0.3;
+  animation: shimmer 1s infinite;
+}
