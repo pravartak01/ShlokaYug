@@ -97,6 +97,443 @@ const userSchema = new mongoose.Schema({
     enum: ['student', 'guru', 'admin', 'moderator'],
     default: 'student'
   },
+  
+  // Guru-specific profile for LMS
+  guruProfile: {
+    applicationStatus: {
+      type: String,
+      enum: ['not_applied', 'pending', 'approved', 'rejected'],
+      default: 'not_applied'
+    },
+    
+    credentials: [{
+      type: {
+        type: String,
+        enum: ['degree', 'certificate', 'experience', 'publication'],
+        required: true
+      },
+      title: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: [200, 'Credential title cannot exceed 200 characters']
+      },
+      institution: {
+        type: String,
+        trim: true,
+        maxlength: [200, 'Institution name cannot exceed 200 characters']
+      },
+      year: {
+        type: Number,
+        min: [1900, 'Year must be after 1900'],
+        max: [new Date().getFullYear(), 'Year cannot be in the future']
+      },
+      description: {
+        type: String,
+        trim: true,
+        maxlength: [500, 'Description cannot exceed 500 characters']
+      },
+      documentUrl: String, // Cloudinary URL for uploaded certificate/proof
+      isVerified: {
+        type: Boolean,
+        default: false
+      }
+    }],
+    
+    experience: {
+      years: {
+        type: Number,
+        min: [0, 'Years of experience cannot be negative'],
+        default: 0
+      },
+      description: {
+        type: String,
+        trim: true,
+        maxlength: [2000, 'Experience description cannot exceed 2000 characters']
+      },
+      previousInstitutions: [{
+        name: {
+          type: String,
+          trim: true,
+          maxlength: [200, 'Institution name cannot exceed 200 characters']
+        },
+        position: {
+          type: String,
+          trim: true,
+          maxlength: [100, 'Position cannot exceed 100 characters']
+        },
+        duration: {
+          from: Date,
+          to: Date
+        },
+        responsibilities: {
+          type: String,
+          trim: true,
+          maxlength: [1000, 'Responsibilities cannot exceed 1000 characters']
+        }
+      }],
+      specializations: [{
+        type: String,
+        trim: true,
+        maxlength: [100, 'Specialization cannot exceed 100 characters']
+      }],
+      languages: [{
+        language: String,
+        proficiency: {
+          type: String,
+          enum: ['beginner', 'intermediate', 'advanced', 'native'],
+          default: 'intermediate'
+        }
+      }]
+    },
+    
+    verification: {
+      isVerified: {
+        type: Boolean,
+        default: false
+      },
+      verifiedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      verifiedAt: Date,
+      verificationNotes: {
+        type: String,
+        trim: true,
+        maxlength: [1000, 'Verification notes cannot exceed 1000 characters']
+      },
+      rejectionReason: {
+        type: String,
+        trim: true,
+        maxlength: [1000, 'Rejection reason cannot exceed 1000 characters']
+      },
+      applicationDate: {
+        type: Date,
+        default: Date.now
+      }
+    },
+    
+    teachingStats: {
+      totalStudents: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      totalCourses: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      publishedCourses: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      averageRating: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: null
+      },
+      totalRatings: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      totalEarnings: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      thisMonthEarnings: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      coursesCompleted: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      averageCompletionRate: {
+        type: Number,
+        min: 0,
+        max: 100,
+        default: 0
+      },
+      totalVideoHours: {
+        type: Number,
+        default: 0,
+        min: 0
+      }
+    },
+    
+    preferences: {
+      acceptNewStudents: {
+        type: Boolean,
+        default: true
+      },
+      maxStudentsPerCourse: {
+        type: Number,
+        default: 1000,
+        min: 1
+      },
+      teachingLanguages: [{
+        type: String,
+        enum: ['english', 'hindi', 'sanskrit', 'tamil', 'bengali', 'gujarati', 'telugu']
+      }],
+      availableHours: {
+        timezone: String,
+        schedule: [{
+          day: {
+            type: String,
+            enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+          },
+          startTime: String, // HH:MM format
+          endTime: String
+        }]
+      },
+      communicationPreference: {
+        type: String,
+        enum: ['immediate', 'within_24h', 'within_48h', 'weekly'],
+        default: 'within_24h'
+      }
+    }
+  },
+  
+  // Enhanced student profile for LMS
+  studentProfile: {
+    learningGoals: [{
+      goal: {
+        type: String,
+        trim: true,
+        maxlength: [200, 'Learning goal cannot exceed 200 characters']
+      },
+      priority: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+        default: 'medium'
+      },
+      targetDate: Date,
+      isCompleted: {
+        type: Boolean,
+        default: false
+      },
+      completedAt: Date
+    }],
+    
+    currentLevel: {
+      overall: {
+        type: String,
+        enum: ['absolute_beginner', 'beginner', 'intermediate', 'advanced', 'expert'],
+        default: 'beginner'
+      },
+      pronunciation: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced'],
+        default: 'beginner'
+      },
+      grammar: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced'],
+        default: 'beginner'
+      },
+      chanting: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced'],
+        default: 'beginner'
+      },
+      philosophy: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced'],
+        default: 'beginner'
+      }
+    },
+    
+    interests: [{
+      category: {
+        type: String,
+        enum: [
+          'vedic_chanting', 'mantra_recitation', 'devotional_singing',
+          'classical_music', 'pronunciation', 'grammar', 'philosophy',
+          'ritual_practices', 'meditation', 'cultural_studies'
+        ]
+      },
+      level: {
+        type: String,
+        enum: ['curious', 'interested', 'passionate'],
+        default: 'interested'
+      }
+    }],
+    
+    preferredLearningStyle: {
+      visual: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 3
+      },
+      auditory: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 3
+      },
+      kinesthetic: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 3
+      },
+      reading: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 3
+      }
+    },
+    
+    subscriptions: [{
+      guruId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      plan: {
+        type: String,
+        enum: ['monthly', 'yearly'],
+        required: true
+      },
+      status: {
+        type: String,
+        enum: ['active', 'cancelled', 'expired', 'paused'],
+        default: 'active'
+      },
+      subscribedAt: {
+        type: Date,
+        default: Date.now
+      },
+      expiresAt: Date,
+      autoRenewal: {
+        type: Boolean,
+        default: true
+      },
+      totalPaid: {
+        type: Number,
+        default: 0,
+        min: 0
+      }
+    }],
+    
+    learningStats: {
+      totalCoursesEnrolled: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      totalCoursesCompleted: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      totalLearningHours: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      averageCompletionRate: {
+        type: Number,
+        min: 0,
+        max: 100,
+        default: 0
+      },
+      currentStreak: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      longestStreak: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      certificatesEarned: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      totalSpent: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      favoriteSubjects: [String],
+      weakAreas: [String],
+      strongAreas: [String],
+      lastActivityDate: {
+        type: Date,
+        default: Date.now
+      }
+    },
+    
+    preferences: {
+      studyReminders: {
+        enabled: {
+          type: Boolean,
+          default: true
+        },
+        frequency: {
+          type: String,
+          enum: ['daily', 'every_other_day', 'weekly'],
+          default: 'daily'
+        },
+        preferredTime: {
+          type: String, // HH:MM format
+          default: '19:00'
+        },
+        timezone: String
+      },
+      contentPreferences: {
+        videoQuality: {
+          type: String,
+          enum: ['auto', 'low', 'medium', 'high'],
+          default: 'auto'
+        },
+        playbackSpeed: {
+          type: Number,
+          min: 0.5,
+          max: 2.0,
+          default: 1.0
+        },
+        subtitles: {
+          type: Boolean,
+          default: false
+        },
+        autoplay: {
+          type: Boolean,
+          default: false
+        }
+      },
+      communicationPreferences: {
+        courseUpdates: {
+          type: Boolean,
+          default: true
+        },
+        guruMessages: {
+          type: Boolean,
+          default: true
+        },
+        promotionalEmails: {
+          type: Boolean,
+          default: false
+        },
+        reminderEmails: {
+          type: Boolean,
+          default: true
+        }
+      }
+    }
+  },
   subscription: {
     plan: {
       type: String,
@@ -431,6 +868,167 @@ userSchema.methods.generateEmailVerificationToken = function() {
   this.verification.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
 
   return verifyToken;
+};
+
+// Method to apply to become a guru
+userSchema.methods.applyForGuru = function(credentials, experience) {
+  this.guruProfile.applicationStatus = 'pending';
+  this.guruProfile.credentials = credentials;
+  this.guruProfile.experience = experience;
+  this.guruProfile.verification.applicationDate = new Date();
+  return this.save();
+};
+
+// Method to approve/reject guru application
+userSchema.methods.reviewGuruApplication = function(decision, reviewerId, notes) {
+  if (decision === 'approve') {
+    this.role = 'guru';
+    this.guruProfile.applicationStatus = 'approved';
+    this.guruProfile.verification.isVerified = true;
+    this.guruProfile.verification.verifiedBy = reviewerId;
+    this.guruProfile.verification.verifiedAt = new Date();
+    this.guruProfile.verification.verificationNotes = notes;
+  } else {
+    this.guruProfile.applicationStatus = 'rejected';
+    this.guruProfile.verification.rejectionReason = notes;
+  }
+  return this.save();
+};
+
+// Method to subscribe to a guru
+userSchema.methods.subscribeToGuru = function(guruId, plan, expiresAt) {
+  // Remove existing subscription to this guru
+  this.studentProfile.subscriptions = this.studentProfile.subscriptions.filter(
+    sub => sub.guruId.toString() !== guruId.toString()
+  );
+  
+  // Add new subscription
+  this.studentProfile.subscriptions.push({
+    guruId: guruId,
+    plan: plan,
+    subscribedAt: new Date(),
+    expiresAt: expiresAt,
+    status: 'active'
+  });
+  
+  return this.save();
+};
+
+// Method to check if user has active subscription to guru
+userSchema.methods.hasActiveSubscription = function(guruId) {
+  const subscription = this.studentProfile.subscriptions.find(
+    sub => sub.guruId.toString() === guruId.toString() && sub.status === 'active'
+  );
+  
+  if (!subscription) return false;
+  
+  // Check if subscription is still valid
+  return !subscription.expiresAt || subscription.expiresAt > new Date();
+};
+
+// Method to update learning stats
+userSchema.methods.updateLearningStats = function(statsUpdate) {
+  Object.keys(statsUpdate).forEach(key => {
+    if (this.studentProfile.learningStats[key] !== undefined) {
+      this.studentProfile.learningStats[key] = statsUpdate[key];
+    }
+  });
+  this.studentProfile.learningStats.lastActivityDate = new Date();
+  return this.save();
+};
+
+// Method to update teaching stats for gurus
+userSchema.methods.updateTeachingStats = function(statsUpdate) {
+  if (this.role !== 'guru') return this;
+  
+  Object.keys(statsUpdate).forEach(key => {
+    if (this.guruProfile.teachingStats[key] !== undefined) {
+      this.guruProfile.teachingStats[key] = statsUpdate[key];
+    }
+  });
+  return this.save();
+};
+
+// Method to calculate average rating for guru
+userSchema.methods.updateAverageRating = function(newRating) {
+  if (this.role !== 'guru') return this;
+  
+  const currentTotal = this.guruProfile.teachingStats.averageRating * this.guruProfile.teachingStats.totalRatings;
+  this.guruProfile.teachingStats.totalRatings += 1;
+  this.guruProfile.teachingStats.averageRating = 
+    (currentTotal + newRating) / this.guruProfile.teachingStats.totalRatings;
+  
+  return this.save();
+};
+
+// Virtual for guru verification status
+userSchema.virtual('isVerifiedGuru').get(function() {
+  return this.role === 'guru' && this.guruProfile.verification.isVerified;
+});
+
+// Virtual for subscription count
+userSchema.virtual('activeSubscriptionCount').get(function() {
+  if (this.role !== 'student') return 0;
+  
+  return this.studentProfile.subscriptions.filter(
+    sub => sub.status === 'active' && (!sub.expiresAt || sub.expiresAt > new Date())
+  ).length;
+});
+
+// Virtual for total earnings (for gurus)
+userSchema.virtual('monthlyEarnings').get(function() {
+  if (this.role !== 'guru') return 0;
+  return this.guruProfile.teachingStats.thisMonthEarnings || 0;
+});
+
+// Method to check if user can access feature
+userSchema.methods.canAccessFeature = function(feature) {
+  const featurePermissions = {
+    'advanced_analytics': ['premium', 'guru'],
+    'unlimited_uploads': ['premium', 'guru'],
+    'create_courses': ['guru'],
+    'moderate_content': ['admin', 'moderator'],
+    'access_admin_panel': ['admin'],
+    'guru_subscription': ['student'], // Only students can subscribe to gurus
+    'course_creation': ['guru'],
+    'student_analytics': ['guru', 'admin']
+  };
+
+  const allowedPlans = featurePermissions[feature];
+  if (!allowedPlans) return true; // Feature not restricted
+
+  // Check subscription
+  if (allowedPlans.includes(this.subscription.plan) && this.isSubscriptionActive) {
+    return true;
+  }
+
+  // Check role-based access
+  return allowedPlans.includes(this.role);
+};
+
+// Static method to find verified gurus
+userSchema.statics.findVerifiedGurus = function(limit = 10, sortBy = 'rating') {
+  const sortField = sortBy === 'rating' ? 'guruProfile.teachingStats.averageRating' : 
+                   sortBy === 'students' ? 'guruProfile.teachingStats.totalStudents' :
+                   'guruProfile.teachingStats.totalCourses';
+  
+  return this.find({
+    role: 'guru',
+    'guruProfile.verification.isVerified': true,
+    'metadata.isActive': true
+  })
+  .select('username profile guruProfile.teachingStats guruProfile.experience')
+  .sort({ [sortField]: -1 })
+  .limit(limit);
+};
+
+// Static method to get pending guru applications
+userSchema.statics.getPendingGuruApplications = function() {
+  return this.find({
+    'guruProfile.applicationStatus': 'pending',
+    'metadata.isActive': true
+  })
+  .select('email username profile guruProfile createdAt');
 };
 
 // Method to add XP

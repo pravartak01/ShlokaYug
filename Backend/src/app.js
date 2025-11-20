@@ -11,12 +11,12 @@ require('dotenv').config();
 
 // Import route modules
 const authRoutes = require('./routes/authRoutes');
+const courseRoutes = require('./routes/courses');
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
 // const audioRoutes = require('./routes/audioRoutes');
 // const aiRoutes = require('./routes/aiRoutes');
-// const courseRoutes = require('./routes/courseRoutes');
 // const communityRoutes = require('./routes/communityRoutes');
 // const liveSessionRoutes = require('./routes/liveSessionRoutes');
 // const gamificationRoutes = require('./routes/gamificationRoutes');
@@ -134,12 +134,12 @@ app.get('/health', (req, res) => {
 const API_VERSION = process.env.API_VERSION || 'v1';
 
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
+app.use(`/api/${API_VERSION}/courses`, courseRoutes);
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
 // app.use(`/api/${API_VERSION}/chandas`, chandasRoutes);
 // app.use(`/api/${API_VERSION}/audio`, audioRoutes);
 // app.use(`/api/${API_VERSION}/ai`, aiRoutes);
-// app.use(`/api/${API_VERSION}/courses`, courseRoutes);
 // app.use(`/api/${API_VERSION}/community`, communityRoutes);
 // app.use(`/api/${API_VERSION}/live-sessions`, liveSessionRoutes);
 // app.use(`/api/${API_VERSION}/gamification`, gamificationRoutes);
