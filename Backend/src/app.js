@@ -12,6 +12,12 @@ require('dotenv').config();
 // Import route modules
 const authRoutes = require('./routes/authRoutes');
 const courseRoutes = require('./routes/courses');
+
+// Phase 2 Routes - Enrollment & Payment System
+const enrollmentRoutes = require('./routes/enrollments');
+const paymentRoutes = require('./routes/payments');
+const subscriptionRoutes = require('./routes/subscriptions');
+
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -22,7 +28,6 @@ const courseRoutes = require('./routes/courses');
 // const gamificationRoutes = require('./routes/gamificationRoutes');
 // const adminRoutes = require('./routes/adminRoutes');
 // const notificationRoutes = require('./routes/notificationRoutes');
-// const paymentRoutes = require('./routes/paymentRoutes');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -135,6 +140,12 @@ const API_VERSION = process.env.API_VERSION || 'v1';
 
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/courses`, courseRoutes);
+
+// Phase 2 Routes - Enrollment & Payment System
+app.use(`/api/${API_VERSION}/enrollments`, enrollmentRoutes);
+app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
+app.use(`/api/${API_VERSION}/subscriptions`, subscriptionRoutes);
+
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
 // app.use(`/api/${API_VERSION}/chandas`, chandasRoutes);
@@ -145,7 +156,6 @@ app.use(`/api/${API_VERSION}/courses`, courseRoutes);
 // app.use(`/api/${API_VERSION}/gamification`, gamificationRoutes);
 // app.use(`/api/${API_VERSION}/admin`, adminRoutes);
 // app.use(`/api/${API_VERSION}/notifications`, notificationRoutes);
-// app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
 
 // Swagger documentation (in development)
 if (process.env.NODE_ENV === 'development') {

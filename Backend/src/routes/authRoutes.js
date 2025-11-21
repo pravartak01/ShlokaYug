@@ -14,7 +14,7 @@ const {
   getProfile
 } = require('../controllers/authController');
 
-const { protect, requireEmailVerification, requireRole } = require('../middleware/auth');
+const { auth: protect, requireEmailVerification, requireRole } = require('../middleware/auth');
 const { validateRequest } = require('../middleware/validateRequest');
 const {
   registerValidation,
