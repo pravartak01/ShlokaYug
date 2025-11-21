@@ -1,7 +1,7 @@
 # Phase 1 Documentation: LMS Course Management System
 
 ## Overview
-Phase 1 of the ShlokaYug Learning Management System focused on building a robust course management foundation with enhanced database models, comprehensive API controllers, and full testing validation. This phase establishes the core infrastructure for Sanskrit learning courses with hierarchical content structure.
+Phase 1 of the ShlokaYug Learning Management System focused on building a robust course management foundation with enhanced database models, comprehensive API controllers, and full testing validation. This phase establishes the core infrastructure for Sanskrit learning courses with hierarchical content structure`.
 
 ---
 
