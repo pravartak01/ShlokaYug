@@ -5,46 +5,90 @@ import {
   Text,
   TouchableOpacity,
   StatusBar,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
 import { ENHANCED_ACHIEVEMENTS } from '../../data/enhancedData';
 
 export default function ProfileScreen() {
-  const [user] = useState({
-    name: 'Sanskrit Scholar',
-    email: 'scholar@sanskrit.com',
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Fallback for user data
+  const displayUser = {
+    name: user?.profile ? `${user.profile.firstName} ${user.profile.lastName}` : 'Sanskrit Scholar',
+    email: user?.email || 'scholar@sanskrit.com',
     avatar: '🙏',
     joinDate: '2024-01-15',
-    level: 'Intermediate',
-    nextLevel: 'Advanced'
-  });
+    level: user?.gamification ? `Level ${user.gamification.level}` : 'Intermediate',
+    nextLevel: user?.gamification ? `Level ${user.gamification.level + 1}` : 'Advanced',
+    isEmailVerified: user?.isEmailVerified || false,
+    subscription: user?.subscription?.plan || 'free',
+  };
 
-  const [stats] = useState({
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            setIsLoggingOut(true);
+            try {
+              await logout();
+              // Navigation will be handled by _layout.tsx
+            } catch (error) {
+              Alert.alert(
+                'Error',
+                'Failed to logout. Please try again.'
+              );
+            } finally {
+              setIsLoggingOut(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const stats = {
     shlokasCompleted: 47,
     accuracy: 87,
-    streakDays: 12,
+    streakDays: user?.gamification?.streak || 12,
     totalTime: 145,
     practiceMinutes: 1250,
     perfectSessions: 23,
-    favoriteChanda: 'Gayatri'
-  });
+    favoriteChanda: 'Gayatri',
+    xp: user?.gamification?.xp || 850,
+    coins: user?.gamification?.coins || 250,
+  };
 
   const profileSections = [
     {
       title: 'Learning Progress',
       items: [
-        { label: 'Current Level', value: user.level, icon: 'school' },
+        { label: 'Current Level', value: displayUser.level, icon: 'school' },
         { label: 'Shlokas Mastered', value: stats.shlokasCompleted, icon: 'book' },
-        { label: 'Average Accuracy', value: `${stats.accuracy}%`, icon: 'target' },
+        { label: 'Average Accuracy', value: `${stats.accuracy}%`, icon: 'radio-button-on' },
         { label: 'Study Streak', value: `${stats.streakDays} days`, icon: 'flame' }
       ]
     },
     {
       title: 'Practice Statistics',
       items: [
-        { label: 'Total Practice Time', value: `${stats.practiceMinutes} min`, icon: 'time' },
-        { label: 'Perfect Sessions', value: stats.perfectSessions, icon: 'trophy' },
+        { label: 'Total XP', value: stats.xp, icon: 'star' },
+        { label: 'Coins Earned', value: stats.coins, icon: 'logo-bitcoin' },
         { label: 'Favorite Chanda', value: stats.favoriteChanda, icon: 'musical-note' },
         { label: 'Sessions This Week', value: '8', icon: 'calendar' }
       ]
@@ -52,6 +96,13 @@ export default function ProfileScreen() {
   ];
 
   const settingsOptions = [
+    {
+      title: 'Change Password',
+      subtitle: 'Update your account password',
+      icon: 'lock-closed',
+      hasToggle: false,
+      route: '/auth/change-password'
+    },
     {
       title: 'Notifications',
       subtitle: 'Daily reminders and updates',
@@ -110,38 +161,50 @@ export default function ProfileScreen() {
       
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
-        <View className="bg-gradient-to-br from-ancient-600 to-ancient-800 px-6 pt-12 pb-8 rounded-b-3xl">
+        <View className="bg-saffron-600 px-6 pt-12 pb-8 rounded-b-3xl" style={{ backgroundColor: '#ea580c' }}>
           <View className="items-center mb-6">
-            <View className="w-20 h-20 bg-white rounded-full items-center justify-center mb-4">
-              <Text className="text-4xl">{user.avatar}</Text>
+            <View className="w-24 h-24 bg-white rounded-full items-center justify-center mb-4 shadow-lg">
+              <Text className="text-5xl">{displayUser.avatar}</Text>
             </View>
-            <Text className="text-white text-2xl font-bold mb-1">
-              {user.name}
+            <Text className="text-white text-2xl font-bold mb-1 drop-shadow-lg">
+              {displayUser.name}
             </Text>
-            <Text className="text-white/90 text-base">
-              {user.email}
+            <Text className="text-white text-base">
+              {displayUser.email}
             </Text>
-            <View className="bg-white/20 px-3 py-1 rounded-full mt-2">
-              <Text className="text-white text-sm font-medium">
-                {user.level} Scholar
-              </Text>
+            <View className="flex-row items-center mt-3 gap-2">
+              <View className="bg-white/30 px-4 py-2 rounded-full">
+                <Text className="text-white text-sm font-semibold">
+                  {displayUser.level} Scholar
+                </Text>
+              </View>
+              {!displayUser.isEmailVerified && (
+                <TouchableOpacity
+                  onPress={() => router.push('/auth/verify-email')}
+                  className="bg-yellow-400 px-4 py-2 rounded-full shadow-md"
+                >
+                  <Text className="text-yellow-900 text-xs font-bold">
+                    Verify Email
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
           {/* Level Progress */}
-          <View className="bg-white/10 p-4 rounded-2xl">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-white/80 text-sm">Progress to {user.nextLevel}</Text>
-              <Text className="text-white/80 text-sm">{Math.round(getLevelProgress())}%</Text>
+          <View className="bg-white/20 p-5 rounded-2xl shadow-lg">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-white text-base font-semibold">Progress to {displayUser.nextLevel}</Text>
+              <Text className="text-white text-base font-bold">{Math.round(getLevelProgress())}%</Text>
             </View>
-            <View className="bg-white/20 h-2 rounded-full">
+            <View className="bg-white/30 h-3 rounded-full">
               <View 
-                className="bg-white h-2 rounded-full"
+                className="bg-white h-3 rounded-full shadow-sm"
                 style={{ width: `${getLevelProgress()}%` }}
               />
             </View>
-            <Text className="text-white/70 text-xs mt-1 text-center">
-              150 more points needed
+            <Text className="text-white text-sm mt-2 text-center font-medium">
+              {user ? `${1000 - stats.xp} XP to next level` : '150 more points needed'}
             </Text>
           </View>
         </View>
@@ -254,6 +317,7 @@ export default function ProfileScreen() {
                   index < settingsOptions.length - 1 ? 'border-b border-ancient-100' : ''
                 }`}
                 activeOpacity={0.7}
+                onPress={() => option.route && router.push(option.route as any)}
               >
                 <View className="flex-row items-center flex-1">
                   <View className="bg-saffron-100 p-2 rounded-lg mr-3">
@@ -271,7 +335,7 @@ export default function ProfileScreen() {
                 
                 {option.hasToggle ? (
                   <View className={`w-12 h-6 rounded-full ${option.enabled ? 'bg-saffron-500' : 'bg-ancient-300'}`}>
-                    <View className={`w-5 h-5 bg-white rounded-full mt-0.5 transition-all ${option.enabled ? 'ml-6' : 'ml-0.5'}`} />
+                    <View className={`w-5 h-5 bg-white rounded-full mt-0.5 ${option.enabled ? 'ml-6' : 'ml-0.5'}`} />
                   </View>
                 ) : (
                   <Ionicons name="chevron-forward" size={16} color="#996f0a" />
@@ -280,13 +344,47 @@ export default function ProfileScreen() {
             ))}
           </View>
 
+          {/* Account Info */}
+          {user && (
+            <View className="bg-white rounded-2xl shadow-sm border border-ancient-200 p-4 mt-6">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-ancient-800 font-semibold">Account Status</Text>
+                <View className={`px-3 py-1 rounded-full ${displayUser.subscription === 'premium' ? 'bg-yellow-100' : 'bg-ancient-100'}`}>
+                  <Text className={`text-xs font-semibold ${displayUser.subscription === 'premium' ? 'text-yellow-700' : 'text-ancient-700'}`}>
+                    {displayUser.subscription.toUpperCase()}
+                  </Text>
+                </View>
+              </View>
+              <View className="flex-row items-center">
+                <Ionicons 
+                  name={displayUser.isEmailVerified ? "checkmark-circle" : "alert-circle"} 
+                  size={20} 
+                  color={displayUser.isEmailVerified ? "#22c55e" : "#f59e0b"} 
+                />
+                <Text className="text-ancient-600 ml-2">
+                  Email {displayUser.isEmailVerified ? 'Verified' : 'Not Verified'}
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Logout Button */}
-          <TouchableOpacity className="bg-red-500 p-4 rounded-2xl mt-6">
+          <TouchableOpacity 
+            className="bg-red-500 p-4 rounded-2xl mt-6"
+            onPress={handleLogout}
+            disabled={isLoggingOut}
+          >
             <View className="flex-row items-center justify-center">
-              <Ionicons name="log-out" size={20} color="white" />
-              <Text className="text-white font-semibold text-base ml-2">
-                Sign Out
-              </Text>
+              {isLoggingOut ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="log-out" size={20} color="white" />
+                  <Text className="text-white font-semibold text-base ml-2">
+                    Sign Out
+                  </Text>
+                </>
+              )}
             </View>
           </TouchableOpacity>
         </View>
