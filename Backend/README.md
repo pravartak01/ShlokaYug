@@ -108,31 +108,37 @@ Course
 
 ## 🧪 Testing Status
 
-### **Test Coverage: 100%**
+### **Test Coverage: Comprehensive Test Suite**
 ```
-✅ LMS Models Test Suite - PASSED
-   - User model with guru/student profiles
-   - Course model with hierarchical structure
-   - Progress, Enrollment, Assessment models
-   - All relationships and methods validated
+✅ Payment Gateway Tests (tests/payment/) - 73% Success Rate
+   - Simple validation: Quick health checks (78% success)
+   - Clean payment test: End-to-end payment flow (73% success)
+   - Working payment test: Advanced analytics testing
+   - Comprehensive PowerShell test suite for Razorpay integration
 
-✅ Course Management Test Suite - PASSED  
+✅ Course Management Tests (tests/course/) - 95%+ Success Rate  
    - Course creation and CRUD operations
    - Content management (Units/Lessons/Lectures)
    - Publishing workflow validation
    - Instructor dashboard functionality
-   - Database operations and relationships
 
-✅ Integration Test Suite - PASSED
-   - API endpoint functionality
-   - Authentication and authorization
-   - Input validation and error handling
-   - Response format consistency
+✅ Model Validation Tests (tests/models/) - 100% Success Rate
+   - User model with guru/student profiles
+   - Course model with hierarchical structure
+   - Progress, Enrollment, Assessment models
+   - All relationships and methods validated
 ```
+
+### **Testing Documentation**
+- **[Payment Gateway Testing Guide](docs/testing/PAYMENT_GATEWAY_TESTING_GUIDE.md)** - Comprehensive payment testing procedures
+- **[Test Suite Overview](tests/README.md)** - Complete testing documentation
+- **PowerShell Test Scripts** - Automated payment validation
+- **Node.js Test Scripts** - Course and model validation
 
 ### **Performance Metrics**
 - Database queries optimized with proper indexing
 - API response times under 200ms for standard operations
+- Payment gateway: 73% success rate (production-ready threshold: 90%+)
 - Pagination implemented for large datasets
 - Efficient aggregation pipelines for analytics
 
@@ -190,10 +196,11 @@ RAZORPAY_KEY_SECRET=your_razorpay_secret
 
 ```
 Backend/
-├── src/
-│   ├── controllers/          # API controllers
-│   │   └── courseController.js
-│   ├── middleware/           # Custom middleware
+├── src/                     # Source code
+│   ├── controllers/         # API controllers
+│   │   ├── courseController.js
+│   │   └── paymentController.js
+│   ├── middleware/          # Custom middleware
 │   │   ├── auth.js
 │   │   ├── roleCheck.js
 │   │   └── courseValidation.js
@@ -205,20 +212,46 @@ Backend/
 │   │   └── Assessment.js
 │   ├── routes/              # API routes
 │   │   ├── authRoutes.js
-│   │   └── courses.js
+│   │   ├── courses.js
+│   │   └── payments.js
 │   ├── config/              # Configuration files
 │   │   ├── database.js
 │   │   └── cloudinary.js
 │   └── app.js               # Express app configuration
-├── tests/                   # Test suites
-│   ├── test-lms-models.js
-│   ├── test-course-management.js
-│   └── test-course-controller.js
-├── docs/                    # Documentation
-│   └── PHASE1_DOCUMENTATION.md
+├── tests/                   # Comprehensive test suites
+│   ├── README.md           # Testing documentation
+│   ├── setup.js            # Test environment setup
+│   ├── payment/            # Payment gateway tests
+│   │   ├── simple-validation.ps1
+│   │   ├── clean-payment-test.ps1
+│   │   ├── working-payment-test.ps1
+│   │   └── debug-user-test.ps1
+│   ├── course/             # Course management tests
+│   │   ├── test-course-api.js
+│   │   ├── test-course-controller.js
+│   │   └── test-course-management.js
+│   ├── models/             # Database model tests
+│   │   ├── test-lms-models.js
+│   │   └── test-route.js
+│   ├── integration/        # Integration tests
+│   ├── unit/               # Unit tests
+│   └── utils/              # Test utilities
+├── docs/                   # Comprehensive documentation
+│   ├── README.md          # Documentation overview
+│   ├── PHASE1_DOCUMENTATION.md  # Phase 1 completion details
+│   ├── PHASE2_ARCHITECTURE.md   # Phase 2 system architecture
+│   ├── api/               # API documentation
+│   │   ├── README.md      # API overview
+│   │   └── [endpoint docs]
+│   ├── testing/           # Testing documentation
+│   │   ├── README.md      # Testing overview
+│   │   └── PAYMENT_GATEWAY_TESTING_GUIDE.md
+│   └── deployment/        # Deployment documentation
+│       ├── README.md      # Deployment overview
+│       └── [deployment guides]
 ├── package.json
 ├── .env.example
-└── README.md
+└── README.md              # This file
 ```
 
 ---
