@@ -27,6 +27,29 @@ const isValidObjectId = (value) => {
   return mongoose.Types.ObjectId.isValid(value);
 };
 
+// Validation for auto-enrollment after payment
+const validateAutoEnrollment = [
+  body('transactionId')
+    .notEmpty()
+    .withMessage('Transaction ID is required')
+    .isLength({ min: 5, max: 100 })
+    .withMessage('Transaction ID must be between 5-100 characters'),
+    
+  body('userId')
+    .notEmpty()
+    .withMessage('User ID is required')
+    .custom(isValidObjectId)
+    .withMessage('User ID must be a valid MongoDB ObjectId'),
+    
+  body('courseId')
+    .notEmpty()
+    .withMessage('Course ID is required')
+    .custom(isValidObjectId)
+    .withMessage('Course ID must be a valid MongoDB ObjectId'),
+    
+  handleValidationErrors
+];
+
 // Custom validator for device ID format
 const isValidDeviceId = (value) => {
   return /^[a-f0-9]{16}$/.test(value);
@@ -375,7 +398,7 @@ const checkEnrollmentAccess = async (req, res, next) => {
       return next();
     }
 
-    const Enrollment = require('../models/EnrollmentEnhanced');
+    const Enrollment = require('../models/Enrollment');
     const enrollment = await Enrollment.findById(id).select('userId guruId');
 
     if (!enrollment) {
@@ -415,6 +438,7 @@ const checkEnrollmentAccess = async (req, res, next) => {
 };
 
 module.exports = {
+  validateAutoEnrollment,
   validateInitiateEnrollment,
   validateConfirmEnrollment,
   validateEnrollmentId,

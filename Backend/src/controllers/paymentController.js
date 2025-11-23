@@ -1,4 +1,49 @@
 const crypto = require('crypto');
+const axios = require('axios');
+
+// Helper function to trigger auto-enrollment after successful payment
+const triggerAutoEnrollment = async (paymentTransaction) => {
+  try {
+    const axios = require('axios');
+    
+    // Prepare auto-enrollment data
+    const enrollmentData = {
+      transactionId: paymentTransaction.transactionId,
+      userId: paymentTransaction.userId,
+      courseId: paymentTransaction.metadata?.courseId || paymentTransaction.courseId
+    };
+
+    console.log('🎓 Triggering auto-enrollment:', enrollmentData);
+
+    // Call the auto-enrollment endpoint internally
+    const enrollmentController = require('./enrollmentController');
+    
+    // Create a mock request/response for the controller
+    const mockReq = {
+      body: enrollmentData
+    };
+    
+    const mockRes = {
+      status: (code) => ({
+        json: (data) => {
+          if (code >= 200 && code < 300) {
+            console.log('✅ Auto-enrollment successful:', data.enrollment?.enrollmentId);
+            return data;
+          } else {
+            throw new Error(data.error || 'Auto-enrollment failed');
+          }
+        }
+      })
+    };
+
+    // Call the auto-enrollment controller method
+    return await enrollmentController.autoEnrollAfterPayment(mockReq, mockRes);
+    
+  } catch (error) {
+    console.error('❌ Auto-enrollment failed:', error);
+    throw error;
+  }
+};
 const Razorpay = require('razorpay');
 
 // Use simplified model for development/testing
@@ -11,7 +56,7 @@ try {
   PaymentTransaction = null;
 }
 
-const Enrollment = require('../models/EnrollmentEnhanced');
+const Enrollment = require('../models/Enrollment');
 const User = require('../models/User');
 
 // Initialize Razorpay instance
@@ -195,33 +240,33 @@ const verifyPaymentSignature = async (req, res) => {
           paymentTransaction.markSuccess(razorpay_payment_id, razorpay_signature);
           await paymentTransaction.save();
           console.log('✓ Payment verification updated in database:', paymentTransaction.transactionId);
+          
+          // Trigger auto-enrollment after successful payment
+          await triggerAutoEnrollment(paymentTransaction);
         } else {
-          // Create new record if not found (fallback)
-          paymentTransaction = new PaymentTransaction({
-            userId: req.user.id,
-            courseId: req.body.courseId || '507f1f77bcf86cd799439011',
-            razorpay: {
-              orderId: razorpay_order_id,
-              paymentId: razorpay_payment_id,
-              signature: razorpay_signature
-            },
-            amount: {
-              total: 1999.50,
-              currency: 'INR'
-            },
-            status: 'success',
-            paymentMethod: 'razorpay',
-            completedAt: new Date(),
-            metadata: {
-              source: 'test_verification'
+          // Find by transactionId for PaymentTransactionSimple
+          paymentTransaction = await PaymentTransaction.findOne({
+            transactionId: { $regex: razorpay_order_id }
+          });
+          
+          if (paymentTransaction) {
+            paymentTransaction.status = 'completed';
+            paymentTransaction.razorpayPaymentId = razorpay_payment_id;
+            paymentTransaction.razorpaySignature = razorpay_signature;
+            await paymentTransaction.save();
+            console.log('✓ PaymentTransactionSimple updated:', paymentTransaction.transactionId);
+            
+            // Trigger auto-enrollment after successful payment
+            try {
+              await triggerAutoEnrollment(paymentTransaction);
+              console.log('✅ Auto-enrollment triggered for transaction:', paymentTransaction.transactionId);
+            } catch (enrollmentError) {
+              console.warn('❌ Auto-enrollment failed:', enrollmentError.message);
+              // Don't fail the payment verification if enrollment fails
             }
-          });
-          paymentTransaction.addEvent('payment_success', {
-            paymentId: razorpay_payment_id,
-            signature: razorpay_signature
-          });
-          await paymentTransaction.save();
-          console.log('✓ New payment verification saved to database:', paymentTransaction.transactionId);
+          } else {
+            console.warn('PaymentTransactionSimple not found for order:', razorpay_order_id);
+          }
         }
       } catch (dbError) {
         console.warn('❌ Database update failed:', dbError.message);

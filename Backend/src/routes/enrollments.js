@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
 
+// Add debugging middleware
+router.use((req, res, next) => {
+  console.log(`📋 Enrollment Route: ${req.method} ${req.path}`);
+  console.log('📋 Headers:', JSON.stringify(req.headers, null, 2));
+  next();
+});
+
 // Import middleware
 const { auth } = require('../middleware/auth');
 const { checkRole } = require('../middleware/roleCheck');
 const {
+  validateAutoEnrollment,
   validateInitiateEnrollment,
   validateConfirmEnrollment,
   validateEnrollmentId,
@@ -22,6 +30,7 @@ const {
 
 // Import controllers
 const {
+  autoEnrollAfterPayment,
   initiateEnrollment,
   confirmEnrollment,
   getMyEnrollments,
@@ -30,6 +39,15 @@ const {
   addDevice,
   removeDevice
 } = require('../controllers/enrollmentController');
+
+// @desc    Auto-enroll user after successful payment (integration endpoint)
+// @route   POST /api/enrollments/auto-enroll
+// @access  Private (Internal)
+router.post('/auto-enroll', 
+  auth,
+  validateAutoEnrollment, 
+  autoEnrollAfterPayment
+);
 
 // @desc    Initiate enrollment process (create Razorpay order)
 // @route   POST /api/enrollments/initiate
@@ -82,9 +100,8 @@ router.get('/search',
         limit = 20
       } = req.query;
 
-      const Enrollment = require('../models/EnrollmentEnhanced');
+      const Enrollment = require('../models/Enrollment');
       
-      // Build filter
       const filter = {};
       
       if (req.user.role === 'guru') {
@@ -96,13 +113,13 @@ router.get('/search',
       }
       
       if (courseId) filter.courseId = courseId;
-      if (status) filter.status = status;
+      if (status) filter['access.status'] = status;
       if (enrollmentType) filter.enrollmentType = enrollmentType;
       
       if (dateFrom || dateTo) {
-        filter.enrollmentDate = {};
-        if (dateFrom) filter.enrollmentDate.$gte = new Date(dateFrom);
-        if (dateTo) filter.enrollmentDate.$lte = new Date(dateTo);
+        filter.createdAt = {};
+        if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+        if (dateTo) filter.createdAt.$lte = new Date(dateTo);
       }
 
       // Add text search if provided
@@ -114,11 +131,11 @@ router.get('/search',
       const options = {
         page: parseInt(page),
         limit: parseInt(limit),
-        sort: { enrollmentDate: -1 },
+        sort: { createdAt: -1 },
         populate: [
-          { path: 'userId', select: 'profile.firstName profile.lastName email' },
-          { path: 'courseId', select: 'title metadata.category pricing' },
-          { path: 'guruId', select: 'profile.firstName profile.lastName' }
+          { path: 'userId', select: 'name email profile' },
+          { path: 'courseId', select: 'title metadata pricing' },
+          { path: 'guruId', select: 'name profile' }
         ]
       };
 
@@ -163,7 +180,7 @@ router.get('/analytics',
       const userId = req.user.id;
       const userRole = req.user.role;
 
-      const Enrollment = require('../models/EnrollmentEnhanced');
+      const Enrollment = require('../models/Enrollment');
 
       // Build match conditions
       const matchConditions = {};
@@ -179,18 +196,46 @@ router.get('/analytics',
         if (endDate) matchConditions.enrollmentDate.$lte = new Date(endDate);
       }
 
-      // Get enrollment stats
-      const enrollmentStats = await Enrollment.getEnrollmentStats(
-        userRole === 'guru' ? userId : null,
-        startDate && endDate ? { startDate, endDate } : null
-      );
+      // Get enrollment stats using aggregation instead of static method
+      const enrollmentStats = await Enrollment.aggregate([
+        { $match: matchConditions },
+        {
+          $group: {
+            _id: null,
+            totalEnrollments: { $sum: 1 },
+            activeEnrollments: {
+              $sum: { $cond: [{ $eq: ['$access.status', 'active'] }, 1, 0] }
+            },
+            totalRevenue: { $sum: '$payment.amount' },
+            averageRevenue: { $avg: '$payment.amount' },
+            subscriptionEnrollments: {
+              $sum: { $cond: [{ $regex: ['$enrollmentType', 'subscription'] }, 1, 0] }
+            },
+            oneTimeEnrollments: {
+              $sum: { $cond: [{ $eq: ['$enrollmentType', 'one_time_purchase'] }, 1, 0] }
+            }
+          }
+        }
+      ]);
 
-      // Get revenue trends (this would integrate with PaymentTransaction model)
-      const PaymentTransaction = require('../models/PaymentTransaction');
-      const revenueTrends = await PaymentTransaction.getRevenueStats(
-        userRole === 'guru' ? userId : null,
-        period
-      );
+      // Get revenue trends (this would integrate with PaymentTransactionSimple model)
+      const PaymentTransactionSimple = require('../models/PaymentTransactionSimple');
+      const revenueTrends = await PaymentTransactionSimple.aggregate([
+        {
+          $match: {
+            status: 'completed',
+            ...(userRole === 'guru' && { userId: new require('mongoose').Types.ObjectId(userId) })
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$amount' },
+            totalTransactions: { $sum: 1 },
+            averageAmount: { $avg: '$amount' }
+          }
+        }
+      ]);
 
       res.status(200).json({
         success: true,
@@ -204,7 +249,7 @@ router.get('/analytics',
             subscriptionEnrollments: 0,
             oneTimeEnrollments: 0
           },
-          revenueTrends,
+          revenueTrends: revenueTrends[0] || { totalRevenue: 0, totalTransactions: 0, averageAmount: 0 },
           period,
           dateRange: { startDate, endDate }
         }
@@ -256,7 +301,7 @@ router.patch('/:id/progress',
       const { lectureId, timeSpent = 0, completed = false, progress } = req.body;
       const userId = req.user.id;
 
-      const Enrollment = require('../models/EnrollmentEnhanced');
+      const Enrollment = require('../models/Enrollment');
       const enrollment = await Enrollment.findOne({ _id: id, userId });
 
       if (!enrollment) {
@@ -267,7 +312,7 @@ router.patch('/:id/progress',
       }
 
       // Find or create lecture progress
-      let lectureProgress = enrollment.progress.completedLectures.find(
+      let lectureProgress = enrollment.progress?.completedLectures?.find(
         lp => lp.lectureId === lectureId
       );
 
@@ -278,7 +323,10 @@ router.patch('/:id/progress',
           lectureProgress.completedAt = new Date();
         }
       } else {
-        // Add new lecture progress
+        // Add new lecture progress - initialize array if needed
+        if (!enrollment.progress) enrollment.progress = { completedLectures: [], totalTimeSpent: 0 };
+        if (!enrollment.progress.completedLectures) enrollment.progress.completedLectures = [];
+        
         enrollment.progress.completedLectures.push({
           lectureId,
           completedAt: completed ? new Date() : null,
@@ -286,18 +334,18 @@ router.patch('/:id/progress',
         });
       }
 
-      // Update total time spent
-      enrollment.progress.totalTimeSpent += timeSpent;
-      enrollment.progress.lastAccessed = new Date();
-
-      // Update overall progress if provided
-      if (progress !== undefined) {
-        enrollment.progress.overallProgress = Math.max(enrollment.progress.overallProgress, progress);
+      // Initialize analytics if not exists
+      if (!enrollment.analytics) {
+        enrollment.analytics = { lastActivityDate: new Date() };
+      } else {
+        enrollment.analytics.lastActivityDate = new Date();
       }
 
-      // Check for certificate eligibility (90% completion)
-      if (enrollment.progress.overallProgress >= 90) {
-        enrollment.progress.certificateEligible = true;
+      // Update overall completion percentage if provided  
+      if (progress !== undefined) {
+        // Simple progress tracking - could be enhanced with more sophisticated logic
+        if (!enrollment.progress) enrollment.progress = {};
+        enrollment.progress.overallProgress = Math.max(enrollment.progress.overallProgress || 0, progress);
       }
 
       await enrollment.save();
@@ -337,7 +385,7 @@ router.patch('/:id/subscription',
       const { action, reason, effectiveDate } = req.body;
       const userId = req.user.id;
 
-      const Enrollment = require('../models/EnrollmentEnhanced');
+      const Enrollment = require('../models/Enrollment');
       const enrollment = await Enrollment.findOne({ _id: id, userId });
 
       if (!enrollment) {
@@ -347,7 +395,8 @@ router.patch('/:id/subscription',
         });
       }
 
-      if (enrollment.enrollmentType !== 'subscription') {
+      if (enrollment.enrollmentType !== 'subscription' && 
+          !enrollment.enrollmentType.includes('subscription')) {
         return res.status(400).json({
           success: false,
           message: 'This enrollment is not a subscription'
@@ -413,12 +462,12 @@ router.patch('/:id/subscription',
           });
       }
 
-      // Add audit log
-      enrollment.addAuditLog(`subscription_${action}`, userId, {
-        reason,
-        effectiveDate: effectiveDateTime,
-        previousStatus: enrollment.subscription.status
-      }, req.ip);
+      // Add audit log (simplified - the model doesn't have addAuditLog method)
+      // enrollment.addAuditLog(`subscription_${action}`, userId, {
+      //   reason,
+      //   effectiveDate: effectiveDateTime,
+      //   previousStatus: enrollment.subscription.status
+      // }, req.ip);
 
       await enrollment.save();
 
@@ -457,7 +506,7 @@ router.delete('/:id',
       const userId = req.user.id;
       const userRole = req.user.role;
 
-      const Enrollment = require('../models/EnrollmentEnhanced');
+      const Enrollment = require('../models/Enrollment');
       const enrollment = await Enrollment.findById(id);
 
       if (!enrollment) {
@@ -480,21 +529,20 @@ router.delete('/:id',
       }
 
       // Update enrollment status
-      enrollment.status = 'cancelled';
-      enrollment.access.isActive = false;
+      enrollment.access.status = 'cancelled';
       
       if (enrollment.subscription) {
         enrollment.subscription.status = 'cancelled';
         enrollment.subscription.autoRenew = false;
       }
 
-      // Add audit log
-      enrollment.addAuditLog('cancelled', userId, {
-        reason,
-        requestRefund,
-        refundReason,
-        cancelledBy: userRole
-      }, req.ip);
+      // Add audit log (simplified)
+      // enrollment.addAuditLog('cancelled', userId, {
+      //   reason,
+      //   requestRefund,
+      //   refundReason,
+      //   cancelledBy: userRole
+      // }, req.ip);
 
       await enrollment.save();
 
@@ -515,7 +563,7 @@ router.delete('/:id',
         data: {
           enrollment: {
             id: enrollment._id,
-            status: enrollment.status,
+            status: enrollment.access.status,
             cancelledAt: new Date()
           },
           refund: refundInfo
@@ -548,9 +596,9 @@ router.get('/:id/devices',
       const { id } = req.params;
       const userId = req.user.id;
 
-      const Enrollment = require('../models/EnrollmentEnhanced');
+      const Enrollment = require('../models/Enrollment');
       const enrollment = await Enrollment.findOne({ _id: id, userId })
-        .select('access.currentDevices access.deviceLimit');
+        .select('access.accessDevices access.maxConcurrentDevices');
 
       if (!enrollment) {
         return res.status(404).json({
@@ -559,7 +607,7 @@ router.get('/:id/devices',
         });
       }
 
-      const activeDevices = enrollment.access.currentDevices.filter(device => device.isActive);
+      const activeDevices = enrollment.access.accessDevices?.filter(device => device.isActive) || [];
 
       res.status(200).json({
         success: true,
@@ -567,15 +615,14 @@ router.get('/:id/devices',
         data: {
           devices: activeDevices.map(device => ({
             deviceId: device.deviceId,
-            platform: device.deviceInfo.platform,
-            browser: device.deviceInfo.browser,
-            os: device.deviceInfo.os,
-            lastAccess: device.deviceInfo.lastAccess,
-            registeredAt: device.registeredAt
+            platform: device.platform,
+            deviceType: device.deviceType,
+            lastUsed: device.lastUsed,
+            registeredAt: device.lastUsed // Using lastUsed as proxy for registeredAt
           })),
           deviceCount: activeDevices.length,
-          deviceLimit: enrollment.access.deviceLimit,
-          canAddDevice: activeDevices.length < enrollment.access.deviceLimit
+          deviceLimit: enrollment.access.maxConcurrentDevices,
+          canAddDevice: activeDevices.length < enrollment.access.maxConcurrentDevices
         }
       });
 
