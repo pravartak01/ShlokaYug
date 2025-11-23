@@ -238,29 +238,79 @@ router.get('/my-payments',
     try {
       const userId = req.user.id;
       const { page = 1, limit = 10, status, dateFrom, dateTo } = req.query;
+      let payments = [];
 
-      // Return empty payment history for now to avoid database dependency
-      // In a real app, this would query the PaymentTransaction collection
-      const mockPaymentData = {
-        docs: [],
-        totalDocs: 0,
-        page: parseInt(page),
-        totalPages: 0,
-        hasNextPage: false,
-        hasPrevPage: false
-      };
+      // Try to get from database first
+      let PaymentTransaction;
+      try {
+        PaymentTransaction = require('../models/PaymentTransactionSimple');
+      } catch (error) {
+        PaymentTransaction = null;
+      }
+      
+      if (PaymentTransaction) {
+        try {
+          const dbPayments = await PaymentTransaction.find({ userId })
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit))
+            .skip((parseInt(page) - 1) * parseInt(limit));
+          
+          payments = dbPayments.map(payment => ({
+            id: payment._id,
+            transactionId: payment.transactionId,
+            status: payment.status,
+            amount: payment.amount,
+            paymentMethod: payment.paymentMethod,
+            createdAt: payment.createdAt,
+            completedAt: payment.completedAt
+          }));
+          
+          if (payments.length > 0) {
+            console.log(`✓ Found ${payments.length} payments in database for user ${userId}`);
+          }
+        } catch (dbError) {
+          console.warn('❌ Database query failed:', dbError.message);
+        }
+      }
+        
+        // Get from in-memory storage if database is empty or failed
+        if (payments.length === 0 && global.testTransactions) {
+          console.log('💾 Checking in-memory storage for payment history');
+          const userTransactions = [];
+          for (const [orderId, transaction] of global.testTransactions) {
+            if (transaction.userId === userId) {
+              userTransactions.push({
+                id: orderId,
+                transactionId: `TXN_${orderId.slice(-8)}`,
+                status: transaction.status,
+                amount: transaction.amount,
+                paymentMethod: transaction.paymentMethod || 'razorpay',
+                createdAt: transaction.createdAt || new Date(),
+                completedAt: transaction.completedAt
+              });
+            }
+          }
+          payments = userTransactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          
+          if (payments.length > 0) {
+            console.log(`✓ Found ${payments.length} payments in memory for user ${userId}`);
+          }
+        }
+
+      const totalPayments = payments.length;
+      const totalPages = Math.ceil(totalPayments / parseInt(limit));
 
       res.status(200).json({
         success: true,
         message: 'Payment history retrieved successfully',
         data: {
-          payments: [],
+          payments: payments,
           pagination: {
-            currentPage: mockPaymentData.page,
-            totalPages: mockPaymentData.totalPages,
-            totalPayments: mockPaymentData.totalDocs,
-            hasNext: mockPaymentData.hasNextPage,
-            hasPrev: mockPaymentData.hasPrevPage
+            currentPage: parseInt(page),
+            totalPages: totalPages,
+            totalPayments: totalPayments,
+            hasNext: parseInt(page) < totalPages,
+            hasPrev: parseInt(page) > 1
           }
         }
       });
@@ -288,7 +338,15 @@ router.get('/revenue-analytics',
       const userRole = req.user.role;
       const { period = 'month', startDate, endDate, courseId } = req.query;
 
-      const PaymentTransaction = require('../models/PaymentTransaction');
+      let PaymentTransaction;
+      try {
+        PaymentTransaction = require('../models/PaymentTransactionSimple');
+      } catch (error) {
+        return res.status(500).json({
+          success: false,
+          message: 'Payment analytics not available - database model not found'
+        });
+      }
 
       // Get revenue stats
       const revenueStats = await PaymentTransaction.getRevenueStats(
@@ -410,7 +468,15 @@ router.get('/pending-distributions',
   checkRole(['admin']),
   async (req, res) => {
     try {
-      const PaymentTransaction = require('../models/PaymentTransaction');
+      let PaymentTransaction;
+      try {
+        PaymentTransaction = require('../models/PaymentTransactionSimple');
+      } catch (error) {
+        return res.status(500).json({
+          success: false,
+          message: 'Distribution data not available - database model not found'
+        });
+      }
       
       const pendingDistributions = await PaymentTransaction.findPendingDistributions();
 
@@ -487,7 +553,15 @@ router.patch('/:id/distribute',
       const { id } = req.params;
       const { notes } = req.body;
 
-      const PaymentTransaction = require('../models/PaymentTransaction');
+      let PaymentTransaction;
+      try {
+        PaymentTransaction = require('../models/PaymentTransactionSimple');
+      } catch (error) {
+        return res.status(500).json({
+          success: false,
+          message: 'Payment system not available - database model not found'
+        });
+      }
       const payment = await PaymentTransaction.findById(id);
 
       if (!payment) {

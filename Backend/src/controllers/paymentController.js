@@ -1,6 +1,16 @@
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
-const PaymentTransaction = require('../models/PaymentTransaction');
+
+// Use simplified model for development/testing
+let PaymentTransaction;
+try {
+  PaymentTransaction = require('../models/PaymentTransactionSimple');
+  console.log('Using simplified PaymentTransaction model for development');
+} catch (error) {
+  console.warn('PaymentTransaction model not available, using fallback');
+  PaymentTransaction = null;
+}
+
 const Enrollment = require('../models/EnrollmentEnhanced');
 const User = require('../models/User');
 
@@ -51,32 +61,50 @@ const createPaymentOrder = async (req, res) => {
     console.log('Creating Razorpay order with options:', orderOptions);
     const razorpayOrder = await razorpay.orders.create(orderOptions);
     
-    // Create payment transaction record
-    try {
-      const paymentTransaction = new PaymentTransaction({
-        userId: userId,
-        courseId: courseId,
-        guruId: userId, // For test purposes, using same user
-        razorpay: {
-          orderId: razorpayOrder.id
-        },
-        amount: {
-          total: amount,
-          coursePrice: amount,
-          currency: currency.toUpperCase()
-        },
-        status: 'pending',
-        metadata: {
-          source: 'api',
-          enrollmentType
-        }
-      });
-      
-      await paymentTransaction.save();
-      console.log('Payment transaction created:', paymentTransaction.transactionId);
-    } catch (dbError) {
-      console.warn('Failed to create payment transaction in DB:', dbError.message);
-      // Continue with Razorpay order creation even if DB fails
+    // Create payment transaction record with proper error handling
+    const transactionData = {
+      userId: userId,
+      courseId: courseId,
+      guruId: userId, // For test purposes, using same user
+      razorpay: {
+        orderId: razorpayOrder.id
+      },
+      amount: {
+        total: amount,
+        coursePrice: amount,
+        currency: currency.toUpperCase()
+      },
+      status: 'pending',
+      metadata: {
+        source: 'api',
+        enrollmentType,
+        sessionId: `session_${Date.now()}`
+      }
+    };
+    
+    // Store transaction data for test/development - both in memory and database
+    global.testTransactions = global.testTransactions || new Map();
+    global.testTransactions.set(razorpayOrder.id, transactionData);
+    console.log('✓ Transaction stored in memory:', razorpayOrder.id);
+    
+    // Try to save to database
+    let savedTransaction = null;
+    if (PaymentTransaction) {
+      try {
+        savedTransaction = new PaymentTransaction(transactionData);
+        savedTransaction.addEvent('transaction_created', {
+          razorpayOrderId: razorpayOrder.id,
+          amount: amount,
+          currency: currency
+        });
+        await savedTransaction.save();
+        console.log('✓ Payment transaction saved to database:', savedTransaction.transactionId);
+      } catch (dbError) {
+        console.warn('❌ Database save failed:', dbError.message);
+        console.log('💾 Using in-memory storage as fallback');
+      }
+    } else {
+      console.log('💾 PaymentTransaction model not available, using in-memory storage only');
     }
 
     res.status(200).json({
@@ -144,31 +172,61 @@ const verifyPaymentSignature = async (req, res) => {
       });
     }
 
-    // Create payment transaction record on successful verification
-    try {
-      const paymentTransaction = new PaymentTransaction({
-        userId: req.user.id,
-        courseId: req.body.courseId || '507f1f77bcf86cd799439011', // Default test course
-        razorpay: {
-          orderId: razorpay_order_id,
-          paymentId: razorpay_payment_id
-        },
-        amount: {
-          total: 1999.50, // Default test amount
-          currency: 'INR'
-        },
-        status: 'success',
-        paymentMethod: 'razorpay',
-        completedAt: new Date(),
-        metadata: {
-          source: 'test_verification'
+    // Update transaction status on successful verification
+    if (global.testTransactions && global.testTransactions.has(razorpay_order_id)) {
+      const transaction = global.testTransactions.get(razorpay_order_id);
+      transaction.status = 'success';
+      transaction.completedAt = new Date();
+      transaction.razorpay.paymentId = razorpay_payment_id;
+      transaction.paymentMethod = 'razorpay';
+      global.testTransactions.set(razorpay_order_id, transaction);
+      console.log('✓ Payment verified and updated in memory storage');
+    }
+    
+    // Try to save/update in database
+    if (PaymentTransaction) {
+      try {
+        let paymentTransaction = await PaymentTransaction.findOne({
+          'razorpay.orderId': razorpay_order_id
+        });
+        
+        if (paymentTransaction) {
+          // Update existing transaction
+          paymentTransaction.markSuccess(razorpay_payment_id, razorpay_signature);
+          await paymentTransaction.save();
+          console.log('✓ Payment verification updated in database:', paymentTransaction.transactionId);
+        } else {
+          // Create new record if not found (fallback)
+          paymentTransaction = new PaymentTransaction({
+            userId: req.user.id,
+            courseId: req.body.courseId || '507f1f77bcf86cd799439011',
+            razorpay: {
+              orderId: razorpay_order_id,
+              paymentId: razorpay_payment_id,
+              signature: razorpay_signature
+            },
+            amount: {
+              total: 1999.50,
+              currency: 'INR'
+            },
+            status: 'success',
+            paymentMethod: 'razorpay',
+            completedAt: new Date(),
+            metadata: {
+              source: 'test_verification'
+            }
+          });
+          paymentTransaction.addEvent('payment_success', {
+            paymentId: razorpay_payment_id,
+            signature: razorpay_signature
+          });
+          await paymentTransaction.save();
+          console.log('✓ New payment verification saved to database:', paymentTransaction.transactionId);
         }
-      });
-
-      await paymentTransaction.save();
-    } catch (dbError) {
-      console.warn('Failed to create payment transaction:', dbError.message);
-      // Continue with verification success even if DB fails
+      } catch (dbError) {
+        console.warn('❌ Database update failed:', dbError.message);
+        console.log('💾 Payment verification tracked in memory only');
+      }
     }
 
     res.status(200).json({
@@ -548,16 +606,46 @@ const getPaymentStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    let paymentTransaction = null;
 
-    // Find payment transaction
-    const paymentTransaction = await PaymentTransaction.findOne({
-      $or: [
-        { transactionId: id },
-        { 'razorpay.paymentId': id },
-        { 'razorpay.orderId': id }
-      ],
-      userId
-    }).populate('enrollmentId courseId', 'title status access.expiresAt');
+    // First try to find in database
+    if (PaymentTransaction) {
+      try {
+        paymentTransaction = await PaymentTransaction.findOne({
+          $or: [
+            { transactionId: id },
+            { 'razorpay.paymentId': id },
+            { 'razorpay.orderId': id }
+          ],
+          userId
+        }).populate('enrollmentId courseId', 'title status access.expiresAt');
+        
+        if (paymentTransaction) {
+          console.log('✓ Payment transaction found in database:', paymentTransaction.transactionId);
+        }
+      } catch (dbError) {
+        console.warn('❌ Database lookup failed:', dbError.message);
+      }
+    }
+
+    // If not found in database, check in-memory storage (for test environment)
+    if (!paymentTransaction && global.testTransactions) {
+      const memoryTransaction = global.testTransactions.get(id);
+      if (memoryTransaction && memoryTransaction.userId === userId) {
+        paymentTransaction = {
+          _id: id,
+          transactionId: `TXN_${id.slice(-8)}`,
+          status: memoryTransaction.status,
+          amount: memoryTransaction.amount,
+          paymentMethod: memoryTransaction.paymentMethod || 'razorpay',
+          createdAt: memoryTransaction.createdAt,
+          completedAt: memoryTransaction.completedAt,
+          failedAt: memoryTransaction.failedAt,
+          razorpay: memoryTransaction.razorpay,
+          refund: { isRefunded: false }
+        };
+      }
+    }
 
     if (!paymentTransaction) {
       return res.status(404).json({
@@ -580,9 +668,9 @@ const getPaymentStatus = async (req, res) => {
           completedAt: paymentTransaction.completedAt,
           failedAt: paymentTransaction.failedAt
         },
-        enrollment: paymentTransaction.enrollmentId,
-        course: paymentTransaction.courseId,
-        refund: paymentTransaction.refund.isRefunded ? {
+        enrollment: paymentTransaction.enrollmentId || null,
+        course: paymentTransaction.courseId || null,
+        refund: paymentTransaction.refund && paymentTransaction.refund.isRefunded ? {
           isRefunded: paymentTransaction.refund.isRefunded,
           refundAmount: paymentTransaction.refund.refundAmount,
           refundedAt: paymentTransaction.refund.refundedAt
