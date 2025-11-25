@@ -23,6 +23,10 @@ const progressRoutes = require('./routes/progress');
 const assessmentRoutes = require('./routes/assessments');
 const contentRoutes = require('./routes/content');
 
+// Phase 4 Routes - Video Sharing Platform (YouTube-like)
+const videoRoutes = require('./routes/videos');
+const shortsRoutes = require('./routes/shorts');
+
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -155,6 +159,10 @@ app.use(`/api/${API_VERSION}/subscriptions`, subscriptionRoutes);
 app.use(`/api/${API_VERSION}/progress`, progressRoutes);
 app.use(`/api/${API_VERSION}/assessments`, assessmentRoutes);
 app.use(`/api/${API_VERSION}/content`, contentRoutes);
+
+// Phase 4 Routes - Video Sharing Platform (YouTube-like)
+app.use(`/api/${API_VERSION}/videos`, videoRoutes);
+app.use(`/api/${API_VERSION}/shorts`, shortsRoutes);
 
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
