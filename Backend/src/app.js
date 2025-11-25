@@ -18,6 +18,11 @@ const enrollmentRoutes = require('./routes/enrollments');
 const paymentRoutes = require('./routes/payments');
 const subscriptionRoutes = require('./routes/subscriptions');
 
+// Phase 3 Routes - Critical LMS Systems
+const progressRoutes = require('./routes/progress');
+const assessmentRoutes = require('./routes/assessments');
+const contentRoutes = require('./routes/content');
+
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -145,6 +150,11 @@ app.use(`/api/${API_VERSION}/courses`, courseRoutes);
 app.use(`/api/${API_VERSION}/enrollments`, enrollmentRoutes);
 app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
 app.use(`/api/${API_VERSION}/subscriptions`, subscriptionRoutes);
+
+// Phase 3 Routes - Critical LMS Systems
+app.use(`/api/${API_VERSION}/progress`, progressRoutes);
+app.use(`/api/${API_VERSION}/assessments`, assessmentRoutes);
+app.use(`/api/${API_VERSION}/content`, contentRoutes);
 
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
