@@ -27,6 +27,9 @@ const contentRoutes = require('./routes/content');
 const videoRoutes = require('./routes/videos');
 const shortsRoutes = require('./routes/shorts');
 
+// Phase 5 Routes - Community Features (Twitter-like)
+const communityRoutes = require('./routes/community');
+
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -164,12 +167,14 @@ app.use(`/api/${API_VERSION}/content`, contentRoutes);
 app.use(`/api/${API_VERSION}/videos`, videoRoutes);
 app.use(`/api/${API_VERSION}/shorts`, shortsRoutes);
 
+// Phase 5 Routes - Community Features (Twitter-like)
+app.use(`/api/${API_VERSION}/community`, communityRoutes);
+
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
 // app.use(`/api/${API_VERSION}/chandas`, chandasRoutes);
 // app.use(`/api/${API_VERSION}/audio`, audioRoutes);
 // app.use(`/api/${API_VERSION}/ai`, aiRoutes);
-// app.use(`/api/${API_VERSION}/community`, communityRoutes);
 // app.use(`/api/${API_VERSION}/live-sessions`, liveSessionRoutes);
 // app.use(`/api/${API_VERSION}/gamification`, gamificationRoutes);
 // app.use(`/api/${API_VERSION}/admin`, adminRoutes);
