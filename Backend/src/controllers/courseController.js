@@ -31,12 +31,23 @@ const createCourse = async (req, res) => {
       });
     }
 
-    // Check if user is a verified guru
+    // CRITICAL SECURITY: Check if user is a verified guru
     const user = await User.findById(req.user.id);
-    if (!user || user.role !== 'guru' || !user.guruProfile.isVerified) {
+    if (!user || user.role !== 'guru') {
       return res.status(403).json({
         success: false,
-        message: 'Only verified gurus can create courses'
+        message: 'Only gurus can create courses. Please apply for guru status.',
+        code: 'GURU_ROLE_REQUIRED'
+      });
+    }
+    
+    // VERIFICATION GATE: Block unverified gurus
+    if (!user.guruProfile?.verification?.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Guru verification required. Please wait for admin approval.',
+        code: 'GURU_VERIFICATION_REQUIRED',
+        applicationStatus: user.guruProfile?.applicationStatus || 'not_applied'
       });
     }
 

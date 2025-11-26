@@ -35,6 +35,20 @@ class CommunityController {
       const userId = req.user.id;
       const { text, hashtags, mentions, videoId, visibility = 'public', location } = req.body;
       
+      // CRITICAL SECURITY: Check for teaching-related content from unverified users
+      if (hashtags?.includes('guru') || hashtags?.includes('teacher') || 
+          text?.toLowerCase().includes('teaching') || text?.toLowerCase().includes('sanskrit lesson')) {
+        if (req.user.role !== 'guru' || !req.user.guruProfile?.verification?.isVerified) {
+          return res.status(403).json({
+            success: false,
+            error: {
+              message: 'Teaching-related content requires verified guru status',
+              code: 'TEACHING_CONTENT_RESTRICTED'
+            }
+          });
+        }
+      }
+      
       // Validate content
       if (!text && !videoId && (!req.files || !req.files.images)) {
         return res.status(400).json({

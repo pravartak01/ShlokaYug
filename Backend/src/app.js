@@ -30,6 +30,9 @@ const shortsRoutes = require('./routes/shorts');
 // Phase 5 Routes - Community Features (Twitter-like)
 const communityRoutes = require('./routes/community');
 
+// CRITICAL: Admin Routes for Platform Management
+const adminRoutes = require('./routes/admin');
+
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -170,6 +173,9 @@ app.use(`/api/${API_VERSION}/shorts`, shortsRoutes);
 // Phase 5 Routes - Community Features (Twitter-like)
 app.use(`/api/${API_VERSION}/community`, communityRoutes);
 
+// CRITICAL: Admin Routes (Must be protected)
+app.use(`/api/${API_VERSION}/admin`, adminRoutes);
+
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
 // app.use(`/api/${API_VERSION}/chandas`, chandasRoutes);
@@ -205,6 +211,15 @@ async function initializeServices() {
     // Initialize Cloudinary
     initializeCloudinary();
     console.log('✅ Cloudinary configured successfully');
+    
+    // CRITICAL: Bootstrap admin user
+    const { bootstrapAdmin } = require('./utils/adminBootstrap');
+    const adminBootstrapResult = await bootstrapAdmin();
+    if (adminBootstrapResult.success) {
+      console.log('✅ Admin system initialized');
+    } else {
+      console.error('⚠️  Admin bootstrap warning:', adminBootstrapResult.error);
+    }
     
     console.log('🚀 All services initialized successfully');
   } catch (error) {
