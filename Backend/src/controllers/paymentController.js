@@ -4,7 +4,7 @@ const axios = require('axios');
 // Helper function to trigger auto-enrollment after successful payment
 const triggerAutoEnrollment = async (paymentTransaction) => {
   try {
-    const axios = require('axios');
+    console.log('🎓 Starting auto-enrollment for transaction:', paymentTransaction.transactionId);
     
     // Prepare auto-enrollment data
     const enrollmentData = {
@@ -13,34 +13,60 @@ const triggerAutoEnrollment = async (paymentTransaction) => {
       courseId: paymentTransaction.metadata?.courseId || paymentTransaction.courseId
     };
 
-    console.log('🎓 Triggering auto-enrollment:', enrollmentData);
+    console.log('🎓 Enrollment data:', JSON.stringify(enrollmentData, null, 2));
 
-    // Call the auto-enrollment endpoint internally
-    const enrollmentController = require('./enrollmentController');
-    
-    // Create a mock request/response for the controller
-    const mockReq = {
-      body: enrollmentData
-    };
-    
-    const mockRes = {
-      status: (code) => ({
-        json: (data) => {
-          if (code >= 200 && code < 300) {
-            console.log('✅ Auto-enrollment successful:', data.enrollment?.enrollmentId);
-            return data;
-          } else {
-            throw new Error(data.error || 'Auto-enrollment failed');
-          }
-        }
-      })
-    };
+    // Check if enrollment already exists
+    const Enrollment = require('../models/Enrollment');
+    const existingEnrollment = await Enrollment.findOne({
+      userId: enrollmentData.userId,
+      courseId: enrollmentData.courseId
+    });
 
-    // Call the auto-enrollment controller method
-    return await enrollmentController.autoEnrollAfterPayment(mockReq, mockRes);
+    if (existingEnrollment) {
+      console.log('✅ Enrollment already exists:', existingEnrollment._id);
+      return { success: true, enrollment: existingEnrollment };
+    }
+
+    // Create new enrollment
+    const Course = require('../models/Course');
+    const course = await Course.findById(enrollmentData.courseId);
+    
+    if (!course) {
+      throw new Error('Course not found for enrollment');
+    }
+
+    const newEnrollment = new Enrollment({
+      userId: enrollmentData.userId,
+      courseId: enrollmentData.courseId,
+      guruId: course.instructor?.userId || course.instructor,
+      enrollmentType: 'one_time_purchase',
+      payment: {
+        paymentId: paymentTransaction.razorpayPaymentId || paymentTransaction.razorpay?.paymentId,
+        razorpayOrderId: paymentTransaction.razorpay?.orderId || paymentTransaction.razorpayOrderId,
+        razorpayPaymentId: paymentTransaction.razorpayPaymentId,
+        razorpaySignature: paymentTransaction.razorpaySignature,
+        amount: paymentTransaction.amount?.total || paymentTransaction.amount,
+        currency: paymentTransaction.amount?.currency || 'INR',
+        status: 'completed',
+        paidAt: new Date()
+      },
+      access: {
+        status: 'active',
+        grantedAt: new Date()
+      },
+      analytics: {
+        enrollmentSource: 'payment'
+      }
+    });
+
+    await newEnrollment.save();
+    console.log('✅ Auto-enrollment successful:', newEnrollment._id);
+    
+    return { success: true, enrollment: newEnrollment };
     
   } catch (error) {
     console.error('❌ Auto-enrollment failed:', error);
+    console.error('Stack:', error.stack);
     throw error;
   }
 };
@@ -71,7 +97,8 @@ const razorpay = new Razorpay({
 const createPaymentOrder = async (req, res) => {
   try {
     const { courseId, amount, currency = 'INR', enrollmentType = 'one_time' } = req.body;
-    const userId = req.user.id;
+    // Get userId from request if authenticated, otherwise use a test user ID
+    const userId = req.user?.id || 'test_user_' + Date.now();
 
     // Validate amount
     if (!amount || amount <= 0) {

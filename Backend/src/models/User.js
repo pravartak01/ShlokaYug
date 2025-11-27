@@ -870,12 +870,16 @@ userSchema.methods.generateEmailVerificationToken = function() {
   return verifyToken;
 };
 
-// Method to apply to become a guru
+// Method to apply to become a guru - AUTO-APPROVE FOR DEVELOPMENT
 userSchema.methods.applyForGuru = function(credentials, experience) {
-  this.guruProfile.applicationStatus = 'pending';
+  this.role = 'guru';
+  this.guruProfile.applicationStatus = 'approved';
   this.guruProfile.credentials = credentials;
   this.guruProfile.experience = experience;
   this.guruProfile.verification.applicationDate = new Date();
+  this.guruProfile.verification.isVerified = true;
+  this.guruProfile.verification.verifiedAt = new Date();
+  this.guruProfile.verification.verificationNotes = 'Auto-approved for development';
   return this.save();
 };
 

@@ -23,11 +23,11 @@ class GoogleAuthService {
       // Verify the token
       const ticket = await this.client.verifyIdToken({
         idToken: tokenId,
-        audience: process.env.GOOGLE_CLIENT_ID
+        audience: process.env.GOOGLE_CLIENT_ID,
       });
 
       const payload = ticket.getPayload();
-      
+
       if (!payload) {
         throw new Error('Invalid token payload');
       }
@@ -50,16 +50,15 @@ class GoogleAuthService {
 
       // Return normalized user data
       return {
-        sub: payload.sub,              // Google user ID
+        sub: payload.sub, // Google user ID
         email: payload.email,
         email_verified: payload.email_verified,
         given_name: payload.given_name,
         family_name: payload.family_name,
         name: payload.name,
         picture: payload.picture,
-        locale: payload.locale
+        locale: payload.locale,
       };
-
     } catch (error) {
       console.error('Google token validation error:', error);
       throw new Error(`Invalid Google token: ${error.message}`);
@@ -74,7 +73,7 @@ class GoogleAuthService {
   getAuthUrl(state = null) {
     const scopes = [
       'https://www.googleapis.com/auth/userinfo.email',
-      'https://www.googleapis.com/auth/userinfo.profile'
+      'https://www.googleapis.com/auth/userinfo.profile',
     ];
 
     const params = {
@@ -82,7 +81,7 @@ class GoogleAuthService {
       scope: scopes,
       include_granted_scopes: true,
       response_type: 'code',
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
     };
 
     if (state) {
@@ -112,9 +111,8 @@ class GoogleAuthService {
 
       return {
         tokens,
-        userInfo
+        userInfo,
       };
-
     } catch (error) {
       console.error('Token exchange error:', error);
       throw new Error(`Token exchange failed: ${error.message}`);
@@ -133,8 +131,8 @@ class GoogleAuthService {
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
+            Authorization: `Bearer ${accessToken}`,
+          },
         }
       );
 
@@ -144,7 +142,6 @@ class GoogleAuthService {
 
       const userInfo = await response.json();
       return userInfo;
-
     } catch (error) {
       console.error('Get user info error:', error);
       throw new Error(`Failed to get user info: ${error.message}`);
@@ -167,14 +164,13 @@ class GoogleAuthService {
       }
 
       const tokenInfo = await response.json();
-      
+
       // Verify audience
       if (tokenInfo.audience !== process.env.GOOGLE_CLIENT_ID) {
         throw new Error('Token audience mismatch');
       }
 
       return tokenInfo;
-
     } catch (error) {
       console.error('Access token verification error:', error);
       throw new Error(`Access token verification failed: ${error.message}`);
@@ -187,22 +183,18 @@ class GoogleAuthService {
    */
   async revokeToken(token) {
     try {
-      const response = await fetch(
-        `https://oauth2.googleapis.com/revoke?token=${token}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }
-      );
+      const response = await fetch(`https://oauth2.googleapis.com/revoke?token=${token}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
 
       if (!response.ok) {
         throw new Error('Token revocation failed');
       }
 
       return true;
-
     } catch (error) {
       console.error('Token revocation error:', error);
       throw new Error(`Token revocation failed: ${error.message}`);
@@ -218,10 +210,10 @@ class GoogleAuthService {
       clientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
       redirectUri: process.env.GOOGLE_REDIRECT_URI,
       isConfigured: !!(
-        process.env.GOOGLE_CLIENT_ID && 
-        process.env.GOOGLE_CLIENT_SECRET && 
+        process.env.GOOGLE_CLIENT_ID &&
+        process.env.GOOGLE_CLIENT_SECRET &&
         process.env.GOOGLE_REDIRECT_URI
-      )
+      ),
     };
   }
 }
@@ -233,5 +225,5 @@ module.exports = {
   googleAuthService,
   validateGoogleToken: (tokenId) => googleAuthService.validateGoogleToken(tokenId),
   getGoogleAuthUrl: (state) => googleAuthService.getAuthUrl(state),
-  exchangeCodeForTokens: (code) => googleAuthService.exchangeCodeForTokens(code)
+  exchangeCodeForTokens: (code) => googleAuthService.exchangeCodeForTokens(code),
 };

@@ -3,13 +3,14 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { getHinduDate, getDailySanskritQuote, getFormattedDate, fetchPanchangData, PanchangData } from './utils';
+import { useAuth } from '../../context/AuthContext';
 
 interface HeaderProps {
-  userName?: string;
   children?: React.ReactNode;
 }
 
-export default function Header({ userName = 'Shantanu', children }: HeaderProps) {
+export default function Header({ children }: HeaderProps) {
+  const { user } = useAuth();
   const [panchangData, setPanchangData] = useState<PanchangData | null>(null);
   const [loading, setLoading] = useState(true);
   const hinduDate = getHinduDate();
@@ -38,7 +39,7 @@ export default function Header({ userName = 'Shantanu', children }: HeaderProps)
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-1">
           <Text className="text-white text-2xl font-bold">
-            Namaste, {userName} 👋
+            Namaste, {user?.profile?.firstName || user?.username || 'Guest'} 👋
           </Text>
           <Text className="text-white/90 text-sm mt-1">
             {formattedDate}

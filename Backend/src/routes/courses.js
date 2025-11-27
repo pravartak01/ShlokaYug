@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 
 // Import middleware
@@ -18,7 +19,7 @@ const {
   publishCourse,
   unpublishCourse,
   getInstructorCourses,
-  getCourseAnalytics
+  getCourseAnalytics,
 } = require('../controllers/courseController');
 
 // Import validations
@@ -34,7 +35,7 @@ const {
   publishCourseValidation,
   unpublishCourseValidation,
   getInstructorCoursesValidation,
-  getCourseAnalyticsValidation
+  getCourseAnalyticsValidation,
 } = require('../middleware/courseValidation');
 
 // ============================================================================
@@ -46,20 +47,14 @@ const {
  * @desc    Get all published courses with filtering and pagination
  * @access  Public
  */
-router.get('/', 
-  getAllCoursesValidation,
-  getAllCourses
-);
+router.get('/', getAllCoursesValidation, getAllCourses);
 
 /**
  * @route   GET /api/courses/:id
  * @desc    Get course by ID (published courses or enrolled/instructor access)
  * @access  Public/Private
  */
-router.get('/:id',
-  getCourseValidation,
-  getCourseById
-);
+router.get('/:id', getCourseValidation, getCourseById);
 
 // ============================================================================
 // PROTECTED ROUTES (Authentication required)
@@ -70,34 +65,21 @@ router.get('/:id',
  * @desc    Create a new course
  * @access  Private (Gurus only)
  */
-router.post('/',
-  auth,
-  checkRole(['guru']),
-  createCourseValidation,
-  createCourse
-);
+router.post('/', auth, checkRole(['guru']), createCourseValidation, createCourse);
 
 /**
  * @route   PUT /api/courses/:id
  * @desc    Update course
  * @access  Private (Instructor only)
  */
-router.put('/:id',
-  auth,
-  updateCourseValidation,
-  updateCourse
-);
+router.put('/:id', auth, updateCourseValidation, updateCourse);
 
 /**
  * @route   DELETE /api/courses/:id
  * @desc    Delete course (soft delete)
  * @access  Private (Instructor only)
  */
-router.delete('/:id',
-  auth,
-  deleteCourseValidation,
-  deleteCourse
-);
+router.delete('/:id', auth, deleteCourseValidation, deleteCourse);
 
 // ============================================================================
 // COURSE CONTENT MANAGEMENT ROUTES
@@ -108,29 +90,22 @@ router.delete('/:id',
  * @desc    Add unit to course
  * @access  Private (Instructor only)
  */
-router.post('/:id/units',
-  auth,
-  addUnitValidation,
-  addUnit
-);
+router.post('/:id/units', auth, addUnitValidation, addUnit);
 
 /**
  * @route   POST /api/courses/:courseId/units/:unitId/lessons
  * @desc    Add lesson to unit
  * @access  Private (Instructor only)
  */
-router.post('/:courseId/units/:unitId/lessons',
-  auth,
-  addLessonValidation,
-  addLesson
-);
+router.post('/:courseId/units/:unitId/lessons', auth, addLessonValidation, addLesson);
 
 /**
  * @route   POST /api/courses/:courseId/units/:unitId/lessons/:lessonId/lectures
  * @desc    Add lecture to lesson
  * @access  Private (Instructor only)
  */
-router.post('/:courseId/units/:unitId/lessons/:lessonId/lectures',
+router.post(
+  '/:courseId/units/:unitId/lessons/:lessonId/lectures',
   auth,
   addLectureValidation,
   addLecture
@@ -145,22 +120,14 @@ router.post('/:courseId/units/:unitId/lessons/:lessonId/lectures',
  * @desc    Publish course
  * @access  Private (Instructor only)
  */
-router.patch('/:id/publish',
-  auth,
-  publishCourseValidation,
-  publishCourse
-);
+router.patch('/:id/publish', auth, publishCourseValidation, publishCourse);
 
 /**
  * @route   PATCH /api/courses/:id/unpublish
  * @desc    Unpublish course
  * @access  Private (Instructor only)
  */
-router.patch('/:id/unpublish',
-  auth,
-  unpublishCourseValidation,
-  unpublishCourse
-);
+router.patch('/:id/unpublish', auth, unpublishCourseValidation, unpublishCourse);
 
 // ============================================================================
 // INSTRUCTOR DASHBOARD ROUTES
@@ -171,7 +138,8 @@ router.patch('/:id/unpublish',
  * @desc    Get instructor's courses
  * @access  Private (Gurus only)
  */
-router.get('/instructor/my-courses',
+router.get(
+  '/instructor/my-courses',
   auth,
   checkRole(['guru']),
   getInstructorCoursesValidation,
@@ -183,10 +151,6 @@ router.get('/instructor/my-courses',
  * @desc    Get course analytics for instructor
  * @access  Private (Course instructor only)
  */
-router.get('/instructor/:id/analytics',
-  auth,
-  getCourseAnalyticsValidation,
-  getCourseAnalytics
-);
+router.get('/instructor/:id/analytics', auth, getCourseAnalyticsValidation, getCourseAnalytics);
 
 module.exports = router;

@@ -25,8 +25,8 @@ class EmailService {
             pass: process.env.SMTP_PASS,
           },
           tls: {
-            rejectUnauthorized: false
-          }
+            rejectUnauthorized: false,
+          },
         });
       } else {
         // Development: Use Ethereal for testing
@@ -48,7 +48,6 @@ class EmailService {
 
       // Load email templates
       await this.loadTemplates();
-
     } catch (error) {
       console.error('Failed to initialize email service:', error);
       throw error;
@@ -59,7 +58,7 @@ class EmailService {
   async loadTemplates() {
     try {
       const templatesPath = path.join(__dirname, '../templates/emails');
-      
+
       // Ensure templates directory exists
       if (!fs.existsSync(templatesPath)) {
         fs.mkdirSync(templatesPath, { recursive: true });
@@ -67,24 +66,20 @@ class EmailService {
         return;
       }
 
-      const templateFiles = fs.readdirSync(templatesPath).filter(file => 
-        file.endsWith('.hbs') || file.endsWith('.handlebars')
-      );
+      const templateFiles = fs
+        .readdirSync(templatesPath)
+        .filter((file) => file.endsWith('.hbs') || file.endsWith('.handlebars'));
 
       for (const file of templateFiles) {
         const templateName = path.parse(file).name;
-        const templateContent = fs.readFileSync(
-          path.join(templatesPath, file), 
-          'utf8'
-        );
-        
+        const templateContent = fs.readFileSync(path.join(templatesPath, file), 'utf8');
+
         // Compile handlebars template
         const compiledTemplate = handlebars.compile(templateContent);
         this.templates.set(templateName, compiledTemplate);
       }
 
       console.log(`Loaded ${templateFiles.length} email templates`);
-
     } catch (error) {
       console.error('Failed to load email templates:', error);
     }
@@ -106,9 +101,9 @@ class EmailService {
         if (!compiledTemplate) {
           throw new Error(`Email template '${template}' not found`);
         }
-        
+
         emailHtml = compiledTemplate(context);
-        
+
         // Generate text version from HTML if not provided
         if (!emailText) {
           emailText = this.htmlToText(emailHtml);
@@ -119,12 +114,12 @@ class EmailService {
       const mailOptions = {
         from: {
           name: process.env.EMAIL_FROM_NAME || 'ShlokaYug',
-          address: process.env.EMAIL_FROM || 'noreply@shlokayug.com'
+          address: process.env.EMAIL_FROM || 'noreply@shlokayug.com',
         },
         to,
         subject,
         html: emailHtml,
-        text: emailText
+        text: emailText,
       };
 
       // Send email
@@ -140,11 +135,9 @@ class EmailService {
       return {
         success: true,
         messageId: info.messageId,
-        previewUrl: process.env.NODE_ENV !== 'production' 
-          ? nodemailer.getTestMessageUrl(info) 
-          : null
+        previewUrl:
+          process.env.NODE_ENV !== 'production' ? nodemailer.getTestMessageUrl(info) : null,
       };
-
     } catch (error) {
       console.error('Failed to send email:', error);
       throw new Error(`Email sending failed: ${error.message}`);
@@ -160,15 +153,15 @@ class EmailService {
       context: {
         firstName: user.profile.firstName,
         username: user.username,
-        dashboardUrl: `${process.env.FRONTEND_URL}/dashboard`
-      }
+        dashboardUrl: `${process.env.FRONTEND_URL}/dashboard`,
+      },
     });
   }
 
   // Send password reset email
   async sendPasswordResetEmail(user, resetToken) {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
+
     return this.sendEmail({
       to: user.email,
       subject: 'Reset Your Password - ShlokaYug',
@@ -177,15 +170,15 @@ class EmailService {
         firstName: user.profile.firstName,
         resetUrl,
         expiryMinutes: 10,
-        supportUrl: `${process.env.FRONTEND_URL}/support`
-      }
+        supportUrl: `${process.env.FRONTEND_URL}/support`,
+      },
     });
   }
 
   // Send email verification
   async sendEmailVerification(user, verificationToken) {
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-    
+
     return this.sendEmail({
       to: user.email,
       subject: 'Verify Your Email - ShlokaYug',
@@ -193,8 +186,8 @@ class EmailService {
       context: {
         firstName: user.profile.firstName,
         verificationUrl,
-        expiryHours: 24
-      }
+        expiryHours: 24,
+      },
     });
   }
 
@@ -208,8 +201,8 @@ class EmailService {
         firstName: user.profile.firstName,
         courseTitle: course.title,
         courseUrl: `${process.env.FRONTEND_URL}/courses/${course._id}`,
-        instructorName: course.instructor.profile.firstName
-      }
+        instructorName: course.instructor.profile.firstName,
+      },
     });
   }
 
@@ -223,8 +216,8 @@ class EmailService {
         firstName: user.profile.firstName,
         planName: subscription.plan,
         expiryDate: subscription.expiresAt,
-        featuresUrl: `${process.env.FRONTEND_URL}/premium-features`
-      }
+        featuresUrl: `${process.env.FRONTEND_URL}/premium-features`,
+      },
     });
   }
 
@@ -239,8 +232,8 @@ class EmailService {
         achievementTitle: achievement.title,
         achievementDescription: achievement.description,
         xpEarned: achievement.xp,
-        profileUrl: `${process.env.FRONTEND_URL}/profile`
-      }
+        profileUrl: `${process.env.FRONTEND_URL}/profile`,
+      },
     });
   }
 
@@ -255,8 +248,8 @@ class EmailService {
         authorName: author.profile.firstName,
         postTitle: post.title,
         postUrl: `${process.env.FRONTEND_URL}/community/posts/${post._id}`,
-        unsubscribeUrl: `${process.env.FRONTEND_URL}/settings/notifications`
-      }
+        unsubscribeUrl: `${process.env.FRONTEND_URL}/settings/notifications`,
+      },
     });
   }
 
@@ -264,8 +257,8 @@ class EmailService {
   htmlToText(html) {
     return html
       .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/\s+/g, ' ')    // Replace multiple spaces with single space
-      .trim();                 // Remove leading/trailing whitespace
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .trim(); // Remove leading/trailing whitespace
   }
 
   // Get email service status
@@ -273,7 +266,7 @@ class EmailService {
     return {
       isInitialized: !!this.transporter,
       templatesLoaded: this.templates.size,
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
     };
   }
 
@@ -283,20 +276,20 @@ class EmailService {
       batchSize = 10,
       delay = 1000, // 1 second between batches
       template,
-      context = {}
+      context = {},
     } = options;
 
     const results = [];
-    
+
     for (let i = 0; i < emails.length; i += batchSize) {
       const batch = emails.slice(i, i + batchSize);
-      
+
       const batchPromises = batch.map(async (email) => {
         try {
           const result = await this.sendEmail({
             ...email,
             template,
-            context: { ...context, ...email.context }
+            context: { ...context, ...email.context },
           });
           return { email: email.to, success: true, result };
         } catch (error) {
@@ -309,7 +302,7 @@ class EmailService {
 
       // Add delay between batches
       if (i + batchSize < emails.length) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
@@ -322,5 +315,5 @@ const emailService = new EmailService();
 
 module.exports = {
   emailService,
-  sendEmail: (emailData) => emailService.sendEmail(emailData)
+  sendEmail: (emailData) => emailService.sendEmail(emailData),
 };

@@ -6,7 +6,7 @@ const initializeCloudinary = () => {
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
-      secure: true
+      secure: true,
     });
 
     console.log('Cloudinary configured successfully');
@@ -27,7 +27,7 @@ const uploadHelpers = {
         folder: 'shlokayug/audio',
         format: 'mp3',
         quality: 'auto',
-        ...options
+        ...options,
       };
 
       const result = await cloudinary.uploader.upload(filePath, defaultOptions);
@@ -37,13 +37,13 @@ const uploadHelpers = {
         public_id: result.public_id,
         duration: result.duration,
         format: result.format,
-        bytes: result.bytes
+        bytes: result.bytes,
       };
     } catch (error) {
       console.error('Audio upload error:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   },
@@ -56,7 +56,7 @@ const uploadHelpers = {
         folder: 'shlokayug/images',
         quality: 'auto',
         fetch_format: 'auto',
-        ...options
+        ...options,
       };
 
       const result = await cloudinary.uploader.upload(filePath, defaultOptions);
@@ -67,13 +67,13 @@ const uploadHelpers = {
         width: result.width,
         height: result.height,
         format: result.format,
-        bytes: result.bytes
+        bytes: result.bytes,
       };
     } catch (error) {
       console.error('Image upload error:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   },
@@ -85,7 +85,7 @@ const uploadHelpers = {
         resource_type: 'video',
         folder: 'shlokayug/videos',
         quality: 'auto',
-        ...options
+        ...options,
       };
 
       const result = await cloudinary.uploader.upload(filePath, defaultOptions);
@@ -97,13 +97,13 @@ const uploadHelpers = {
         width: result.width,
         height: result.height,
         format: result.format,
-        bytes: result.bytes
+        bytes: result.bytes,
       };
     } catch (error) {
       console.error('Video upload error:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   },
@@ -112,18 +112,18 @@ const uploadHelpers = {
   async deleteFile(publicId, resourceType = 'image') {
     try {
       const result = await cloudinary.uploader.destroy(publicId, {
-        resource_type: resourceType
+        resource_type: resourceType,
       });
-      
+
       return {
         success: result.result === 'ok',
-        result: result.result
+        result: result.result,
       };
     } catch (error) {
       console.error('File deletion error:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   },
@@ -135,7 +135,7 @@ const uploadHelpers = {
       const defaultOptions = {
         timestamp,
         folder: 'shlokayug/temp',
-        ...options
+        ...options,
       };
 
       const signature = cloudinary.utils.api_sign_request(
@@ -149,13 +149,13 @@ const uploadHelpers = {
         signature,
         timestamp,
         apiKey: process.env.CLOUDINARY_API_KEY,
-        ...defaultOptions
+        ...defaultOptions,
       };
     } catch (error) {
       console.error('Signed URL generation error:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   },
@@ -166,12 +166,12 @@ const uploadHelpers = {
       const defaultTransformations = {
         quality: 'auto',
         fetch_format: 'auto',
-        ...transformations
+        ...transformations,
       };
 
       const url = cloudinary.url(publicId, {
         ...defaultTransformations,
-        secure: true
+        secure: true,
       });
 
       return url;
@@ -187,12 +187,12 @@ const uploadHelpers = {
       const defaultOptions = {
         resource_type: 'video',
         quality: 'auto',
-        ...options
+        ...options,
       };
 
       const url = cloudinary.url(publicId, {
         ...defaultOptions,
-        secure: true
+        secure: true,
       });
 
       return url;
@@ -200,7 +200,7 @@ const uploadHelpers = {
       console.error('Audio optimization error:', error);
       return null;
     }
-  }
+  },
 };
 
 // Preset configurations for different use cases
@@ -209,27 +209,27 @@ const presets = {
   avatar: {
     small: { width: 50, height: 50, crop: 'fill', gravity: 'face' },
     medium: { width: 150, height: 150, crop: 'fill', gravity: 'face' },
-    large: { width: 300, height: 300, crop: 'fill', gravity: 'face' }
+    large: { width: 300, height: 300, crop: 'fill', gravity: 'face' },
   },
 
   // Audio quality presets
   audio: {
     low: { bit_rate: '64k', audio_codec: 'mp3' },
     medium: { bit_rate: '128k', audio_codec: 'mp3' },
-    high: { bit_rate: '320k', audio_codec: 'mp3' }
+    high: { bit_rate: '320k', audio_codec: 'mp3' },
   },
 
   // Video quality presets
   video: {
     mobile: { width: 480, quality: '60', video_codec: 'h264' },
     web: { width: 720, quality: '80', video_codec: 'h264' },
-    hd: { width: 1080, quality: '90', video_codec: 'h264' }
-  }
+    hd: { width: 1080, quality: '90', video_codec: 'h264' },
+  },
 };
 
 module.exports = {
   initializeCloudinary,
   cloudinary,
   uploadHelpers,
-  presets
+  presets,
 };

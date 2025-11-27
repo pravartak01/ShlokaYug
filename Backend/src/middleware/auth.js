@@ -11,7 +11,7 @@ const cache = {
       return blacklistedTokens.has(key.replace('blacklist:', '')) ? true : null;
     }
     return null;
-  }
+  },
 };
 
 const auth = async (req, res, next) => {
@@ -29,15 +29,15 @@ const auth = async (req, res, next) => {
         success: false,
         error: {
           message: 'Access token is required',
-          code: 'AUTHENTICATION_REQUIRED'
-        }
+          code: 'AUTHENTICATION_REQUIRED',
+        },
       });
     }
 
     try {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
+
       // Check if token is blacklisted (for logout functionality)
       const isBlacklisted = await cache.get(`blacklist:${token}`);
       if (isBlacklisted) {
@@ -45,8 +45,8 @@ const auth = async (req, res, next) => {
           success: false,
           error: {
             message: 'Token has been invalidated',
-            code: 'TOKEN_INVALIDATED'
-          }
+            code: 'TOKEN_INVALIDATED',
+          },
         });
       }
 
@@ -57,8 +57,8 @@ const auth = async (req, res, next) => {
           success: false,
           error: {
             message: 'User no longer exists or is inactive',
-            code: 'USER_NOT_FOUND'
-          }
+            code: 'USER_NOT_FOUND',
+          },
         });
       }
 
@@ -69,8 +69,8 @@ const auth = async (req, res, next) => {
           error: {
             message: `Account suspended until ${currentUser.metadata.bannedUntil.toDateString()}`,
             code: 'ACCOUNT_SUSPENDED',
-            bannedUntil: currentUser.metadata.bannedUntil
-          }
+            bannedUntil: currentUser.metadata.bannedUntil,
+          },
         });
       }
 
@@ -78,37 +78,35 @@ const auth = async (req, res, next) => {
       req.user = currentUser;
       req.token = token;
       next();
-
     } catch (err) {
       if (err.name === 'JsonWebTokenError') {
         return res.status(401).json({
           success: false,
           error: {
             message: 'Invalid token',
-            code: 'INVALID_TOKEN'
-          }
+            code: 'INVALID_TOKEN',
+          },
         });
-      } else if (err.name === 'TokenExpiredError') {
+      }
+      if (err.name === 'TokenExpiredError') {
         return res.status(401).json({
           success: false,
           error: {
             message: 'Token expired',
-            code: 'TOKEN_EXPIRED'
-          }
+            code: 'TOKEN_EXPIRED',
+          },
         });
-      } else {
-        throw err;
       }
+      throw err;
     }
-
   } catch (error) {
     console.error('Auth middleware error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Authentication failed',
-        code: 'AUTHENTICATION_ERROR'
-      }
+        code: 'AUTHENTICATION_ERROR',
+      },
     });
   }
 };
@@ -126,7 +124,7 @@ const optionalAuth = async (req, res, next) => {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const currentUser = await User.findById(decoded.id);
-        
+
         if (currentUser && currentUser.metadata.isActive) {
           req.user = currentUser;
           req.token = token;
@@ -143,15 +141,16 @@ const optionalAuth = async (req, res, next) => {
 };
 
 // Role-based authorization middleware
-const authorize = (...roles) => {
-  return (req, res, next) => {
+const authorize =
+  (...roles) =>
+  (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
         error: {
           message: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED'
-        }
+          code: 'AUTHENTICATION_REQUIRED',
+        },
       });
     }
 
@@ -162,25 +161,25 @@ const authorize = (...roles) => {
           message: 'Insufficient permissions',
           code: 'INSUFFICIENT_PERMISSIONS',
           requiredRoles: roles,
-          userRole: req.user.role
-        }
+          userRole: req.user.role,
+        },
       });
     }
 
     next();
   };
-};
 
 // Subscription-based authorization
-const requireSubscription = (...plans) => {
-  return (req, res, next) => {
+const requireSubscription =
+  (...plans) =>
+  (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
         error: {
           message: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED'
-        }
+          code: 'AUTHENTICATION_REQUIRED',
+        },
       });
     }
 
@@ -192,8 +191,8 @@ const requireSubscription = (...plans) => {
           code: 'SUBSCRIPTION_REQUIRED',
           requiredPlans: plans,
           currentPlan: req.user.subscription.plan,
-          upgradeUrl: '/api/v1/payments/plans'
-        }
+          upgradeUrl: '/api/v1/payments/plans',
+        },
       });
     }
 
@@ -204,42 +203,39 @@ const requireSubscription = (...plans) => {
         error: {
           message: 'Subscription expired',
           code: 'SUBSCRIPTION_EXPIRED',
-          renewUrl: '/api/v1/payments/renew'
-        }
+          renewUrl: '/api/v1/payments/renew',
+        },
       });
     }
 
     next();
   };
-};
 
 // Feature-based authorization
-const requireFeature = (feature) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          message: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED'
-        }
-      });
-    }
+const requireFeature = (feature) => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: {
+        message: 'Authentication required',
+        code: 'AUTHENTICATION_REQUIRED',
+      },
+    });
+  }
 
-    if (!req.user.canAccessFeature(feature)) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          message: 'Feature access denied',
-          code: 'FEATURE_ACCESS_DENIED',
-          feature,
-          upgradeRequired: true
-        }
-      });
-    }
+  if (!req.user.canAccessFeature(feature)) {
+    return res.status(403).json({
+      success: false,
+      error: {
+        message: 'Feature access denied',
+        code: 'FEATURE_ACCESS_DENIED',
+        feature,
+        upgradeRequired: true,
+      },
+    });
+  }
 
-    next();
-  };
+  next();
 };
 
 // Email verification requirement
@@ -249,8 +245,8 @@ const requireEmailVerification = (req, res, next) => {
       success: false,
       error: {
         message: 'Authentication required',
-        code: 'AUTHENTICATION_REQUIRED'
-      }
+        code: 'AUTHENTICATION_REQUIRED',
+      },
     });
   }
 
@@ -260,8 +256,8 @@ const requireEmailVerification = (req, res, next) => {
       error: {
         message: 'Email verification required',
         code: 'EMAIL_VERIFICATION_REQUIRED',
-        resendUrl: '/api/v1/auth/resend-verification'
-      }
+        resendUrl: '/api/v1/auth/resend-verification',
+      },
     });
   }
 
@@ -269,30 +265,31 @@ const requireEmailVerification = (req, res, next) => {
 };
 
 // Rate limiting for authenticated users
-const authRateLimit = (maxRequests = 1000, windowMs = 60 * 60 * 1000) => {
-  return async (req, res, next) => {
+const authRateLimit =
+  (maxRequests = 1000, windowMs = 60 * 60 * 1000) =>
+  async (req, res, next) => {
     if (!req.user) {
       return next();
     }
 
     const userId = req.user._id.toString();
     const key = `auth_rate_limit:${userId}`;
-    
+
     try {
       const current = await cache.incr(key);
-      
+
       if (current === 1) {
         await cache.expire(key, Math.ceil(windowMs / 1000));
       }
-      
+
       if (current > maxRequests) {
         return res.status(429).json({
           success: false,
           error: {
             message: 'Too many requests',
             code: 'RATE_LIMIT_EXCEEDED',
-            retryAfter: Math.ceil(windowMs / 1000)
-          }
+            retryAfter: Math.ceil(windowMs / 1000),
+          },
         });
       }
 
@@ -300,7 +297,7 @@ const authRateLimit = (maxRequests = 1000, windowMs = 60 * 60 * 1000) => {
       res.set({
         'X-RateLimit-Limit': maxRequests,
         'X-RateLimit-Remaining': Math.max(0, maxRequests - current),
-        'X-RateLimit-Reset': new Date(Date.now() + windowMs).toISOString()
+        'X-RateLimit-Reset': new Date(Date.now() + windowMs).toISOString(),
       });
 
       next();
@@ -309,29 +306,29 @@ const authRateLimit = (maxRequests = 1000, windowMs = 60 * 60 * 1000) => {
       next(); // Continue without rate limiting on error
     }
   };
-};
 
 // IP-based rate limiting for sensitive endpoints
-const ipRateLimit = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
-  return async (req, res, next) => {
+const ipRateLimit =
+  (maxRequests = 100, windowMs = 15 * 60 * 1000) =>
+  async (req, res, next) => {
     const ip = req.ip || req.connection.remoteAddress;
     const key = `ip_rate_limit:${ip}`;
-    
+
     try {
       const current = await cache.incr(key);
-      
+
       if (current === 1) {
         await cache.expire(key, Math.ceil(windowMs / 1000));
       }
-      
+
       if (current > maxRequests) {
         return res.status(429).json({
           success: false,
           error: {
             message: 'Too many requests from this IP',
             code: 'IP_RATE_LIMIT_EXCEEDED',
-            retryAfter: Math.ceil(windowMs / 1000)
-          }
+            retryAfter: Math.ceil(windowMs / 1000),
+          },
         });
       }
 
@@ -341,37 +338,34 @@ const ipRateLimit = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
       next();
     }
   };
-};
 
 // Audit logging middleware
-const auditLog = (action) => {
-  return (req, res, next) => {
-    const originalSend = res.send;
-    
-    res.send = function(data) {
-      // Log the action after response
-      setImmediate(() => {
-        const logData = {
-          action,
-          userId: req.user ? req.user._id : null,
-          ip: req.ip,
-          userAgent: req.get('User-Agent'),
-          method: req.method,
-          url: req.originalUrl,
-          statusCode: res.statusCode,
-          timestamp: new Date().toISOString(),
-          requestId: req.id // If you have request ID middleware
-        };
+const auditLog = (action) => (req, res, next) => {
+  const originalSend = res.send;
 
-        // Store audit log (in practice, you might use a separate audit collection)
-        console.log('Audit Log:', JSON.stringify(logData));
-      });
-      
-      originalSend.call(this, data);
-    };
-    
-    next();
+  res.send = function (data) {
+    // Log the action after response
+    setImmediate(() => {
+      const logData = {
+        action,
+        userId: req.user ? req.user._id : null,
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        method: req.method,
+        url: req.originalUrl,
+        statusCode: res.statusCode,
+        timestamp: new Date().toISOString(),
+        requestId: req.id, // If you have request ID middleware
+      };
+
+      // Store audit log (in practice, you might use a separate audit collection)
+      console.log('Audit Log:', JSON.stringify(logData));
+    });
+
+    originalSend.call(this, data);
   };
+
+  next();
 };
 
 module.exports = {
@@ -385,5 +379,5 @@ module.exports = {
   requireEmailVerification,
   authRateLimit,
   ipRateLimit,
-  auditLog
+  auditLog,
 };
