@@ -18,10 +18,6 @@ const enrollmentRoutes = require('./routes/enrollments');
 const paymentRoutes = require('./routes/payments');
 const subscriptionRoutes = require('./routes/subscriptions');
 
-// LMS Routes
-const certificateRoutes = require('./routes/certificates');
-const notesRoutes = require('./routes/notes');
-
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -158,16 +154,11 @@ app.use(`/api/${API_VERSION}/enrollments`, enrollmentRoutes);
 app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
 app.use(`/api/${API_VERSION}/subscriptions`, subscriptionRoutes);
 
-// LMS Routes
-app.use(`/api/${API_VERSION}/certificates`, certificateRoutes);
-app.use(`/api/${API_VERSION}/notes`, notesRoutes);
-
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
 // app.use(`/api/${API_VERSION}/chandas`, chandasRoutes);
 // app.use(`/api/${API_VERSION}/audio`, audioRoutes);
 // app.use(`/api/${API_VERSION}/ai`, aiRoutes);
-// app.use(`/api/${API_VERSION}/community`, communityRoutes);
 // app.use(`/api/${API_VERSION}/live-sessions`, liveSessionRoutes);
 // app.use(`/api/${API_VERSION}/gamification`, gamificationRoutes);
 // app.use(`/api/${API_VERSION}/admin`, adminRoutes);
@@ -198,7 +189,7 @@ async function initializeServices() {
     // Initialize Cloudinary
     initializeCloudinary();
     console.log('✅ Cloudinary configured successfully');
-
+    
     console.log('🚀 All services initialized successfully');
   } catch (error) {
     console.error('❌ Service initialization failed:', error.message);
