@@ -33,6 +33,10 @@ const communityRoutes = require('./routes/community');
 // CRITICAL: Admin Routes for Platform Management
 const adminRoutes = require('./routes/admin');
 
+// NEW: Separate Guru Management System
+const guruAuthRoutes = require('./routes/guruAuth');
+const adminGuruRoutes = require('./routes/adminGuru');
+
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -175,6 +179,10 @@ app.use(`/api/${API_VERSION}/community`, communityRoutes);
 
 // CRITICAL: Admin Routes (Must be protected)
 app.use(`/api/${API_VERSION}/admin`, adminRoutes);
+
+// NEW: Separate Guru Management System
+app.use(`/api/${API_VERSION}/guru`, guruAuthRoutes);
+app.use(`/api/${API_VERSION}/admin/gurus`, adminGuruRoutes);
 
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);

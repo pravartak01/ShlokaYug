@@ -1,9 +1,11 @@
 /**
  * Admin Controller - Platform Management and Content Moderation
  * CRITICAL: Handles guru verification, content approval, and platform oversight
+ * Updated to handle separate Guru model
  */
 
 const User = require('../models/User');
+const Guru = require('../models/Guru');
 const Course = require('../models/Course');
 const CommunityPost = require('../models/CommunityPost');
 const mongoose = require('mongoose');
@@ -16,37 +18,42 @@ class AdminController {
    */
   async getDashboardStats(req, res) {
     try {
-      // Get platform statistics
+      // Get platform statistics with separated models
       const [
         totalUsers,
-        pendingGurus,
-        verifiedGurus,
+        totalGurus,
+        pendingGuruApplications,
+        approvedGurus,
+        rejectedGurus,
         totalCourses,
         pendingPosts,
         activeStudents
       ] = await Promise.all([
         User.countDocuments(),
-        User.countDocuments({ 'guruProfile.applicationStatus': 'pending' }),
-        User.countDocuments({ role: 'guru', 'guruProfile.verification.isVerified': true }),
+        Guru.countDocuments(),
+        Guru.countDocuments({ 'applicationStatus.status': 'submitted' }),
+        Guru.countDocuments({ 'accountStatus.isApproved': true }),
+        Guru.countDocuments({ 'applicationStatus.status': 'rejected' }),
         Course.countDocuments(),
         CommunityPost.countDocuments({ 'moderation.status': 'pending' }),
-        User.countDocuments({ role: 'student', 'metadata.lastLogin': { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } })
+        User.countDocuments({ 'metadata.lastLogin': { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } })
       ]);
 
-      // Get recent activity
-      const recentGuruApplications = await User.find({
-        'guruProfile.applicationStatus': 'pending'
+      // Get recent guru applications
+      const recentGuruApplications = await Guru.find({
+        'applicationStatus.status': 'submitted'
       })
-      .select('username email profile guruProfile.verification.applicationDate')
-      .sort({ 'guruProfile.verification.applicationDate': -1 })
+      .select('username email profile applicationStatus')
+      .sort({ 'applicationStatus.submittedAt': -1 })
       .limit(5);
 
       // Get platform health metrics
       const platformHealth = {
         userGrowthRate: 'Calculate from last month data',
         contentQualityScore: 'Based on user ratings',
-        guruVerificationBacklog: pendingGurus,
-        activeUserPercentage: ((activeStudents / totalUsers) * 100).toFixed(1)
+        guruApplicationBacklog: pendingGuruApplications,
+        activeUserPercentage: totalUsers > 0 ? ((activeStudents / totalUsers) * 100).toFixed(1) : 0,
+        guruApprovalRate: totalGurus > 0 ? ((approvedGurus / totalGurus) * 100).toFixed(1) : 0
       };
 
       res.status(200).json({
