@@ -550,14 +550,30 @@ userSchema.methods.getResetPasswordToken = function() {
   return resetToken;
 };
 
-// Instance method to create email verification token
-userSchema.methods.getEmailVerificationToken = function() {
-  const verificationToken = crypto.randomBytes(20).toString('hex');
-  
-  this.verification.emailVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
-  this.verification.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-  
-  return verificationToken;
+// Method to generate email verification token
+userSchema.methods.generateEmailVerificationToken = function() {
+  // Generate random token
+  const verifyToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash and set verification token
+  this.verification.emailVerificationToken = crypto
+    .createHash('sha256')
+    .update(verifyToken)
+    .digest('hex');
+
+  // Set token expiry (24 hours)
+  this.verification.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
+
+  return verifyToken;
+};
+
+// Method to apply to become a guru
+userSchema.methods.applyForGuru = function(credentials, experience) {
+  this.guruProfile.applicationStatus = 'pending';
+  this.guruProfile.credentials = credentials;
+  this.guruProfile.experience = experience;
+  this.guruProfile.verification.applicationDate = new Date();
+  return this.save();
 };
 
 // Static method to get active users

@@ -4,28 +4,26 @@ const mongoose = require('mongoose');
 // Helper function to handle validation errors
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
-    const formattedErrors = errors.array().map(error => ({
+    const formattedErrors = errors.array().map((error) => ({
       field: error.path,
       message: error.msg,
-      value: error.value
+      value: error.value,
     }));
 
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
-      errors: formattedErrors
+      errors: formattedErrors,
     });
   }
-  
+
   next();
 };
 
 // Custom validator for MongoDB ObjectId
-const isValidObjectId = (value) => {
-  return mongoose.Types.ObjectId.isValid(value);
-};
+const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
 // Validation for auto-enrollment after payment
 const validateAutoEnrollment = [
@@ -34,26 +32,24 @@ const validateAutoEnrollment = [
     .withMessage('Transaction ID is required')
     .isLength({ min: 5, max: 100 })
     .withMessage('Transaction ID must be between 5-100 characters'),
-    
+
   body('userId')
     .notEmpty()
     .withMessage('User ID is required')
     .custom(isValidObjectId)
     .withMessage('User ID must be a valid MongoDB ObjectId'),
-    
+
   body('courseId')
     .notEmpty()
     .withMessage('Course ID is required')
     .custom(isValidObjectId)
     .withMessage('Course ID must be a valid MongoDB ObjectId'),
-    
-  handleValidationErrors
+
+  handleValidationErrors,
 ];
 
 // Custom validator for device ID format
-const isValidDeviceId = (value) => {
-  return /^[a-f0-9]{16}$/.test(value);
-};
+const isValidDeviceId = (value) => /^[a-f0-9]{16}$/.test(value);
 
 // Validation for enrollment initiation
 const validateInitiateEnrollment = [
@@ -62,23 +58,20 @@ const validateInitiateEnrollment = [
     .withMessage('Course ID is required')
     .custom(isValidObjectId)
     .withMessage('Course ID must be a valid MongoDB ObjectId'),
-    
+
   body('enrollmentType')
     .optional()
     .isIn(['subscription', 'one_time'])
     .withMessage('Enrollment type must be either "subscription" or "one_time"'),
 
-  body('deviceInfo')
-    .optional()
-    .isObject()
-    .withMessage('Device info must be an object'),
+  body('deviceInfo').optional().isObject().withMessage('Device info must be an object'),
 
   body('deviceInfo.platform')
     .optional()
     .isIn(['web', 'mobile', 'tablet', 'desktop'])
     .withMessage('Platform must be one of: web, mobile, tablet, desktop'),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for enrollment confirmation
@@ -115,7 +108,7 @@ const validateConfirmEnrollment = [
     .matches(/^TXN_[0-9]+_[A-Z0-9]{6}$/)
     .withMessage('Invalid transaction ID format'),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for enrollment ID parameter
@@ -126,7 +119,7 @@ const validateEnrollmentId = [
     .custom(isValidObjectId)
     .withMessage('Enrollment ID must be a valid MongoDB ObjectId'),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for device ID parameter
@@ -137,7 +130,7 @@ const validateDeviceId = [
     .custom(isValidDeviceId)
     .withMessage('Device ID must be a valid 16-character hexadecimal string'),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for get enrollments query parameters
@@ -147,10 +140,7 @@ const validateGetEnrollments = [
     .isIn(['active', 'suspended', 'expired', 'cancelled', 'pending'])
     .withMessage('Status must be one of: active, suspended, expired, cancelled, pending'),
 
-  query('page')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Page must be a positive integer'),
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
 
   query('limit')
     .optional()
@@ -167,7 +157,7 @@ const validateGetEnrollments = [
     .isIn(['asc', 'desc'])
     .withMessage('Sort order must be either "asc" or "desc"'),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for access validation request
@@ -184,15 +174,12 @@ const validateAccessValidation = [
     .isIn(['view', 'download', 'stream'])
     .withMessage('Requested action must be one of: view, download, stream'),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for device addition
 const validateAddDevice = [
-  body('deviceInfo')
-    .optional()
-    .isObject()
-    .withMessage('Device info must be an object'),
+  body('deviceInfo').optional().isObject().withMessage('Device info must be an object'),
 
   body('deviceInfo.platform')
     .optional()
@@ -221,7 +208,7 @@ const validateAddDevice = [
     .withMessage('Device name must be between 1 and 100 characters')
     .trim(),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for progress update
@@ -239,17 +226,14 @@ const validateProgressUpdate = [
     .isInt({ min: 0 })
     .withMessage('Time spent must be a non-negative integer'),
 
-  body('completed')
-    .optional()
-    .isBoolean()
-    .withMessage('Completed must be a boolean'),
+  body('completed').optional().isBoolean().withMessage('Completed must be a boolean'),
 
   body('progress')
     .optional()
     .isFloat({ min: 0, max: 100 })
     .withMessage('Progress must be between 0 and 100'),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for subscription management
@@ -281,7 +265,7 @@ const validateSubscriptionAction = [
       return true;
     }),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for enrollment cancellation
@@ -295,10 +279,7 @@ const validateCancelEnrollment = [
     .withMessage('Reason must be between 10 and 500 characters')
     .trim(),
 
-  body('requestRefund')
-    .optional()
-    .isBoolean()
-    .withMessage('Request refund must be a boolean'),
+  body('requestRefund').optional().isBoolean().withMessage('Request refund must be a boolean'),
 
   body('refundReason')
     .optional()
@@ -308,7 +289,7 @@ const validateCancelEnrollment = [
     .withMessage('Refund reason cannot exceed 500 characters')
     .trim(),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for enrollment search/filter
@@ -336,10 +317,7 @@ const validateEnrollmentSearch = [
     .isIn(['subscription', 'one_time'])
     .withMessage('Enrollment type must be either "subscription" or "one_time"'),
 
-  query('dateFrom')
-    .optional()
-    .isISO8601()
-    .withMessage('Date from must be a valid ISO 8601 date'),
+  query('dateFrom').optional().isISO8601().withMessage('Date from must be a valid ISO 8601 date'),
 
   query('dateTo')
     .optional()
@@ -352,7 +330,7 @@ const validateEnrollmentSearch = [
       return true;
     }),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Validation for guru enrollment analytics
@@ -367,10 +345,7 @@ const validateEnrollmentAnalytics = [
     .custom(isValidObjectId)
     .withMessage('Course ID must be a valid MongoDB ObjectId'),
 
-  query('startDate')
-    .optional()
-    .isISO8601()
-    .withMessage('Start date must be a valid ISO 8601 date'),
+  query('startDate').optional().isISO8601().withMessage('Start date must be a valid ISO 8601 date'),
 
   query('endDate')
     .optional()
@@ -383,7 +358,7 @@ const validateEnrollmentAnalytics = [
       return true;
     }),
 
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Middleware to check enrollment ownership or permission
@@ -404,19 +379,18 @@ const checkEnrollmentAccess = async (req, res, next) => {
     if (!enrollment) {
       return res.status(404).json({
         success: false,
-        message: 'Enrollment not found'
+        message: 'Enrollment not found',
       });
     }
 
     // Check if user owns the enrollment or is the instructor
-    const hasAccess = 
-      enrollment.userId.toString() === userId ||
-      enrollment.guruId.toString() === userId;
+    const hasAccess =
+      enrollment.userId.toString() === userId || enrollment.guruId.toString() === userId;
 
     if (!hasAccess) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to access this enrollment'
+        message: 'Not authorized to access this enrollment',
       });
     }
 
@@ -424,7 +398,7 @@ const checkEnrollmentAccess = async (req, res, next) => {
     req.enrollmentAccess = {
       enrollmentId: enrollment._id,
       isOwner: enrollment.userId.toString() === userId,
-      isInstructor: enrollment.guruId.toString() === userId
+      isInstructor: enrollment.guruId.toString() === userId,
     };
 
     next();
@@ -432,7 +406,7 @@ const checkEnrollmentAccess = async (req, res, next) => {
     console.error('Enrollment access check error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error checking enrollment access'
+      message: 'Error checking enrollment access',
     });
   }
 };
@@ -452,5 +426,5 @@ module.exports = {
   validateEnrollmentSearch,
   validateEnrollmentAnalytics,
   checkEnrollmentAccess,
-  handleValidationErrors
+  handleValidationErrors,
 };

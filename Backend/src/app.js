@@ -33,10 +33,6 @@ const communityRoutes = require('./routes/community');
 // CRITICAL: Admin Routes for Platform Management
 const adminRoutes = require('./routes/admin');
 
-// NEW: Separate Guru Management System
-const guruAuthRoutes = require('./routes/guruAuth');
-const adminGuruRoutes = require('./routes/adminGuru');
-
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -65,44 +61,50 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Security Middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-      scriptSrc: ["'self'"],
-      mediaSrc: ["'self'", "https://res.cloudinary.com"],
-      connectSrc: ["'self'", "https://api.gemini.google.com"]
-    }
-  }
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com'],
+        scriptSrc: ["'self'"],
+        mediaSrc: ["'self'", 'https://res.cloudinary.com'],
+        connectSrc: ["'self'", 'https://api.gemini.google.com'],
+      },
+    },
+  })
+);
 
 // CORS configuration
-app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      process.env.MOBILE_APP_URL,
-      'http://localhost:3000',
-      'http://localhost:19006', // Expo web
-      'exp://localhost:19000'   // Expo mobile
-    ].filter(Boolean);
-    
-    // Allow requests with no origin (mobile apps, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+app.use(
+  cors({
+    origin(origin, callback) {
+      const allowedOrigins = [
+        process.env.FRONTEND_URL,
+        process.env.MOBILE_APP_URL,
+        'http://localhost:3000',
+        'http://localhost:19006', // Expo web
+        'exp://localhost:19000', // Expo mobile
+        'http://localhost:5173', // Vite dev server (Website)
+        // Vite dev server (Web-App)
+      ].filter(Boolean);
+
+      // Allow requests with no origin (mobile apps, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  })
+);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -112,8 +114,8 @@ const limiter = rateLimit({
     success: false,
     error: {
       message: 'Too many requests from this IP, please try again later.',
-      code: 'RATE_LIMIT_EXCEEDED'
-    }
+      code: 'RATE_LIMIT_EXCEEDED',
+    },
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -129,9 +131,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(mongoSanitize());
 
 // Prevent HTTP Parameter Pollution
-app.use(hpp({
-  whitelist: ['tags', 'category', 'difficulty'] // Allow duplicate query params for these fields
-}));
+app.use(
+  hpp({
+    whitelist: ['tags', 'category', 'difficulty'], // Allow duplicate query params for these fields
+  })
+);
 
 // Compression middleware
 app.use(compression());
@@ -150,7 +154,7 @@ app.get('/health', (req, res) => {
     message: 'ShlokaYug Backend API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    version: process.env.npm_package_version || '1.0.0'
+    version: process.env.npm_package_version || '1.0.0',
   });
 });
 
@@ -180,10 +184,6 @@ app.use(`/api/${API_VERSION}/community`, communityRoutes);
 // CRITICAL: Admin Routes (Must be protected)
 app.use(`/api/${API_VERSION}/admin`, adminRoutes);
 
-// NEW: Separate Guru Management System
-app.use(`/api/${API_VERSION}/guru`, guruAuthRoutes);
-app.use(`/api/${API_VERSION}/admin/gurus`, adminGuruRoutes);
-
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
 // app.use(`/api/${API_VERSION}/chandas`, chandasRoutes);
@@ -198,9 +198,9 @@ app.use(`/api/${API_VERSION}/admin/gurus`, adminGuruRoutes);
 if (process.env.NODE_ENV === 'development') {
   // const swaggerUi = require('swagger-ui-express');
   // const swaggerDocument = require('../docs/swagger.json');
-  
+
   // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-  
+
   // Redirect root to swagger docs in development
   console.log('Swagger docs will be available at /api-docs when implemented');
 }
@@ -215,19 +215,10 @@ async function initializeServices() {
     // Connect to MongoDB
     await connectDB();
     console.log('✅ MongoDB connected successfully');
-    
+
     // Initialize Cloudinary
     initializeCloudinary();
     console.log('✅ Cloudinary configured successfully');
-    
-    // CRITICAL: Bootstrap admin user
-    const { bootstrapAdmin } = require('./utils/adminBootstrap');
-    const adminBootstrapResult = await bootstrapAdmin();
-    if (adminBootstrapResult.success) {
-      console.log('✅ Admin system initialized');
-    } else {
-      console.error('⚠️  Admin bootstrap warning:', adminBootstrapResult.error);
-    }
     
     console.log('🚀 All services initialized successfully');
   } catch (error) {
@@ -240,9 +231,10 @@ async function initializeServices() {
 const PORT = process.env.PORT || 5000;
 
 if (require.main === module) {
-  initializeServices().then(() => {
-    const server = app.listen(PORT, () => {
-      console.log(`
+  initializeServices()
+    .then(() => {
+      const server = app.listen(PORT, () => {
+        console.log(`
 🕉️  ShlokaYug Backend API Server
 📍 Running on port ${PORT}
 🌍 Environment: ${process.env.NODE_ENV}
@@ -250,59 +242,59 @@ if (require.main === module) {
 ${process.env.NODE_ENV === 'development' ? `📖 Documentation: http://localhost:${PORT}/api-docs` : ''}
 🙏 Sanskrit Learning Platform Backend Ready!
       `);
-    });
-
-    // Handle WebSocket connections for real-time features
-    const http = require('http');
-    const socketIo = require('socket.io');
-    
-    const httpServer = http.createServer(app);
-    const io = socketIo(httpServer, {
-      cors: {
-        origin: [
-          process.env.FRONTEND_URL,
-          process.env.MOBILE_APP_URL,
-          'http://localhost:3000',
-          'http://localhost:19006'
-        ].filter(Boolean),
-        credentials: true
-      }
-    });
-
-    // Socket.IO setup (basic for now)
-    io.on('connection', (socket) => {
-      console.log('🔌 User connected:', socket.id);
-      
-      socket.on('disconnect', () => {
-        console.log('📴 User disconnected:', socket.id);
       });
-    });
 
-    // Graceful shutdown
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM received. Shutting down gracefully...');
-      server.close(() => {
-        mongoose.connection.close(false, () => {
-          console.log('MongoDB connection closed.');
-          process.exit(0);
+      // Handle WebSocket connections for real-time features
+      const http = require('http');
+      const socketIo = require('socket.io');
+
+      const httpServer = http.createServer(app);
+      const io = socketIo(httpServer, {
+        cors: {
+          origin: [
+            process.env.FRONTEND_URL,
+            process.env.MOBILE_APP_URL,
+            'http://localhost:3000',
+            'http://localhost:19006',
+          ].filter(Boolean),
+          credentials: true,
+        },
+      });
+
+      // Socket.IO setup (basic for now)
+      io.on('connection', (socket) => {
+        console.log('🔌 User connected:', socket.id);
+
+        socket.on('disconnect', () => {
+          console.log('📴 User disconnected:', socket.id);
         });
       });
-    });
 
-    process.on('SIGINT', () => {
-      console.log('SIGINT received. Shutting down gracefully...');
-      server.close(() => {
-        mongoose.connection.close(false, () => {
-          console.log('MongoDB connection closed.');
-          process.exit(0);
+      // Graceful shutdown
+      process.on('SIGTERM', () => {
+        console.log('SIGTERM received. Shutting down gracefully...');
+        server.close(() => {
+          mongoose.connection.close(false, () => {
+            console.log('MongoDB connection closed.');
+            process.exit(0);
+          });
         });
       });
-    });
 
-  }).catch((error) => {
-    console.error('Failed to start server:', error.message);
-    process.exit(1);
-  });
+      process.on('SIGINT', () => {
+        console.log('SIGINT received. Shutting down gracefully...');
+        server.close(() => {
+          mongoose.connection.close(false, () => {
+            console.log('MongoDB connection closed.');
+            process.exit(0);
+          });
+        });
+      });
+    })
+    .catch((error) => {
+      console.error('Failed to start server:', error.message);
+      process.exit(1);
+    });
 }
 
 module.exports = app;

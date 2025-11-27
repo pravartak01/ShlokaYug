@@ -11,7 +11,7 @@ const {
   resendVerification,
   googleAuth,
   changePassword,
-  getProfile
+  getProfile,
 } = require('../controllers/authController');
 
 const { auth: protect, requireEmailVerification, requireRole } = require('../middleware/auth');
@@ -24,7 +24,7 @@ const {
   verifyEmailValidation,
   refreshTokenValidation,
   googleAuthValidation,
-  changePasswordValidation
+  changePasswordValidation,
 } = require('../validators/authValidators');
 
 const router = express.Router();
@@ -37,11 +37,11 @@ const registerRateLimit = rateLimit({
     success: false,
     error: {
       message: 'Too many registration attempts, please try again later',
-      code: 'RATE_LIMIT_REGISTRATION'
-    }
+      code: 'RATE_LIMIT_REGISTRATION',
+    },
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 const loginRateLimit = rateLimit({
@@ -51,11 +51,11 @@ const loginRateLimit = rateLimit({
     success: false,
     error: {
       message: 'Too many login attempts, please try again later',
-      code: 'RATE_LIMIT_LOGIN'
-    }
+      code: 'RATE_LIMIT_LOGIN',
+    },
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 const passwordResetRateLimit = rateLimit({
@@ -65,11 +65,11 @@ const passwordResetRateLimit = rateLimit({
     success: false,
     error: {
       message: 'Too many password reset attempts, please try again later',
-      code: 'RATE_LIMIT_PASSWORD_RESET'
-    }
+      code: 'RATE_LIMIT_PASSWORD_RESET',
+    },
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 // ================================
@@ -77,30 +77,17 @@ const passwordResetRateLimit = rateLimit({
 // ================================
 
 // POST /api/v1/auth/register - Register new user
-router.post('/register', 
-  registerRateLimit,
-  registerValidation,
-  validateRequest,
-  register
-);
+router.post('/register', registerRateLimit, registerValidation, validateRequest, register);
 
 // POST /api/v1/auth/login - Login user
-router.post('/login', 
-  loginRateLimit,
-  loginValidation,
-  validateRequest,
-  login
-);
+router.post('/login', loginRateLimit, loginValidation, validateRequest, login);
 
 // POST /api/v1/auth/refresh-token - Refresh access token
-router.post('/refresh-token', 
-  refreshTokenValidation,
-  validateRequest,
-  refreshToken
-);
+router.post('/refresh-token', refreshTokenValidation, validateRequest, refreshToken);
 
 // POST /api/v1/auth/forgot-password - Request password reset
-router.post('/forgot-password', 
+router.post(
+  '/forgot-password',
   passwordResetRateLimit,
   forgotPasswordValidation,
   validateRequest,
@@ -108,55 +95,29 @@ router.post('/forgot-password',
 );
 
 // POST /api/v1/auth/reset-password - Reset password with token
-router.post('/reset-password', 
-  resetPasswordValidation,
-  validateRequest,
-  resetPassword
-);
+router.post('/reset-password', resetPasswordValidation, validateRequest, resetPassword);
 
 // POST /api/v1/auth/verify-email - Verify email address
-router.post('/verify-email', 
-  verifyEmailValidation,
-  validateRequest,
-  verifyEmail
-);
+router.post('/verify-email', verifyEmailValidation, validateRequest, verifyEmail);
 
 // POST /api/v1/auth/google - Google OAuth authentication
-router.post('/google', 
-  googleAuthValidation,
-  validateRequest,
-  googleAuth
-);
+router.post('/google', googleAuthValidation, validateRequest, googleAuth);
 
 // ================================
 // PROTECTED ROUTES (Authentication Required)
 // ================================
 
 // POST /api/v1/auth/logout - Logout user (invalidate token)
-router.post('/logout', 
-  protect,
-  logout
-);
+router.post('/logout', protect, logout);
 
 // POST /api/v1/auth/resend-verification - Resend email verification
-router.post('/resend-verification', 
-  protect,
-  resendVerification
-);
+router.post('/resend-verification', protect, resendVerification);
 
 // POST /api/v1/auth/change-password - Change password
-router.post('/change-password', 
-  protect,
-  changePasswordValidation,
-  validateRequest,
-  changePassword
-);
+router.post('/change-password', protect, changePasswordValidation, validateRequest, changePassword);
 
 // GET /api/v1/auth/profile - Get user profile
-router.get('/profile', 
-  protect,
-  getProfile
-);
+router.get('/profile', protect, getProfile);
 
 // ================================
 // UTILITY ROUTES
@@ -174,9 +135,9 @@ router.get('/status', protect, (req, res) => {
         email: req.user.email,
         role: req.user.role,
         subscription: req.user.subscription,
-        isEmailVerified: req.user.verification.isEmailVerified
-      }
-    }
+        isEmailVerified: req.user.verification.isEmailVerified,
+      },
+    },
   });
 });
 
@@ -185,7 +146,7 @@ router.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Authentication service is healthy',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 

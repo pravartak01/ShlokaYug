@@ -21,7 +21,8 @@ const cache = {
   get: async (key) => {
     if (key.startsWith('blacklist:')) {
       return blacklistedTokens.has(key.replace('blacklist:', '')) ? true : null;
-    } else if (key.startsWith('refresh_token:')) {
+    }
+    if (key.startsWith('refresh_token:')) {
       return refreshTokens.get(key.replace('refresh_token:', '')) || null;
     }
     return null;
@@ -33,7 +34,7 @@ const cache = {
       refreshTokens.delete(key.replace('refresh_token:', ''));
     }
     return true;
-  }
+  },
 };
 
 // @desc    Register user
@@ -45,10 +46,7 @@ const register = async (req, res) => {
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [
-        { email: email.toLowerCase() },
-        { username }
-      ]
+      $or: [{ email: email.toLowerCase() }, { username }],
     });
 
     if (existingUser) {
@@ -58,21 +56,42 @@ const register = async (req, res) => {
         error: {
           message: `${field === 'email' ? 'Email' : 'Username'} is already registered`,
           code: 'USER_EXISTS',
-          field
-        }
+          field,
+        },
       });
     }
 
-    // Create user
+    // Create user - AUTO-APPROVE AS VERIFIED GURU FOR DEVELOPMENT
     const user = await User.create({
       email: email.toLowerCase(),
       username,
       password,
+      role: 'guru', // Auto-assign guru role
       profile: {
         firstName,
         lastName,
-        preferredScript: preferredScript || 'devanagari'
-      }
+        preferredScript: preferredScript || 'devanagari',
+      },
+      guruProfile: {
+        applicationStatus: 'approved',
+        verification: {
+          isVerified: true,
+          verifiedAt: new Date(),
+          verificationNotes: 'Auto-approved for development',
+        },
+        credentials: [{
+          type: 'certificate',
+          title: 'Verified Sanskrit Teacher',
+          institution: 'Auto-verified',
+          year: new Date().getFullYear(),
+          description: 'Auto-verified for development',
+          isVerified: true
+        }],
+        experience: {
+          years: 5,
+          description: 'Auto-verified experienced teacher'
+        },
+      },
     });
 
     // Generate email verification token
@@ -105,24 +124,23 @@ const register = async (req, res) => {
           profile: user.profile,
           role: user.role,
           subscription: user.subscription,
-          isEmailVerified: user.verification.isEmailVerified
+          isEmailVerified: user.verification.isEmailVerified,
         },
         tokens: {
           access: token,
           refresh: refreshToken,
-          expiresIn: process.env.JWT_EXPIRE || '7d'
-        }
-      }
+          expiresIn: process.env.JWT_EXPIRE || '7d',
+        },
+      },
     });
-
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Registration failed',
-        code: 'REGISTRATION_ERROR'
-      }
+        code: 'REGISTRATION_ERROR',
+      },
     });
   }
 };
@@ -136,14 +154,14 @@ const login = async (req, res) => {
 
     // Find user by email or username
     const user = await User.findByIdentifier(identifier).select('+password');
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
         error: {
           message: 'Invalid credentials',
-          code: 'INVALID_CREDENTIALS'
-        }
+          code: 'INVALID_CREDENTIALS',
+        },
       });
     }
 
@@ -154,8 +172,8 @@ const login = async (req, res) => {
         success: false,
         error: {
           message: 'Invalid credentials',
-          code: 'INVALID_CREDENTIALS'
-        }
+          code: 'INVALID_CREDENTIALS',
+        },
       });
     }
 
@@ -167,8 +185,8 @@ const login = async (req, res) => {
           message: 'Account is suspended',
           code: 'ACCOUNT_SUSPENDED',
           bannedUntil: user.metadata.bannedUntil,
-          reason: user.metadata.banReason
-        }
+          reason: user.metadata.banReason,
+        },
       });
     }
 
@@ -196,24 +214,23 @@ const login = async (req, res) => {
           role: user.role,
           subscription: user.subscription,
           gamification: user.gamification,
-          isEmailVerified: user.verification.isEmailVerified
+          isEmailVerified: user.verification.isEmailVerified,
         },
         tokens: {
           access: token,
           refresh: refreshToken,
-          expiresIn: process.env.JWT_EXPIRE || '7d'
-        }
-      }
+          expiresIn: process.env.JWT_EXPIRE || '7d',
+        },
+      },
     });
-
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Login failed',
-        code: 'LOGIN_ERROR'
-      }
+        code: 'LOGIN_ERROR',
+      },
     });
   }
 };
@@ -223,7 +240,7 @@ const login = async (req, res) => {
 // @access  Private
 const logout = async (req, res) => {
   try {
-    const token = req.token;
+    const { token } = req;
     const userId = req.user._id;
 
     // Blacklist the current token
@@ -234,17 +251,16 @@ const logout = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Logout successful'
+      message: 'Logout successful',
     });
-
   } catch (error) {
     console.error('Logout error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Logout failed',
-        code: 'LOGOUT_ERROR'
-      }
+        code: 'LOGOUT_ERROR',
+      },
     });
   }
 };
@@ -261,16 +277,13 @@ const refreshToken = async (req, res) => {
         success: false,
         error: {
           message: 'Refresh token is required',
-          code: 'REFRESH_TOKEN_REQUIRED'
-        }
+          code: 'REFRESH_TOKEN_REQUIRED',
+        },
       });
     }
 
     // Verify refresh token
-    const decoded = jwt.verify(
-      token, 
-      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET
-    );
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
 
     // Check if refresh token exists in Redis
     const storedToken = await cache.get(`refresh_token:${decoded.id}`);
@@ -279,8 +292,8 @@ const refreshToken = async (req, res) => {
         success: false,
         error: {
           message: 'Invalid refresh token',
-          code: 'INVALID_REFRESH_TOKEN'
-        }
+          code: 'INVALID_REFRESH_TOKEN',
+        },
       });
     }
 
@@ -291,8 +304,8 @@ const refreshToken = async (req, res) => {
         success: false,
         error: {
           message: 'User not found',
-          code: 'USER_NOT_FOUND'
-        }
+          code: 'USER_NOT_FOUND',
+        },
       });
     }
 
@@ -310,19 +323,18 @@ const refreshToken = async (req, res) => {
         tokens: {
           access: newAccessToken,
           refresh: newRefreshToken,
-          expiresIn: process.env.JWT_EXPIRE || '7d'
-        }
-      }
+          expiresIn: process.env.JWT_EXPIRE || '7d',
+        },
+      },
     });
-
   } catch (error) {
     console.error('Token refresh error:', error);
     res.status(401).json({
       success: false,
       error: {
         message: 'Token refresh failed',
-        code: 'REFRESH_TOKEN_ERROR'
-      }
+        code: 'REFRESH_TOKEN_ERROR',
+      },
     });
   }
 };
@@ -334,16 +346,16 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ 
+    const user = await User.findOne({
       email: email.toLowerCase(),
-      'metadata.isActive': true 
+      'metadata.isActive': true,
     });
 
     if (!user) {
       // Don't reveal if email exists for security
       return res.status(200).json({
         success: true,
-        message: 'If the email exists, a reset link has been sent'
+        message: 'If the email exists, a reset link has been sent',
       });
     }
 
@@ -356,17 +368,16 @@ const forgotPassword = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Password reset email sent'
+      message: 'Password reset email sent',
     });
-
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Password reset request failed',
-        code: 'FORGOT_PASSWORD_ERROR'
-      }
+        code: 'FORGOT_PASSWORD_ERROR',
+      },
     });
   }
 };
@@ -379,14 +390,11 @@ const resetPassword = async (req, res) => {
     const { token, password } = req.body;
 
     // Hash the token to match stored version
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
       'verification.passwordResetToken': hashedToken,
-      'verification.passwordResetExpires': { $gt: Date.now() }
+      'verification.passwordResetExpires': { $gt: Date.now() },
     });
 
     if (!user) {
@@ -394,8 +402,8 @@ const resetPassword = async (req, res) => {
         success: false,
         error: {
           message: 'Invalid or expired reset token',
-          code: 'INVALID_RESET_TOKEN'
-        }
+          code: 'INVALID_RESET_TOKEN',
+        },
       });
     }
 
@@ -420,19 +428,18 @@ const resetPassword = async (req, res) => {
         tokens: {
           access: accessToken,
           refresh: refreshToken,
-          expiresIn: process.env.JWT_EXPIRE || '7d'
-        }
-      }
+          expiresIn: process.env.JWT_EXPIRE || '7d',
+        },
+      },
     });
-
   } catch (error) {
     console.error('Password reset error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Password reset failed',
-        code: 'PASSWORD_RESET_ERROR'
-      }
+        code: 'PASSWORD_RESET_ERROR',
+      },
     });
   }
 };
@@ -445,14 +452,11 @@ const verifyEmail = async (req, res) => {
     const { token } = req.body;
 
     // Hash the token to match stored version
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
       'verification.emailVerificationToken': hashedToken,
-      'verification.emailVerificationExpires': { $gt: Date.now() }
+      'verification.emailVerificationExpires': { $gt: Date.now() },
     });
 
     if (!user) {
@@ -460,8 +464,8 @@ const verifyEmail = async (req, res) => {
         success: false,
         error: {
           message: 'Invalid or expired verification token',
-          code: 'INVALID_VERIFICATION_TOKEN'
-        }
+          code: 'INVALID_VERIFICATION_TOKEN',
+        },
       });
     }
 
@@ -479,18 +483,17 @@ const verifyEmail = async (req, res) => {
       success: true,
       message: 'Email verified successfully',
       data: {
-        xpEarned: 50
-      }
+        xpEarned: 50,
+      },
     });
-
   } catch (error) {
     console.error('Email verification error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Email verification failed',
-        code: 'EMAIL_VERIFICATION_ERROR'
-      }
+        code: 'EMAIL_VERIFICATION_ERROR',
+      },
     });
   }
 };
@@ -500,15 +503,15 @@ const verifyEmail = async (req, res) => {
 // @access  Private
 const resendVerification = async (req, res) => {
   try {
-    const user = req.user;
+    const { user } = req;
 
     if (user.verification.isEmailVerified) {
       return res.status(400).json({
         success: false,
         error: {
           message: 'Email is already verified',
-          code: 'EMAIL_ALREADY_VERIFIED'
-        }
+          code: 'EMAIL_ALREADY_VERIFIED',
+        },
       });
     }
 
@@ -521,17 +524,16 @@ const resendVerification = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Verification email sent'
+      message: 'Verification email sent',
     });
-
   } catch (error) {
     console.error('Resend verification error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Failed to resend verification email',
-        code: 'RESEND_VERIFICATION_ERROR'
-      }
+        code: 'RESEND_VERIFICATION_ERROR',
+      },
     });
   }
 };
@@ -548,30 +550,27 @@ const googleAuth = async (req, res) => {
         success: false,
         error: {
           message: 'Google token is required',
-          code: 'GOOGLE_TOKEN_REQUIRED'
-        }
+          code: 'GOOGLE_TOKEN_REQUIRED',
+        },
       });
     }
 
     // Validate Google token
     const googleUser = await validateGoogleToken(tokenId);
-    
+
     if (!googleUser) {
       return res.status(401).json({
         success: false,
         error: {
           message: 'Invalid Google token',
-          code: 'INVALID_GOOGLE_TOKEN'
-        }
+          code: 'INVALID_GOOGLE_TOKEN',
+        },
       });
     }
 
     // Check if user exists
     let user = await User.findOne({
-      $or: [
-        { 'socialAuth.googleId': googleUser.sub },
-        { email: googleUser.email.toLowerCase() }
-      ]
+      $or: [{ 'socialAuth.googleId': googleUser.sub }, { email: googleUser.email.toLowerCase() }],
     });
 
     if (user) {
@@ -589,14 +588,14 @@ const googleAuth = async (req, res) => {
         profile: {
           firstName: googleUser.given_name || '',
           lastName: googleUser.family_name || '',
-          avatar: googleUser.picture || null
+          avatar: googleUser.picture || null,
         },
         socialAuth: {
-          googleId: googleUser.sub
+          googleId: googleUser.sub,
         },
         verification: {
-          isEmailVerified: true // Google emails are pre-verified
-        }
+          isEmailVerified: true, // Google emails are pre-verified
+        },
       });
     }
 
@@ -623,24 +622,23 @@ const googleAuth = async (req, res) => {
           profile: user.profile,
           role: user.role,
           subscription: user.subscription,
-          isEmailVerified: user.verification.isEmailVerified
+          isEmailVerified: user.verification.isEmailVerified,
         },
         tokens: {
           access: token,
           refresh: refreshToken,
-          expiresIn: process.env.JWT_EXPIRE || '7d'
-        }
-      }
+          expiresIn: process.env.JWT_EXPIRE || '7d',
+        },
+      },
     });
-
   } catch (error) {
     console.error('Google auth error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Google authentication failed',
-        code: 'GOOGLE_AUTH_ERROR'
-      }
+        code: 'GOOGLE_AUTH_ERROR',
+      },
     });
   }
 };
@@ -660,8 +658,8 @@ const changePassword = async (req, res) => {
         success: false,
         error: {
           message: 'Current password is incorrect',
-          code: 'INVALID_CURRENT_PASSWORD'
-        }
+          code: 'INVALID_CURRENT_PASSWORD',
+        },
       });
     }
 
@@ -674,17 +672,16 @@ const changePassword = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Password changed successfully. Please login again.'
+      message: 'Password changed successfully. Please login again.',
     });
-
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({
       success: false,
       error: {
         message: 'Password change failed',
-        code: 'PASSWORD_CHANGE_ERROR'
-      }
+        code: 'PASSWORD_CHANGE_ERROR',
+      },
     });
   }
 };
@@ -697,8 +694,8 @@ const getProfile = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        user: req.user
-      }
+        user: req.user,
+      },
     });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -706,8 +703,8 @@ const getProfile = async (req, res) => {
       success: false,
       error: {
         message: 'Failed to get profile',
-        code: 'GET_PROFILE_ERROR'
-      }
+        code: 'GET_PROFILE_ERROR',
+      },
     });
   }
 };
@@ -715,7 +712,7 @@ const getProfile = async (req, res) => {
 // Helper function to send verification email
 const sendVerificationEmail = async (user, token) => {
   const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-  
+
   const emailData = {
     to: user.email,
     subject: 'Verify Your Email - ShlokaYug',
@@ -723,8 +720,8 @@ const sendVerificationEmail = async (user, token) => {
     context: {
       firstName: user.profile.firstName,
       verificationUrl,
-      expiryHours: 24
-    }
+      expiryHours: 24,
+    },
   };
 
   await sendEmail(emailData);
@@ -733,7 +730,7 @@ const sendVerificationEmail = async (user, token) => {
 // Helper function to send password reset email
 const sendPasswordResetEmail = async (user, token) => {
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-  
+
   const emailData = {
     to: user.email,
     subject: 'Reset Your Password - ShlokaYug',
@@ -741,8 +738,8 @@ const sendPasswordResetEmail = async (user, token) => {
     context: {
       firstName: user.profile.firstName,
       resetUrl,
-      expiryMinutes: 10
-    }
+      expiryMinutes: 10,
+    },
   };
 
   await sendEmail(emailData);
@@ -759,5 +756,5 @@ module.exports = {
   resendVerification,
   googleAuth,
   changePassword,
-  getProfile
+  getProfile,
 };

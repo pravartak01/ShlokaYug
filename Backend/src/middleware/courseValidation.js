@@ -42,7 +42,7 @@ const createCourseValidation = [
       'ayurveda',
       'music_arts',
       'scriptures',
-      'other'
+      'other',
     ])
     .withMessage('Invalid category'),
 
@@ -86,10 +86,7 @@ const createCourseValidation = [
     .isFloat({ min: 1, max: 100000 })
     .withMessage('Amount must be between ₹1 and ₹100,000'),
 
-  body('pricing.currency')
-    .optional()
-    .isIn(['INR', 'USD'])
-    .withMessage('Invalid currency'),
+  body('pricing.currency').optional().isIn(['INR', 'USD']).withMessage('Invalid currency'),
 
   body('pricing.subscriptionPeriod')
     .if(body('pricing.type').equals('subscription'))
@@ -98,10 +95,7 @@ const createCourseValidation = [
     .isIn(['monthly', 'quarterly', 'yearly'])
     .withMessage('Invalid subscription period'),
 
-  body('tags')
-    .optional()
-    .isArray({ max: 10 })
-    .withMessage('Maximum 10 tags allowed'),
+  body('tags').optional().isArray({ max: 10 }).withMessage('Maximum 10 tags allowed'),
 
   body('tags.*')
     .optional()
@@ -135,13 +129,11 @@ const createCourseValidation = [
     .optional()
     .trim()
     .isLength({ max: 1000 })
-    .withMessage('Target audience description cannot exceed 1000 characters')
+    .withMessage('Target audience description cannot exceed 1000 characters'),
 ];
 
 const updateCourseValidation = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid course ID'),
+  param('id').isMongoId().withMessage('Invalid course ID'),
 
   body('title')
     .optional()
@@ -172,7 +164,7 @@ const updateCourseValidation = [
       'ayurveda',
       'music_arts',
       'scriptures',
-      'other'
+      'other',
     ])
     .withMessage('Invalid category'),
 
@@ -196,10 +188,7 @@ const updateCourseValidation = [
     .isFloat({ min: 1, max: 100000 })
     .withMessage('Amount must be between ₹1 and ₹100,000'),
 
-  body('tags')
-    .optional()
-    .isArray({ max: 10 })
-    .withMessage('Maximum 10 tags allowed'),
+  body('tags').optional().isArray({ max: 10 }).withMessage('Maximum 10 tags allowed'),
 
   body('learningObjectives')
     .optional()
@@ -209,7 +198,7 @@ const updateCourseValidation = [
   body('prerequisites')
     .optional()
     .isArray({ max: 10 })
-    .withMessage('Maximum 10 prerequisites allowed')
+    .withMessage('Maximum 10 prerequisites allowed'),
 ];
 
 // ============================================================================
@@ -217,9 +206,7 @@ const updateCourseValidation = [
 // ============================================================================
 
 const addUnitValidation = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid course ID'),
+  param('id').isMongoId().withMessage('Invalid course ID'),
 
   body('title')
     .trim()
@@ -234,20 +221,13 @@ const addUnitValidation = [
     .isLength({ max: 1000 })
     .withMessage('Description cannot exceed 1000 characters'),
 
-  body('order')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Order must be a positive integer')
+  body('order').optional().isInt({ min: 1 }).withMessage('Order must be a positive integer'),
 ];
 
 const addLessonValidation = [
-  param('courseId')
-    .isMongoId()
-    .withMessage('Invalid course ID'),
+  param('courseId').isMongoId().withMessage('Invalid course ID'),
 
-  param('unitId')
-    .isMongoId()
-    .withMessage('Invalid unit ID'),
+  param('unitId').isMongoId().withMessage('Invalid unit ID'),
 
   body('title')
     .trim()
@@ -262,24 +242,15 @@ const addLessonValidation = [
     .isLength({ max: 1000 })
     .withMessage('Description cannot exceed 1000 characters'),
 
-  body('order')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Order must be a positive integer')
+  body('order').optional().isInt({ min: 1 }).withMessage('Order must be a positive integer'),
 ];
 
 const addLectureValidation = [
-  param('courseId')
-    .isMongoId()
-    .withMessage('Invalid course ID'),
+  param('courseId').isMongoId().withMessage('Invalid course ID'),
 
-  param('unitId')
-    .isMongoId()
-    .withMessage('Invalid unit ID'),
+  param('unitId').isMongoId().withMessage('Invalid unit ID'),
 
-  param('lessonId')
-    .isMongoId()
-    .withMessage('Invalid lesson ID'),
+  param('lessonId').isMongoId().withMessage('Invalid lesson ID'),
 
   body('title')
     .trim()
@@ -304,10 +275,7 @@ const addLectureValidation = [
     .isInt({ min: 0, max: 600 })
     .withMessage('Duration must be between 0 and 600 minutes'),
 
-  body('order')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Order must be a positive integer'),
+  body('order').optional().isInt({ min: 1 }).withMessage('Order must be a positive integer'),
 
   body('content.videoUrl')
     .if(body('type').equals('video'))
@@ -327,10 +295,7 @@ const addLectureValidation = [
     .isLength({ max: 50000 })
     .withMessage('Text content cannot exceed 50,000 characters'),
 
-  body('resources')
-    .optional()
-    .isArray({ max: 20 })
-    .withMessage('Maximum 20 resources allowed'),
+  body('resources').optional().isArray({ max: 20 }).withMessage('Maximum 20 resources allowed'),
 
   body('resources.*.title')
     .optional()
@@ -343,10 +308,7 @@ const addLectureValidation = [
     .isIn(['pdf', 'doc', 'image', 'audio', 'video', 'link'])
     .withMessage('Invalid resource type'),
 
-  body('resources.*.url')
-    .optional()
-    .isURL()
-    .withMessage('Invalid resource URL')
+  body('resources.*.url').optional().isURL().withMessage('Invalid resource URL'),
 ];
 
 // ============================================================================
@@ -354,21 +316,16 @@ const addLectureValidation = [
 // ============================================================================
 
 const getCourseValidation = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid course ID'),
+  param('id').isMongoId().withMessage('Invalid course ID'),
 
   query('includeContent')
     .optional()
     .isIn(['true', 'false'])
-    .withMessage('includeContent must be true or false')
+    .withMessage('includeContent must be true or false'),
 ];
 
 const getAllCoursesValidation = [
-  query('page')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Page must be a positive integer'),
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
 
   query('limit')
     .optional()
@@ -392,7 +349,7 @@ const getAllCoursesValidation = [
       'ayurveda',
       'music_arts',
       'scriptures',
-      'other'
+      'other',
     ])
     .withMessage('Invalid category'),
 
@@ -411,25 +368,22 @@ const getAllCoursesValidation = [
     .isIn(['free', 'paid', 'one_time', 'subscription'])
     .withMessage('Invalid pricing filter'),
 
-  query('status')
-    .optional()
-    .isIn(['draft', 'published', 'archived'])
-    .withMessage('Invalid status'),
+  query('status').optional().isIn(['draft', 'published', 'archived']).withMessage('Invalid status'),
 
-  query('instructor')
-    .optional()
-    .isMongoId()
-    .withMessage('Invalid instructor ID'),
+  query('instructor').optional().isMongoId().withMessage('Invalid instructor ID'),
 
   query('sortBy')
     .optional()
-    .isIn(['createdAt', 'title', 'pricing.amount', 'analytics.ratings.average', 'analytics.enrollmentCount'])
+    .isIn([
+      'createdAt',
+      'title',
+      'pricing.amount',
+      'analytics.ratings.average',
+      'analytics.enrollmentCount',
+    ])
     .withMessage('Invalid sort field'),
 
-  query('sortOrder')
-    .optional()
-    .isIn(['asc', 'desc'])
-    .withMessage('Sort order must be asc or desc'),
+  query('sortOrder').optional().isIn(['asc', 'desc']).withMessage('Sort order must be asc or desc'),
 
   query('featured')
     .optional()
@@ -449,68 +403,45 @@ const getAllCoursesValidation = [
   query('maxDuration')
     .optional()
     .isInt({ min: 0 })
-    .withMessage('Maximum duration must be a positive integer')
+    .withMessage('Maximum duration must be a positive integer'),
 ];
 
 const getInstructorCoursesValidation = [
-  query('page')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Page must be a positive integer'),
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
 
   query('limit')
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage('Limit must be between 1 and 100'),
 
-  query('status')
-    .optional()
-    .isIn(['draft', 'published', 'archived'])
-    .withMessage('Invalid status'),
+  query('status').optional().isIn(['draft', 'published', 'archived']).withMessage('Invalid status'),
 
   query('sortBy')
     .optional()
     .isIn(['createdAt', 'updatedAt', 'title', 'analytics.enrollmentCount'])
     .withMessage('Invalid sort field'),
 
-  query('sortOrder')
-    .optional()
-    .isIn(['asc', 'desc'])
-    .withMessage('Sort order must be asc or desc')
+  query('sortOrder').optional().isIn(['asc', 'desc']).withMessage('Sort order must be asc or desc'),
 ];
 
 const getCourseAnalyticsValidation = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid course ID'),
+  param('id').isMongoId().withMessage('Invalid course ID'),
 
   query('period')
     .optional()
     .isIn(['7d', '30d', '90d', '1y'])
-    .withMessage('Period must be 7d, 30d, 90d, or 1y')
+    .withMessage('Period must be 7d, 30d, 90d, or 1y'),
 ];
 
 // ============================================================================
 // PUBLISH/UNPUBLISH VALIDATIONS
 // ============================================================================
 
-const publishCourseValidation = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid course ID')
-];
+const publishCourseValidation = [param('id').isMongoId().withMessage('Invalid course ID')];
 
-const unpublishCourseValidation = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid course ID')
-];
+const unpublishCourseValidation = [param('id').isMongoId().withMessage('Invalid course ID')];
 
-const deleteCourseValidation = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid course ID')
-];
+const deleteCourseValidation = [param('id').isMongoId().withMessage('Invalid course ID')];
 
 // ============================================================================
 // EXPORT VALIDATION GROUPS
@@ -535,5 +466,5 @@ module.exports = {
 
   // Instructor Dashboard
   getInstructorCoursesValidation,
-  getCourseAnalyticsValidation
+  getCourseAnalyticsValidation,
 };

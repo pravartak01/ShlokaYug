@@ -37,7 +37,9 @@ const {
   getEnrollmentDetails,
   validateAccess,
   addDevice,
-  removeDevice
+  removeDevice,
+  markLectureComplete,
+  getCourseProgress
 } = require('../controllers/enrollmentController');
 
 // @desc    Auto-enroll user after successful payment (integration endpoint)
@@ -47,6 +49,90 @@ router.post('/auto-enroll',
   auth,
   validateAutoEnrollment, 
   autoEnrollAfterPayment
+);
+
+// @desc    Direct enrollment (for free courses or manual enrollment)
+// @route   POST /api/enrollments/enroll
+// @access  Private
+router.post('/enroll',
+  auth,
+  async (req, res) => {
+    try {
+      const { courseId } = req.body;
+      const userId = req.user.id;
+
+      if (!courseId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Course ID is required'
+        });
+      }
+
+      const Enrollment = require('../models/Enrollment');
+      const Course = require('../models/Course');
+
+      // Check if already enrolled
+      const existingEnrollment = await Enrollment.findOne({ userId, courseId });
+      if (existingEnrollment) {
+        return res.status(200).json({
+          success: true,
+          message: 'Already enrolled in this course',
+          data: { enrollment: existingEnrollment }
+        });
+      }
+
+      // Get course details
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found'
+        });
+      }
+
+      // Generate unique payment ID for free enrollment
+      const paymentId = `free_${userId.slice(-8)}_${courseId.slice(-8)}_${Date.now()}`;
+
+      // Create enrollment
+      const enrollment = new Enrollment({
+        userId,
+        courseId,
+        guruId: course.instructor?.userId || course.instructor,
+        enrollmentType: 'one_time_purchase',
+        payment: {
+          paymentId: paymentId,
+          amount: 0,
+          currency: 'INR',
+          status: 'completed',
+          paidAt: new Date()
+        },
+        access: {
+          status: 'active',
+          grantedAt: new Date()
+        },
+        analytics: {
+          enrollmentSource: 'direct'
+        }
+      });
+
+      await enrollment.save();
+      console.log('✅ Direct enrollment created:', enrollment._id);
+
+      res.status(201).json({
+        success: true,
+        message: 'Enrolled successfully',
+        data: { enrollment }
+      });
+
+    } catch (error) {
+      console.error('Enrollment error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to enroll in course',
+        error: error.message
+      });
+    }
+  }
 );
 
 // @desc    Initiate enrollment process (create Razorpay order)
@@ -71,12 +157,35 @@ router.post('/confirm',
 
 // @desc    Get user's enrollments
 // @route   GET /api/enrollments/my-enrollments
-// @access  Private (Student only)
+// @access  Private
 router.get('/my-enrollments',
   auth,
-  checkRole(['student']),
   ...validateGetEnrollments,
   getMyEnrollments
+);
+
+// @desc    Get user's enrolled courses (alias for mobile app)
+// @route   GET /api/enrollments/my-courses
+// @access  Private
+router.get('/my-courses',
+  auth,
+  getMyEnrollments
+);
+
+// @desc    Mark lecture as complete
+// @route   POST /api/enrollments/lecture-complete
+// @access  Private
+router.post('/lecture-complete',
+  auth,
+  markLectureComplete
+);
+
+// @desc    Get course progress
+// @route   GET /api/enrollments/course/:courseId/progress
+// @access  Private
+router.get('/course/:courseId/progress',
+  auth,
+  getCourseProgress
 );
 
 // @desc    Search enrollments (for admin and analytics)
@@ -658,5 +767,80 @@ router.delete('/:id/devices/:deviceId',
   ...validateDeviceId,
   removeDevice
 );
+
+// @desc    Force complete course (DEVELOPMENT ONLY)
+// @route   POST /api/enrollments/force-complete/:courseId
+// @access  Private
+router.post('/force-complete/:courseId', auth, async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user.id;
+    
+    const Enrollment = require('../models/Enrollment');
+    const Course = require('../models/Course');
+    
+    console.log('🎯 Force complete request:', { userId, courseId });
+    
+    const enrollment = await Enrollment.findOne({ userId, courseId });
+    if (!enrollment) {
+      console.log('❌ Enrollment not found');
+      return res.status(404).json({ success: false, message: 'Enrollment not found' });
+    }
+    
+    const course = await Course.findById(courseId);
+    if (!course) {
+      console.log('❌ Course not found');
+      return res.status(404).json({ success: false, message: 'Course not found' });
+    }
+    
+    console.log('📚 Course structure:', JSON.stringify(course.structure, null, 2));
+    
+    // Collect all lecture IDs
+    const allLectureIds = [];
+    let totalLectures = 0;
+    course.structure?.units?.forEach(unit => {
+      unit.lessons?.forEach(lesson => {
+        lesson.lectures?.forEach(lecture => {
+          totalLectures++;
+          if (lecture.lectureId) {
+            allLectureIds.push(lecture.lectureId);
+          } else {
+            // Generate a placeholder ID if missing
+            allLectureIds.push(`lecture_${totalLectures}`);
+          }
+        });
+      });
+    });
+    
+    console.log('✅ Collected lecture IDs:', allLectureIds.length, 'Total lectures:', totalLectures);
+    
+    // Mark all lectures as complete
+    enrollment.progress = {
+      lecturesCompleted: allLectureIds,
+      completionPercentage: 100,
+      isCompleted: true,
+      completedAt: new Date(),
+      totalWatchTime: course.structure?.totalDuration || 3600,
+      lastAccessedLecture: allLectureIds[allLectureIds.length - 1] || 'final'
+    };
+    
+    await enrollment.save();
+    
+    console.log('✅ Course force-completed successfully');
+    
+    res.json({
+      success: true,
+      message: 'Course force-completed successfully',
+      data: {
+        lecturesCompleted: allLectureIds.length,
+        completionPercentage: 100,
+        isCompleted: true
+      }
+    });
+  } catch (error) {
+    console.error('❌ Force complete error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 module.exports = router;

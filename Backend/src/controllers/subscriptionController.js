@@ -1,8 +1,8 @@
+const mongoose = require('mongoose');
 const EnrollmentV2 = require('../models/EnrollmentEnhanced');
 const PaymentTransaction = require('../models/PaymentTransaction');
 const Course = require('../models/Course');
 const User = require('../models/User');
-const mongoose = require('mongoose');
 
 /**
  * Subscription Management Controller
@@ -20,9 +20,9 @@ const getMySubscriptions = async (req, res) => {
     const { status, includeExpired = false } = req.query;
 
     // Build filter
-    const filter = { 
+    const filter = {
       userId: new mongoose.Types.ObjectId(userId),
-      enrollmentType: 'subscription'
+      enrollmentType: 'subscription',
     };
 
     if (status) {
@@ -37,14 +37,16 @@ const getMySubscriptions = async (req, res) => {
       .populate('userId', 'name email')
       .sort({ 'subscription.nextBillingDate': 1 });
 
-    const subscriptionData = subscriptions.map(enrollment => {
-      const subscription = enrollment.subscription;
+    const subscriptionData = subscriptions.map((enrollment) => {
+      const { subscription } = enrollment;
       const course = enrollment.courseId;
-      
+
       // Calculate subscription metrics
-      const totalPaid = enrollment.paymentHistory.reduce((sum, payment) => 
-        sum + (payment.amount || 0), 0);
-      
+      const totalPaid = enrollment.paymentHistory.reduce(
+        (sum, payment) => sum + (payment.amount || 0),
+        0
+      );
+
       const daysActive = Math.floor(
         (Date.now() - enrollment.enrollmentDate.getTime()) / (1000 * 60 * 60 * 24)
       );
@@ -56,20 +58,20 @@ const getMySubscriptions = async (req, res) => {
           nextAction = {
             type: 'expires',
             date: subscription.currentPeriodEnd,
-            description: 'Subscription will end'
+            description: 'Subscription will end',
           };
         } else {
           nextAction = {
             type: 'renews',
             date: subscription.nextBillingDate,
-            description: 'Next billing'
+            description: 'Next billing',
           };
         }
       } else if (subscription.status === 'past_due') {
         nextAction = {
           type: 'retry',
           date: subscription.nextRetryDate,
-          description: 'Payment retry'
+          description: 'Payment retry',
         };
       }
 
@@ -81,7 +83,7 @@ const getMySubscriptions = async (req, res) => {
           description: course.description,
           instructor: course.instructor.name,
           thumbnail: course.thumbnail,
-          duration: course.duration
+          duration: course.duration,
         },
         subscription: {
           status: subscription.status,
@@ -95,7 +97,7 @@ const getMySubscriptions = async (req, res) => {
           cancelReason: subscription.cancelReason,
           deviceLimit: subscription.deviceLimit,
           trialEnd: subscription.trialEnd,
-          discountPercentage: subscription.discountPercentage
+          discountPercentage: subscription.discountPercentage,
         },
         enrollment: {
           enrollmentDate: enrollment.enrollmentDate,
@@ -103,15 +105,15 @@ const getMySubscriptions = async (req, res) => {
           progress: enrollment.progress,
           lastAccessedAt: enrollment.lastAccessedAt,
           certificateEligible: enrollment.certificateEligible,
-          certificateIssued: enrollment.certificateIssued
+          certificateIssued: enrollment.certificateIssued,
         },
         metrics: {
           totalPaid,
           daysActive,
-          activeDevices: enrollment.devices.filter(d => d.isActive).length,
-          totalDevices: enrollment.devices.length
+          activeDevices: enrollment.devices.filter((d) => d.isActive).length,
+          totalDevices: enrollment.devices.length,
         },
-        nextAction
+        nextAction,
       };
     });
 
@@ -122,20 +124,19 @@ const getMySubscriptions = async (req, res) => {
         subscriptions: subscriptionData,
         summary: {
           total: subscriptionData.length,
-          active: subscriptionData.filter(s => s.subscription.status === 'active').length,
-          trialPeriod: subscriptionData.filter(s => s.subscription.status === 'trialing').length,
-          pastDue: subscriptionData.filter(s => s.subscription.status === 'past_due').length,
-          cancelled: subscriptionData.filter(s => s.subscription.status === 'cancelled').length
-        }
-      }
+          active: subscriptionData.filter((s) => s.subscription.status === 'active').length,
+          trialPeriod: subscriptionData.filter((s) => s.subscription.status === 'trialing').length,
+          pastDue: subscriptionData.filter((s) => s.subscription.status === 'past_due').length,
+          cancelled: subscriptionData.filter((s) => s.subscription.status === 'cancelled').length,
+        },
+      },
     });
-
   } catch (error) {
     console.error('Get my subscriptions error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching subscriptions',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -151,13 +152,12 @@ const pauseSubscription = async (req, res) => {
     const { reason, pauseDuration } = req.body;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId)
-      .populate('courseId', 'title');
+    const enrollment = await EnrollmentV2.findById(enrollmentId).populate('courseId', 'title');
 
     if (!enrollment) {
       return res.status(404).json({
         success: false,
-        message: 'Enrollment not found'
+        message: 'Enrollment not found',
       });
     }
 
@@ -165,7 +165,7 @@ const pauseSubscription = async (req, res) => {
     if (enrollment.userId.toString() !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied'
+        message: 'Access denied',
       });
     }
 
@@ -173,7 +173,7 @@ const pauseSubscription = async (req, res) => {
     if (enrollment.enrollmentType !== 'subscription') {
       return res.status(400).json({
         success: false,
-        message: 'Only subscriptions can be paused'
+        message: 'Only subscriptions can be paused',
       });
     }
 
@@ -181,7 +181,7 @@ const pauseSubscription = async (req, res) => {
     if (!['active', 'trialing'].includes(enrollment.subscription.status)) {
       return res.status(400).json({
         success: false,
-        message: 'Subscription cannot be paused in current state'
+        message: 'Subscription cannot be paused in current state',
       });
     }
 
@@ -204,16 +204,15 @@ const pauseSubscription = async (req, res) => {
         pausedAt: enrollment.subscription.pausedAt,
         pauseEndDate: enrollment.subscription.pauseEndDate,
         reason: enrollment.subscription.pauseReason,
-        status: enrollment.subscription.status
-      }
+        status: enrollment.subscription.status,
+      },
     });
-
   } catch (error) {
     console.error('Pause subscription error:', error);
     res.status(500).json({
       success: false,
       message: 'Error pausing subscription',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -228,13 +227,12 @@ const resumeSubscription = async (req, res) => {
     const { enrollmentId } = req.params;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId)
-      .populate('courseId', 'title');
+    const enrollment = await EnrollmentV2.findById(enrollmentId).populate('courseId', 'title');
 
     if (!enrollment) {
       return res.status(404).json({
         success: false,
-        message: 'Enrollment not found'
+        message: 'Enrollment not found',
       });
     }
 
@@ -242,7 +240,7 @@ const resumeSubscription = async (req, res) => {
     if (enrollment.userId.toString() !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied'
+        message: 'Access denied',
       });
     }
 
@@ -250,7 +248,7 @@ const resumeSubscription = async (req, res) => {
     if (enrollment.subscription.status !== 'paused') {
       return res.status(400).json({
         success: false,
-        message: 'Subscription is not paused'
+        message: 'Subscription is not paused',
       });
     }
 
@@ -265,16 +263,15 @@ const resumeSubscription = async (req, res) => {
         courseName: enrollment.courseId.title,
         resumedAt: new Date(),
         nextBillingDate: enrollment.subscription.nextBillingDate,
-        status: enrollment.subscription.status
-      }
+        status: enrollment.subscription.status,
+      },
     });
-
   } catch (error) {
     console.error('Resume subscription error:', error);
     res.status(500).json({
       success: false,
       message: 'Error resuming subscription',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -290,13 +287,12 @@ const cancelSubscription = async (req, res) => {
     const { reason, immediate = false, feedback } = req.body;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId)
-      .populate('courseId', 'title');
+    const enrollment = await EnrollmentV2.findById(enrollmentId).populate('courseId', 'title');
 
     if (!enrollment) {
       return res.status(404).json({
         success: false,
-        message: 'Enrollment not found'
+        message: 'Enrollment not found',
       });
     }
 
@@ -304,7 +300,7 @@ const cancelSubscription = async (req, res) => {
     if (enrollment.userId.toString() !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied'
+        message: 'Access denied',
       });
     }
 
@@ -312,7 +308,7 @@ const cancelSubscription = async (req, res) => {
     if (enrollment.enrollmentType !== 'subscription') {
       return res.status(400).json({
         success: false,
-        message: 'Only subscriptions can be cancelled'
+        message: 'Only subscriptions can be cancelled',
       });
     }
 
@@ -320,7 +316,7 @@ const cancelSubscription = async (req, res) => {
     if (['cancelled', 'expired'].includes(enrollment.subscription.status)) {
       return res.status(400).json({
         success: false,
-        message: 'Subscription is already cancelled or expired'
+        message: 'Subscription is already cancelled or expired',
       });
     }
 
@@ -333,7 +329,7 @@ const cancelSubscription = async (req, res) => {
       cancelledAt: enrollment.subscription.cancelledAt,
       reason: enrollment.subscription.cancelReason,
       immediate,
-      status: enrollment.subscription.status
+      status: enrollment.subscription.status,
     };
 
     if (!immediate) {
@@ -346,15 +342,14 @@ const cancelSubscription = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Subscription cancelled successfully',
-      data: responseData
+      data: responseData,
     });
-
   } catch (error) {
     console.error('Cancel subscription error:', error);
     res.status(500).json({
       success: false,
       message: 'Error cancelling subscription',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -370,13 +365,15 @@ const renewSubscription = async (req, res) => {
     const { billingCycle } = req.body;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId)
-      .populate('courseId', 'title pricing');
+    const enrollment = await EnrollmentV2.findById(enrollmentId).populate(
+      'courseId',
+      'title pricing'
+    );
 
     if (!enrollment) {
       return res.status(404).json({
         success: false,
-        message: 'Enrollment not found'
+        message: 'Enrollment not found',
       });
     }
 
@@ -384,7 +381,7 @@ const renewSubscription = async (req, res) => {
     if (enrollment.userId.toString() !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied'
+        message: 'Access denied',
       });
     }
 
@@ -392,7 +389,7 @@ const renewSubscription = async (req, res) => {
     if (enrollment.enrollmentType !== 'subscription') {
       return res.status(400).json({
         success: false,
-        message: 'Only subscriptions can be renewed'
+        message: 'Only subscriptions can be renewed',
       });
     }
 
@@ -400,14 +397,14 @@ const renewSubscription = async (req, res) => {
     if (!['expired', 'past_due', 'cancelled'].includes(enrollment.subscription.status)) {
       return res.status(400).json({
         success: false,
-        message: 'Subscription does not need renewal'
+        message: 'Subscription does not need renewal',
       });
     }
 
     // Calculate renewal price
     const course = enrollment.courseId;
     const newBillingCycle = billingCycle || enrollment.subscription.billingCycle;
-    
+
     let renewalPrice;
     if (newBillingCycle === 'monthly') {
       renewalPrice = course.pricing.subscription.monthly;
@@ -418,20 +415,20 @@ const renewSubscription = async (req, res) => {
     } else {
       return res.status(400).json({
         success: false,
-        message: 'Invalid billing cycle'
+        message: 'Invalid billing cycle',
       });
     }
 
     // Apply any existing discount
     if (enrollment.subscription.discountPercentage > 0) {
-      renewalPrice = renewalPrice * (1 - enrollment.subscription.discountPercentage / 100);
+      renewalPrice *= 1 - enrollment.subscription.discountPercentage / 100;
     }
 
     // Create payment order for renewal
     const Razorpay = require('razorpay');
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
     const orderOptions = {
@@ -440,11 +437,11 @@ const renewSubscription = async (req, res) => {
       receipt: `renewal_${enrollment._id}_${Date.now()}`,
       notes: {
         enrollmentId: enrollment._id.toString(),
-        userId: userId,
+        userId,
         courseId: course._id.toString(),
         type: 'subscription_renewal',
-        billingCycle: newBillingCycle
-      }
+        billingCycle: newBillingCycle,
+      },
     };
 
     const razorpayOrder = await razorpay.orders.create(orderOptions);
@@ -459,8 +456,8 @@ const renewSubscription = async (req, res) => {
       razorpayOrderId: razorpayOrder.id,
       amount: {
         original: course.pricing.subscription[newBillingCycle],
-        discount: (course.pricing.subscription[newBillingCycle] - renewalPrice),
-        total: renewalPrice
+        discount: course.pricing.subscription[newBillingCycle] - renewalPrice,
+        total: renewalPrice,
       },
       currency: 'INR',
       paymentMethod: 'razorpay',
@@ -468,8 +465,8 @@ const renewSubscription = async (req, res) => {
       metadata: {
         source: 'subscription_renewal',
         billingCycle: newBillingCycle,
-        previousStatus: enrollment.subscription.status
-      }
+        previousStatus: enrollment.subscription.status,
+      },
     });
 
     await paymentTransaction.save();
@@ -488,17 +485,16 @@ const renewSubscription = async (req, res) => {
         renewalDetails: {
           previousStatus: enrollment.subscription.status,
           newBillingCycle,
-          discountApplied: enrollment.subscription.discountPercentage
-        }
-      }
+          discountApplied: enrollment.subscription.discountPercentage,
+        },
+      },
     });
-
   } catch (error) {
     console.error('Renew subscription error:', error);
     res.status(500).json({
       success: false,
       message: 'Error creating renewal payment',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -514,13 +510,12 @@ const updateSubscriptionPreferences = async (req, res) => {
     const { billingCycle, autoRenewal, deviceLimit } = req.body;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId)
-      .populate('courseId', 'title');
+    const enrollment = await EnrollmentV2.findById(enrollmentId).populate('courseId', 'title');
 
     if (!enrollment) {
       return res.status(404).json({
         success: false,
-        message: 'Enrollment not found'
+        message: 'Enrollment not found',
       });
     }
 
@@ -528,7 +523,7 @@ const updateSubscriptionPreferences = async (req, res) => {
     if (enrollment.userId.toString() !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied'
+        message: 'Access denied',
       });
     }
 
@@ -536,11 +531,11 @@ const updateSubscriptionPreferences = async (req, res) => {
     if (enrollment.enrollmentType !== 'subscription') {
       return res.status(400).json({
         success: false,
-        message: 'Only subscription preferences can be updated'
+        message: 'Only subscription preferences can be updated',
       });
     }
 
-    let updateFields = {};
+    const updateFields = {};
     let requiresPaymentUpdate = false;
 
     // Update billing cycle
@@ -549,7 +544,7 @@ const updateSubscriptionPreferences = async (req, res) => {
       if (!validCycles.includes(billingCycle)) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid billing cycle'
+          message: 'Invalid billing cycle',
         });
       }
       updateFields['subscription.billingCycle'] = billingCycle;
@@ -567,7 +562,7 @@ const updateSubscriptionPreferences = async (req, res) => {
       if (newDeviceLimit < 1 || newDeviceLimit > 10) {
         return res.status(400).json({
           success: false,
-          message: 'Device limit must be between 1 and 10'
+          message: 'Device limit must be between 1 and 10',
         });
       }
       updateFields['subscription.deviceLimit'] = newDeviceLimit;
@@ -575,23 +570,22 @@ const updateSubscriptionPreferences = async (req, res) => {
 
     // Apply updates
     if (Object.keys(updateFields).length > 0) {
-      await EnrollmentV2.updateOne(
-        { _id: enrollmentId },
-        { $set: updateFields }
-      );
+      await EnrollmentV2.updateOne({ _id: enrollmentId }, { $set: updateFields });
 
       // Add audit log
       await enrollment.addAuditLog({
         action: 'subscription_preferences_updated',
         details: updateFields,
         performedBy: userId,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
 
     // Get updated enrollment
-    const updatedEnrollment = await EnrollmentV2.findById(enrollmentId)
-      .populate('courseId', 'title');
+    const updatedEnrollment = await EnrollmentV2.findById(enrollmentId).populate(
+      'courseId',
+      'title'
+    );
 
     const responseData = {
       enrollmentId: enrollment._id,
@@ -599,9 +593,9 @@ const updateSubscriptionPreferences = async (req, res) => {
       preferences: {
         billingCycle: updatedEnrollment.subscription.billingCycle,
         autoRenewal: !updatedEnrollment.subscription.cancelAtPeriodEnd,
-        deviceLimit: updatedEnrollment.subscription.deviceLimit
+        deviceLimit: updatedEnrollment.subscription.deviceLimit,
       },
-      updated: Object.keys(updateFields)
+      updated: Object.keys(updateFields),
     };
 
     if (requiresPaymentUpdate) {
@@ -611,15 +605,14 @@ const updateSubscriptionPreferences = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Subscription preferences updated successfully',
-      data: responseData
+      data: responseData,
     });
-
   } catch (error) {
     console.error('Update subscription preferences error:', error);
     res.status(500).json({
       success: false,
       message: 'Error updating subscription preferences',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -637,12 +630,12 @@ const getSubscriptionAnalytics = async (req, res) => {
 
     // Build match stage for aggregation
     const matchStage = { enrollmentType: 'subscription' };
-    
+
     // If guru, only show their courses
     if (userRole === 'guru') {
       const Course = require('../models/Course');
       const guruCourses = await Course.find({ 'instructor._id': userId }).select('_id');
-      matchStage.courseId = { $in: guruCourses.map(c => c._id) };
+      matchStage.courseId = { $in: guruCourses.map((c) => c._id) };
     }
 
     // Filter by specific course if provided
@@ -666,46 +659,46 @@ const getSubscriptionAnalytics = async (req, res) => {
           totalSubscriptions: { $sum: 1 },
           activeSubscriptions: {
             $sum: {
-              $cond: [{ $eq: ['$subscription.status', 'active'] }, 1, 0]
-            }
+              $cond: [{ $eq: ['$subscription.status', 'active'] }, 1, 0],
+            },
           },
           trialSubscriptions: {
             $sum: {
-              $cond: [{ $eq: ['$subscription.status', 'trialing'] }, 1, 0]
-            }
+              $cond: [{ $eq: ['$subscription.status', 'trialing'] }, 1, 0],
+            },
           },
           pausedSubscriptions: {
             $sum: {
-              $cond: [{ $eq: ['$subscription.status', 'paused'] }, 1, 0]
-            }
+              $cond: [{ $eq: ['$subscription.status', 'paused'] }, 1, 0],
+            },
           },
           cancelledSubscriptions: {
             $sum: {
-              $cond: [{ $eq: ['$subscription.status', 'cancelled'] }, 1, 0]
-            }
+              $cond: [{ $eq: ['$subscription.status', 'cancelled'] }, 1, 0],
+            },
           },
           expiredSubscriptions: {
             $sum: {
-              $cond: [{ $eq: ['$subscription.status', 'expired'] }, 1, 0]
-            }
+              $cond: [{ $eq: ['$subscription.status', 'expired'] }, 1, 0],
+            },
           },
           monthlySubscriptions: {
             $sum: {
-              $cond: [{ $eq: ['$subscription.billingCycle', 'monthly'] }, 1, 0]
-            }
+              $cond: [{ $eq: ['$subscription.billingCycle', 'monthly'] }, 1, 0],
+            },
           },
           quarterlySubscriptions: {
             $sum: {
-              $cond: [{ $eq: ['$subscription.billingCycle', 'quarterly'] }, 1, 0]
-            }
+              $cond: [{ $eq: ['$subscription.billingCycle', 'quarterly'] }, 1, 0],
+            },
           },
           yearlySubscriptions: {
             $sum: {
-              $cond: [{ $eq: ['$subscription.billingCycle', 'yearly'] }, 1, 0]
-            }
-          }
-        }
-      }
+              $cond: [{ $eq: ['$subscription.billingCycle', 'yearly'] }, 1, 0],
+            },
+          },
+        },
+      },
     ]);
 
     // Get churn analysis
@@ -714,24 +707,29 @@ const getSubscriptionAnalytics = async (req, res) => {
       {
         $group: {
           _id: '$subscription.cancelReason',
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
-      { $sort: { count: -1 } }
+      { $sort: { count: -1 } },
     ]);
 
     // Get subscription trends by period
-    const periodGrouping = period === 'day' ? {
-      year: { $year: '$enrollmentDate' },
-      month: { $month: '$enrollmentDate' },
-      day: { $dayOfMonth: '$enrollmentDate' }
-    } : period === 'week' ? {
-      year: { $year: '$enrollmentDate' },
-      week: { $week: '$enrollmentDate' }
-    } : {
-      year: { $year: '$enrollmentDate' },
-      month: { $month: '$enrollmentDate' }
-    };
+    const periodGrouping =
+      period === 'day'
+        ? {
+            year: { $year: '$enrollmentDate' },
+            month: { $month: '$enrollmentDate' },
+            day: { $dayOfMonth: '$enrollmentDate' },
+          }
+        : period === 'week'
+          ? {
+              year: { $year: '$enrollmentDate' },
+              week: { $week: '$enrollmentDate' },
+            }
+          : {
+              year: { $year: '$enrollmentDate' },
+              month: { $month: '$enrollmentDate' },
+            };
 
     const subscriptionTrends = await EnrollmentV2.aggregate([
       { $match: matchStage },
@@ -742,18 +740,20 @@ const getSubscriptionAnalytics = async (req, res) => {
           trialConversions: {
             $sum: {
               $cond: [
-                { $and: [
-                  { $eq: ['$subscription.status', 'active'] },
-                  { $ne: ['$subscription.trialEnd', null] }
-                ]},
+                {
+                  $and: [
+                    { $eq: ['$subscription.status', 'active'] },
+                    { $ne: ['$subscription.trialEnd', null] },
+                  ],
+                },
                 1,
-                0
-              ]
-            }
-          }
-        }
+                0,
+              ],
+            },
+          },
+        },
       },
-      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
+      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } },
     ]);
 
     res.status(200).json({
@@ -769,21 +769,20 @@ const getSubscriptionAnalytics = async (req, res) => {
           expiredSubscriptions: 0,
           monthlySubscriptions: 0,
           quarterlySubscriptions: 0,
-          yearlySubscriptions: 0
+          yearlySubscriptions: 0,
         },
         churnAnalysis,
         trends: subscriptionTrends,
         period,
-        filters: { startDate, endDate, courseId }
-      }
+        filters: { startDate, endDate, courseId },
+      },
     });
-
   } catch (error) {
     console.error('Get subscription analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching subscription analytics',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -795,5 +794,5 @@ module.exports = {
   cancelSubscription,
   renewSubscription,
   updateSubscriptionPreferences,
-  getSubscriptionAnalytics
+  getSubscriptionAnalytics,
 };

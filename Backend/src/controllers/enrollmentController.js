@@ -532,7 +532,7 @@ const getMyEnrollments = async (req, res) => {
       .limit(limitNumber)
       .populate({
         path: 'courseId',
-        select: 'title description instructor metadata.difficulty metadata.category pricing structure.units',
+        select: 'title description instructor metadata.difficulty metadata.category pricing structure.units thumbnail',
         populate: {
           path: 'instructor.userId',
           select: 'profile.firstName profile.lastName'
@@ -540,24 +540,26 @@ const getMyEnrollments = async (req, res) => {
       })
       .lean();
 
-    // Calculate additional data for each enrollment
-    const enrichedEnrollments = enrollments.map(enrollment => {
-      const totalLectures = enrollment.courseId?.structure?.units?.reduce((total, unit) => {
-        return total + unit.lessons?.reduce((lessonTotal, lesson) => {
-          return lessonTotal + (lesson.lectures?.length || 0);
+    // Filter out enrollments where course was deleted and calculate additional data
+    const enrichedEnrollments = enrollments
+      .filter(enrollment => enrollment.courseId) // Skip deleted courses
+      .map(enrollment => {
+        const totalLectures = enrollment.courseId?.structure?.units?.reduce((total, unit) => {
+          return total + unit.lessons?.reduce((lessonTotal, lesson) => {
+            return lessonTotal + (lesson.lectures?.length || 0);
+          }, 0) || 0;
         }, 0) || 0;
-      }, 0) || 0;
 
-      return {
-        ...enrollment,
-        daysUntilExpiry: enrollment.daysRemaining,
-        isExpired: !enrollment.isActive,
-        activeDeviceCount: enrollment.access?.accessDevices?.filter(d => d.isActive).length || 0,
-        canAddDevice: (enrollment.access?.accessDevices?.filter(d => d.isActive).length || 0) < enrollment.access?.maxConcurrentDevices,
-        totalLectures,
-        completionPercentage: 0 // TODO: Implement based on progress tracking
-      };
-    });
+        return {
+          ...enrollment,
+          daysUntilExpiry: enrollment.daysRemaining,
+          isExpired: !enrollment.isActive,
+          activeDeviceCount: enrollment.access?.accessDevices?.filter(d => d.isActive).length || 0,
+          canAddDevice: (enrollment.access?.accessDevices?.filter(d => d.isActive).length || 0) < enrollment.access?.maxConcurrentDevices,
+          totalLectures,
+          completionPercentage: enrollment.progress?.completionPercentage || 0
+        };
+      });
 
     res.status(200).json({
       success: true,
@@ -827,6 +829,145 @@ const removeDevice = async (req, res) => {
   }
 };
 
+// @desc    Mark lecture as complete
+// @route   POST /api/enrollments/lecture-complete
+// @access  Private (Student only)
+const markLectureComplete = async (req, res) => {
+  try {
+    const { courseId, lectureId } = req.body;
+    const userId = req.user.id;
+
+    // Find the enrollment
+    const enrollment = await Enrollment.findOne({ userId, courseId });
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Enrollment not found',
+      });
+    }
+
+    // Initialize progress if not exists
+    if (!enrollment.progress) {
+      enrollment.progress = {
+        lecturesCompleted: [],
+        completionPercentage: 0,
+        lastAccessedLecture: null,
+        isCompleted: false,
+        totalWatchTime: 0,
+      };
+    }
+
+    // Add lecture to completed list if not already there
+    if (!enrollment.progress.lecturesCompleted.includes(lectureId)) {
+      enrollment.progress.lecturesCompleted.push(lectureId);
+    }
+
+    // Update last accessed lecture
+    enrollment.progress.lastAccessedLecture = lectureId;
+
+    // Get course to calculate completion percentage
+    const course = await Course.findById(courseId);
+    if (course) {
+      const totalLectures = course.structure?.totalLectures || 0;
+      const completedCount = enrollment.progress.lecturesCompleted.length;
+      enrollment.progress.completionPercentage = totalLectures > 0 
+        ? Math.round((completedCount / totalLectures) * 100) 
+        : 0;
+
+      // Mark as completed if all lectures done
+      if (completedCount >= totalLectures && totalLectures > 0) {
+        enrollment.progress.isCompleted = true;
+        enrollment.progress.completedAt = new Date();
+      }
+    }
+
+    await enrollment.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Lecture marked as complete',
+      data: {
+        progress: {
+          lecturesCompleted: enrollment.progress.lecturesCompleted.length,
+          completionPercentage: enrollment.progress.completionPercentage,
+          isCompleted: enrollment.progress.isCompleted,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Mark lecture complete error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to mark lecture as complete',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get course progress
+// @route   GET /api/enrollments/course/:courseId/progress
+// @access  Private (Student only)
+const getCourseProgress = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user.id;
+
+    const enrollment = await Enrollment.findOne({ userId, courseId }).populate(
+      'courseId',
+      'title structure'
+    );
+
+    if (!enrollment) {
+      // Return empty progress instead of 404 for better UX
+      return res.status(200).json({
+        success: true,
+        data: {
+          progress: {
+            lecturesCompleted: [],
+            completionPercentage: 0,
+            lastAccessedLecture: null,
+            isCompleted: false,
+            completedAt: null,
+            totalWatchTime: 0,
+          },
+          course: {
+            title: 'Unknown',
+            totalLectures: 0,
+          },
+          enrolled: false,
+        },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        progress: {
+          lecturesCompleted: enrollment.progress?.lecturesCompleted || [],
+          completionPercentage: enrollment.progress?.completionPercentage || 0,
+          lastAccessedLecture: enrollment.progress?.lastAccessedLecture,
+          isCompleted: enrollment.progress?.isCompleted || false,
+          completedAt: enrollment.progress?.completedAt,
+          totalWatchTime: enrollment.progress?.totalWatchTime || 0,
+        },
+        course: {
+          title: enrollment.courseId.title,
+          totalLectures: enrollment.courseId.structure?.totalLectures || 0,
+        },
+        enrolled: true,
+      },
+    });
+  } catch (error) {
+    console.error('Get course progress error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve progress',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   autoEnrollAfterPayment,
   initiateEnrollment,
@@ -835,5 +976,7 @@ module.exports = {
   getEnrollmentDetails,
   validateAccess,
   addDevice,
-  removeDevice
+  removeDevice,
+  markLectureComplete,
+  getCourseProgress,
 };

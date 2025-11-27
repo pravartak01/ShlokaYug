@@ -7,8 +7,8 @@ const notFound = (req, res, next) => {
       method: req.method,
       path: req.originalUrl,
       timestamp: new Date().toISOString(),
-      suggestion: 'Please check the API documentation for valid endpoints'
-    }
+      suggestion: 'Please check the API documentation for valid endpoints',
+    },
   };
 
   // Log 404 for monitoring

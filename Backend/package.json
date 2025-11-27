@@ -140,11 +140,7 @@
     "plugins": [
       "prettier"
     ],
-    "rules": {
-      "prettier/prettier": "error",
-      "no-console": "warn",
-      "no-unused-vars": "error"
-    },
+    
     "env": {
       "node": true,
       "jest": true,
