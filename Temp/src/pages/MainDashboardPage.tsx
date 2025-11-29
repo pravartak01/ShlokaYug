@@ -29,41 +29,10 @@ import {
 
 // Import feature components
 
-export const MainDashboardPage: React.FC = () => {
- 
-    heroGlow: true,
-    particleFlow: true,
-    breathingCards: true
-  });
 
-  // Refs for GSAP animations
 
-  // Enhanced time-based greeting with mood
-
-  // Enhanced daily quote with rotation
-
-  // Enhanced analysis with detailed prosodic information
-      suggestions: [
-        'This appears to be Anushtubh meter',
-        'Consider natural pauses for better recitation'
-      ]
-    };
-    
-    setAnalysisResult(mockResult);
-    setIsAnalyzing(false);
-  };
 
   // Voice input simulation
-  const startListening = () => {
-    setIsListening(true);
-    setTimeout(() => {
-      setInputText('कर्मण्येवाधिकारस्ते मा फलेषु कदाचन');
-      setIsListening(false);
-    }, 3000);
-  };
-
-   greeting = getEnhancedGreeting();
-   dailyQuote = getDailyQuote();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-ancient-50 via-saffron-50 to-sandalwood-50">
@@ -363,4 +332,3 @@ export const MainDashboardPage: React.FC = () => {
       </div>
     </div>
   );
-};

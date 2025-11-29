@@ -32,7 +32,6 @@ const subscriptionRoutes = require('./routes/subscriptions');
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
-const validateRequest = require('./middleware/validateRequest');
 
 // Import database connection
 const connectDB = require('./config/database');

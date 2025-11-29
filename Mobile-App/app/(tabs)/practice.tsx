@@ -1,353 +1,266 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  ScrollView,
   View,
   Text,
   TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Animated,
   StatusBar,
-  Modal,
+  SafeAreaView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { ENHANCED_SHLOKAS } from '../../data/enhancedData';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ShlokaList, KaraokePlayer } from '../../components/practice/karaoke';
+import { VoiceAnalysisScreen } from '../../components/practice/voice-analysis';
+import { ChallengesScreen } from '../../components/practice/challenges';
+import { ShlokaData } from '../../data/shlokas';
 
-export default function PracticeScreen() {
-  const [showKaraokeModal, setShowKaraokeModal] = useState(false);
-  const [currentShloka] = useState(ENHANCED_SHLOKAS[0]);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [karaokeProgress, setKaraokeProgress] = useState(0);
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-  const practiceFeatures = [
-    {
-      id: 'karaoke',
-      title: 'Divine Karaoke 🎵',
-      subtitle: 'Sing along with perfect timing',
-      description: 'Practice pronunciation and rhythm with our enhanced karaoke system',
-      icon: 'musical-notes',
-      color: '#d946ef',
-      action: () => setShowKaraokeModal(true)
-    },
-    {
-      id: 'speech',
-      title: 'Voice Analysis 🎤',
-      subtitle: 'AI-powered pronunciation coach',
-      description: 'Get real-time feedback on your Sanskrit pronunciation',
-      icon: 'mic',
-      color: '#10b981',
-      action: () => console.log('Speech Analysis')
-    },
-    {
-      id: 'rhythm',
-      title: 'Rhythm Training 🥁',
-      subtitle: 'Master the beat patterns',
-      description: 'Learn the musical aspects of different chandas meters',
-      icon: 'pulse',
-      color: '#f59e0b',
-      action: () => console.log('Rhythm Training')
-    },
-    {
-      id: 'identify',
-      title: 'Meter Identification 🔍',
-      subtitle: 'Test your chandas knowledge',
-      description: 'Identify the meter patterns in various Sanskrit verses',
-      icon: 'search',
-      color: '#ef4444',
-      action: () => console.log('Meter Identification')
+type PracticeTab = 'karaoke' | 'voice-analysis' | 'challenges';
+
+interface TabItem {
+  id: PracticeTab;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  gradient: [string, string];
+}
+
+const TABS: TabItem[] = [
+  {
+    id: 'karaoke',
+    label: 'Karaoke',
+    icon: 'musical-notes',
+    gradient: ['#667eea', '#764ba2'],
+  },
+  {
+    id: 'voice-analysis',
+    label: 'Voice Analysis',
+    icon: 'mic',
+    gradient: ['#f093fb', '#f5576c'],
+  },
+  {
+    id: 'challenges',
+    label: 'Challenges',
+    icon: 'trophy',
+    gradient: ['#4facfe', '#00f2fe'],
+  },
+];
+
+const Practice = () => {
+  const [activeTab, setActiveTab] = useState<PracticeTab>('karaoke');
+  const [selectedShloka, setSelectedShloka] = useState<ShlokaData | null>(null);
+  const scaleAnims = useRef(TABS.map(() => new Animated.Value(1))).current;
+  const indicatorPosition = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const tabIndex = TABS.findIndex(tab => tab.id === activeTab);
+    Animated.spring(indicatorPosition, {
+      toValue: tabIndex * (SCREEN_WIDTH / 3),
+      useNativeDriver: true,
+      tension: 100,
+      friction: 10,
+    }).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  const handleTabPress = (tab: PracticeTab, index: number) => {
+    // Animate tab press
+    Animated.sequence([
+      Animated.timing(scaleAnims[index], {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnims[index], {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    setActiveTab(tab);
+    // Reset shloka selection when switching tabs
+    if (tab !== 'karaoke') {
+      setSelectedShloka(null);
     }
-  ];
+  };
 
-  const quickPractice = [
-    {
-      id: 'daily-challenge',
-      title: 'Daily Challenge',
-      subtitle: '5 minutes of focused practice',
-      icon: 'trophy',
-      streak: 12
-    },
-    {
-      id: 'pronunciation',
-      title: 'Pronunciation Drill',
-      subtitle: 'Perfect your Sanskrit sounds',
-      icon: 'volume-high',
-      completed: 7
-    },
-    {
-      id: 'rhythm-game',
-      title: 'Rhythm Game',
-      subtitle: 'Fun way to learn meters',
-      icon: 'game-controller',
-      score: 1250
-    }
-  ];
+  const handleShlokaSelect = (shloka: ShlokaData) => {
+    setSelectedShloka(shloka);
+  };
 
-  const togglePlayback = () => {
-    setIsPlaying(!isPlaying);
-    // In a real app, this would control audio playback
-    if (!isPlaying) {
-      // Simulate progress
-      const interval = setInterval(() => {
-        setKaraokeProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 2;
-        });
-      }, 100);
+  const handleBackToList = () => {
+    setSelectedShloka(null);
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'karaoke':
+        if (selectedShloka) {
+          return (
+            <KaraokePlayer
+              shloka={selectedShloka}
+              onBack={handleBackToList}
+              onComplete={(score) => {
+                console.log('Karaoke completed with score:', score);
+              }}
+            />
+          );
+        }
+        return <ShlokaList onSelectShloka={handleShlokaSelect} />;
+      
+      case 'voice-analysis':
+        return <VoiceAnalysisScreen />;
+      
+      case 'challenges':
+        return <ChallengesScreen />;
+      
+      default:
+        return null;
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-ancient-50">
-      <StatusBar barStyle="dark-content" backgroundColor="#fdf6e3" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
       
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Header */}
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        style={styles.header}
+      >
+        <Text style={styles.headerTitle}>Practice</Text>
+        <Text style={styles.headerSubtitle}>Master your skills</Text>
+      </LinearGradient>
+
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
         <LinearGradient
-          colors={['#f97316', '#ea580c', '#c2410c']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="px-6 pt-12 pb-8 rounded-b-3xl"
+          colors={['#1a1a2e', '#16213e']}
+          style={styles.tabGradient}
         >
-          <View className="flex-row items-center justify-between mb-4">
-            <View>
-              <Text className="text-white text-2xl font-bold">
-                🎯 Practice Hub
-              </Text>
-              <Text className="text-white/90 text-base mt-1">
-                Enhance your Sanskrit skills with interactive practice
-              </Text>
-            </View>
-            <View className="bg-white/20 p-3 rounded-full">
-              <Ionicons name="fitness" size={24} color="white" />
-            </View>
-          </View>
+          {/* Animated Indicator */}
+          <Animated.View
+            style={[
+              styles.tabIndicator,
+              {
+                transform: [{ translateX: indicatorPosition }],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={TABS.find(t => t.id === activeTab)?.gradient || ['#667eea', '#764ba2']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.tabIndicatorGradient}
+            />
+          </Animated.View>
 
-          {/* Practice Stats */}
-          <View className="bg-white/10 p-4 rounded-2xl">
-            <Text className="text-white/80 text-sm mb-2">📊 Today&apos;s Progress</Text>
-            <View className="flex-row justify-between">
-              <View className="items-center">
-                <Text className="text-white text-lg font-bold">15</Text>
-                <Text className="text-white/90 text-xs">Minutes</Text>
-              </View>
-              <View className="items-center">
-                <Text className="text-white text-lg font-bold">3</Text>
-                <Text className="text-white/90 text-xs">Sessions</Text>
-              </View>
-              <View className="items-center">
-                <Text className="text-white text-lg font-bold">92%</Text>
-                <Text className="text-white/90 text-xs">Accuracy</Text>
-              </View>
-            </View>
-          </View>
-        </LinearGradient>
-
-        {/* Quick Practice */}
-        <View className="px-6 mt-6">
-          <Text className="text-ancient-800 text-xl font-bold mb-4">Quick Practice</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6">
-            {quickPractice.map((item) => (
+          {/* Tab Items */}
+          {TABS.map((tab, index) => (
+            <Animated.View
+              key={tab.id}
+              style={[
+                styles.tabItem,
+                { transform: [{ scale: scaleAnims[index] }] },
+              ]}
+            >
               <TouchableOpacity
-                key={item.id}
-                className="bg-white p-4 rounded-2xl shadow-sm border border-ancient-200 mr-4 w-40"
+                style={styles.tabButton}
+                onPress={() => handleTabPress(tab.id, index)}
                 activeOpacity={0.7}
               >
-                <View className="items-center mb-3">
-                  <View className="bg-saffron-100 p-3 rounded-full mb-2">
-                    <Ionicons name={item.icon as any} size={24} color="#f97316" />
-                  </View>
-                  <Text className="text-ancient-800 font-semibold text-sm text-center">
-                    {item.title}
-                  </Text>
-                  <Text className="text-ancient-600 text-xs text-center mt-1">
-                    {item.subtitle}
-                  </Text>
-                </View>
-                
-                <View className="items-center">
-                  {item.streak && (
-                    <Text className="text-saffron-600 text-xs font-bold">
-                      🔥 {item.streak} day streak
-                    </Text>
-                  )}
-                  {item.completed && (
-                    <Text className="text-green-600 text-xs font-bold">
-                      ✅ {item.completed}/10 completed
-                    </Text>
-                  )}
-                  {item.score && (
-                    <Text className="text-blue-600 text-xs font-bold">
-                      🏆 {item.score} points
-                    </Text>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Practice Features */}
-        <View className="px-6">
-          <Text className="text-ancient-800 text-xl font-bold mb-4">Practice Features</Text>
-          
-          {practiceFeatures.map((feature) => (
-            <TouchableOpacity
-              key={feature.id}
-              onPress={feature.action}
-              className="bg-white p-5 rounded-2xl shadow-sm border border-ancient-200 mb-4"
-              activeOpacity={0.7}
-            >
-              <View className="flex-row items-start">
-                <View 
-                  className="p-3 rounded-xl mr-4"
-                  style={{ backgroundColor: feature.color + '20' }}
+                <Ionicons
+                  name={tab.icon}
+                  size={20}
+                  color={activeTab === tab.id ? '#fff' : 'rgba(255,255,255,0.5)'}
+                />
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    activeTab === tab.id && styles.tabLabelActive,
+                  ]}
                 >
-                  <Ionicons 
-                    name={feature.icon as any} 
-                    size={24} 
-                    color={feature.color} 
-                  />
-                </View>
-                
-                <View className="flex-1">
-                  <Text className="text-ancient-800 text-lg font-bold mb-1">
-                    {feature.title}
-                  </Text>
-                  <Text className="text-ancient-600 text-sm mb-2">
-                    {feature.subtitle}
-                  </Text>
-                  <Text className="text-ancient-500 text-sm leading-5">
-                    {feature.description}
-                  </Text>
-                </View>
-                
-                <Ionicons name="chevron-forward" size={20} color="#996f0a" />
-              </View>
-            </TouchableOpacity>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           ))}
-        </View>
+        </LinearGradient>
+      </View>
 
-        {/* Recent Practice */}
-        <View className="px-6 mt-6 mb-8">
-          <Text className="text-ancient-800 text-xl font-bold mb-4">Recent Practice</Text>
-          <View className="bg-white p-5 rounded-2xl shadow-sm border border-ancient-200">
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-saffron-600 font-semibold text-base">
-                {currentShloka.source}
-              </Text>
-              <View className="bg-green-100 px-2 py-1 rounded-full">
-                <Text className="text-green-700 text-xs font-medium">
-                  COMPLETED
-                </Text>
-              </View>
-            </View>
-            
-            <Text className="text-ancient-800 text-base font-medium mb-2">
-              {currentShloka.devanagari.split('\n')[0]}
-            </Text>
-            
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <Ionicons name="musical-note" size={14} color="#f97316" />
-                <Text className="text-ancient-600 text-sm ml-1">
-                  {currentShloka.chandas.name}
-                </Text>
-              </View>
-              <Text className="text-ancient-500 text-xs">
-                Practiced 2 hours ago
-              </Text>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Karaoke Modal */}
-      <Modal
-        visible={showKaraokeModal}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        onRequestClose={() => setShowKaraokeModal(false)}
-      >
-        <SafeAreaView className="flex-1 bg-gradient-to-br from-purple-600 to-indigo-700" edges={['top']}>
-          <View className="flex-row items-center justify-between p-6">
-            <Text className="text-white text-xl font-bold">
-              🎵 Divine Karaoke
-            </Text>
-            <TouchableOpacity 
-              onPress={() => setShowKaraokeModal(false)}
-              className="bg-white/20 p-2 rounded-full"
-            >
-              <Ionicons name="close" size={24} color="white" />
-            </TouchableOpacity>
-          </View>
-          
-          <View className="flex-1 justify-center px-6">
-            {/* Shloka Display */}
-            <View className="bg-white/10 p-6 rounded-3xl mb-8">
-              <Text className="text-white/80 text-center text-sm mb-4">
-                {currentShloka.source}
-              </Text>
-              <Text className="text-white text-center text-xl font-bold leading-8 mb-4">
-                {currentShloka.devanagari}
-              </Text>
-              <Text className="text-white/90 text-center text-base">
-                {currentShloka.translation}
-              </Text>
-            </View>
-
-            {/* Progress Bar */}
-            <View className="mb-8">
-              <View className="bg-white/20 h-2 rounded-full">
-                <View 
-                  className="bg-white h-2 rounded-full transition-all duration-100"
-                  style={{ width: `${karaokeProgress}%` }}
-                />
-              </View>
-              <Text className="text-white/80 text-center text-sm mt-2">
-                {Math.round(karaokeProgress)}% Complete
-              </Text>
-            </View>
-
-            {/* Controls */}
-            <View className="flex-row items-center justify-center space-x-8">
-              <TouchableOpacity className="bg-white/20 p-4 rounded-full">
-                <Ionicons name="play-skip-back" size={24} color="white" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                onPress={togglePlayback}
-                className="bg-white p-4 rounded-full"
-              >
-                <Ionicons 
-                  name={isPlaying ? "pause" : "play"} 
-                  size={32} 
-                  color="#7c3aed" 
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity className="bg-white/20 p-4 rounded-full">
-                <Ionicons name="play-skip-forward" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Settings */}
-            <View className="flex-row justify-center mt-8 space-x-6">
-              <TouchableOpacity className="bg-white/20 p-3 rounded-full">
-                <Ionicons name="volume-medium" size={20} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity className="bg-white/20 p-3 rounded-full">
-                <Ionicons name="settings" size={20} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity className="bg-white/20 p-3 rounded-full">
-                <Ionicons name="repeat" size={20} color="white" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
+      {/* Content Area */}
+      <View style={styles.content}>
+        {renderTabContent()}
+      </View>
     </SafeAreaView>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1a1a2e',
+  },
+  header: {
+    paddingTop: 50,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+  },
+  tabContainer: {
+    paddingHorizontal: 0,
+  },
+  tabGradient: {
+    flexDirection: 'row',
+    paddingVertical: 8,
+    paddingHorizontal: 0,
+    position: 'relative',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: SCREEN_WIDTH / 3,
+    height: 3,
+    borderRadius: 2,
+  },
+  tabIndicatorGradient: {
+    flex: 1,
+    borderRadius: 2,
+  },
+  tabItem: {
+    flex: 1,
+  },
+  tabButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 4,
+  },
+  tabLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 4,
+  },
+  tabLabelActive: {
+    color: '#fff',
+  },
+  content: {
+    flex: 1,
+  },
+});
+
+export default Practice;
