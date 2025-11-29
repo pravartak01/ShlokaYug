@@ -1,393 +1,254 @@
-# ShlokaYug LMS Backend - Development Status
+# ShlokaYug Backend
 
-## 🎯 Project Overview
-ShlokaYug is a comprehensive Learning Management System designed specifically for Sanskrit education, featuring Vedic chanting, pronunciation training, and traditional learning methodologies. The backend provides a robust API infrastructure supporting course management, user authentication, payment processing, and detailed learning analytics.
+## 🕉️ Overview
+ShlokaYug is a comprehensive Sanskrit learning platform featuring separated guru and user systems with admin management capabilities. The backend provides a robust API infrastructure supporting course management, user authentication, payment processing, and detailed learning analytics with complete separation of concerns.
 
----
+## 🚀 Quick Start
 
-## 🏗️ Development Phase Status
+### Prerequisites
+- Node.js (v16+)
+- MongoDB
+- Cloudinary Account (for media storage)
 
-### ✅ **Phase 1: Course Management System - COMPLETE**
-**Duration:** Completed November 20, 2025  
-**Status:** 🎉 **100% COMPLETE & TESTED**
-
-**Key Achievements:**
-- ✅ Enhanced LMS database models with guru/student profiles
-- ✅ Complete Course Management API with CRUD operations  
-- ✅ Hierarchical content structure (Course→Unit→Lesson→Lecture)
-- ✅ Publishing workflow (Draft→Published)
-- ✅ Role-based authentication & authorization
-- ✅ Instructor dashboard foundation
-- ✅ Comprehensive testing suite with 100% pass rate
-
-**[📚 View Complete Phase 1 Documentation](./docs/PHASE1_DOCUMENTATION.md)**
-
-### ✅ **Phase 2: Enrollment & Payment System - COMPLETE**
-**Duration:** Completed November 22, 2025  
-**Status:** 🎉 **100% COMPLETE & TESTED**
-
-**Key Achievements:**
-- ✅ Course enrollment controllers with CRUD operations
-- ✅ Razorpay payment integration framework
-- ✅ Revenue sharing system (80/20 split)
-- ✅ Payment transaction tracking
-- ✅ Enrollment management APIs
-
-**[📚 View Complete Phase 2 Documentation](./docs/PHASE2_ARCHITECTURE.md)**
-
-### ✅ **Phase 3: Auto-Enrollment & Integration - COMPLETE**
-**Duration:** Completed November 23, 2025  
-**Status:** 🎉 **100% COMPLETE & PRODUCTION READY**
-
-**Key Achievements:**
-- ✅ **Auto-Enrollment System**: Payment-triggered automatic course enrollment
-- ✅ **Database Integration**: Full MongoDB schema validation and integrity
-- ✅ **Test Infrastructure**: Comprehensive test suite with 95%+ coverage
-- ✅ **Production Readiness**: All systems validated for deployment
-- ✅ **Payment-Enrollment Flow**: End-to-end integration confirmed working
-- ✅ **Error Handling**: Comprehensive error management and logging
-
-**[📚 View Complete Phase 3 Documentation](./docs/PHASE3_COMPLETION.md)**
-
-### 🚀 **Phase 4: Enhanced Features & Production - READY TO START**
-**Planned Features:**
-- Enhanced UI/UX for payment and enrollment interfaces
-- Real Razorpay production integration
-- Email/SMS notification system
-- Advanced analytics and reporting
-- Mobile app integration support
-
-### 📋 **Upcoming Phases**
-- **Phase 5:** Progress Tracking APIs & Advanced Learning Analytics
-- **Phase 6:** Assessment Controllers & Comprehensive Quiz Management
-- **Phase 7:** File Upload & Advanced Media Handling System
-
----
-
-## 🛠️ Technology Stack
-
-### **Backend Framework**
-- **Node.js** with Express.js
-- **MongoDB Atlas** with Mongoose ODM
-- **JWT Authentication** with role-based access control
-- **Express Validator** for comprehensive input validation
-
-### **Key Dependencies**
-```json
-{
-  "express": "^4.18.2",
-  "mongoose": "^8.0.3", 
-  "jsonwebtoken": "^9.0.2",
-  "bcryptjs": "^2.4.3",
-  "express-validator": "^7.0.1",
-  "razorpay": "^2.9.2",
-  "cloudinary": "^1.41.0",
-  "helmet": "^7.1.0",
-  "cors": "^2.8.5"
-}
-```
-
-### **Development Tools**
-- **Nodemon** for development
-- **Jest & Supertest** for testing
-- **ESLint & Prettier** for code quality
-- **Morgan** for logging
-
----
-
-## 📊 Current System Capabilities
-
-### **✅ Functional Features**
-
-#### **User Management**
-- Multi-role system (Student, Guru, Admin)
-- Guru verification and application process
-- Student learning profiles and preferences
-- JWT-based authentication with role checking
-
-#### **Course Management** 
-- Complete CRUD operations for courses
-- Hierarchical content structure management
-- Course publishing and status management
-- Instructor dashboard with analytics foundation
-- Advanced search and filtering capabilities
-
-#### **Content Organization**
-```
-Course
-├── Units (Learning modules)
-│   ├── Lessons (Topic-specific content)
-│   │   └── Lectures (Individual learning items)
-│   │       ├── Video content
-│   │       ├── Audio content  
-│   │       ├── Interactive elements
-│   │       └── Resource attachments
-```
-
-#### **Pricing & Monetization**
-- Multiple pricing models (Free, One-time, Subscription)
-- Revenue sharing structure (80/20 split)
-- Currency support (INR primary, USD secondary)
-- Subscription period options (Monthly, Yearly)
-
----
-
-## 🧪 Testing Status
-
-### **Test Coverage: Comprehensive Test Suite**
-```
-✅ Payment Gateway Tests (tests/payment/) - 73% Success Rate
-   - Simple validation: Quick health checks (78% success)
-   - Clean payment test: End-to-end payment flow (73% success)
-   - Working payment test: Advanced analytics testing
-   - Comprehensive PowerShell test suite for Razorpay integration
-
-✅ Course Management Tests (tests/course/) - 95%+ Success Rate  
-   - Course creation and CRUD operations
-   - Content management (Units/Lessons/Lectures)
-   - Publishing workflow validation
-   - Instructor dashboard functionality
-
-✅ Model Validation Tests (tests/models/) - 100% Success Rate
-   - User model with guru/student profiles
-   - Course model with hierarchical structure
-   - Progress, Enrollment, Assessment models
-   - All relationships and methods validated
-```
-
-### **Testing Documentation**
-- **[Payment Gateway Testing Guide](docs/testing/PAYMENT_GATEWAY_TESTING_GUIDE.md)** - Comprehensive payment testing procedures
-- **[Test Suite Overview](tests/README.md)** - Complete testing documentation
-- **PowerShell Test Scripts** - Automated payment validation
-- **Node.js Test Scripts** - Course and model validation
-
-### **Performance Metrics**
-- Database queries optimized with proper indexing
-- API response times under 200ms for standard operations
-- Payment gateway: 73% success rate (production-ready threshold: 90%+)
-- Pagination implemented for large datasets
-- Efficient aggregation pipelines for analytics
-
----
-
-## 🔧 Development Environment Setup
-
-### **Prerequisites**
-- Node.js >= 18.0.0
-- MongoDB Atlas account
-- Environment variables configured
-
-### **Installation & Setup**
+### Installation
 ```bash
-# Clone repository
-git clone https://github.com/pravartak01/ShlokaYug.git
-cd ShlokaYug/Backend
-
-# Install dependencies
 npm install
-
-# Configure environment variables
 cp .env.example .env
-# Edit .env with your MongoDB URI and other configurations
-
-# Start development server
-npm run dev
-
-# Run tests
-npm test
+# Configure your environment variables
+npm start
 ```
 
-### **Environment Configuration**
-```env
+### Environment Variables
+```bash
 # Database
-MONGODB_URI=mongodb+srv://...
+MONGODB_URI=mongodb://localhost:27017/shlokayug
 
 # Authentication  
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRE=30d
+JWT_SECRET=your-jwt-secret
+JWT_EXPIRES_IN=7d
 
-# API Configuration
-PORT=5000
-NODE_ENV=development
-API_VERSION=v1
+# Email Service
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
 
-# Payment Integration (Phase 2)
-RAZORPAY_KEY_ID=your_razorpay_key
-RAZORPAY_KEY_SECRET=your_razorpay_secret
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+
+# Admin Configuration
+ADMIN_EMAIL=admin@shlokayug.com
+ADMIN_PASSWORD=secure-admin-password
 ```
 
----
+## 🏗️ Architecture
 
-## 📂 Project Structure
+### System Separation
+Our backend implements **complete separation** between guru and user systems:
+
+#### 👨‍🏫 **Guru System** (`/api/v1/guru/*`)
+- **Application Process**: Gurus apply → admin reviews → approval/rejection
+- **Authentication**: Separate JWT tokens and middleware
+- **Capabilities**: Create courses, upload content, manage students
+- **Admin Oversight**: Full lifecycle management
+
+#### 👨‍🎓 **User System** (`/api/v1/auth/*`, `/api/v1/users/*`)  
+- **Direct Access**: Self-registration with immediate platform access
+- **Learning Focus**: Enroll in courses, track progress, community participation
+- **Independent**: No guru-related fields or dependencies
+
+#### 🛡️ **Admin System** (`/api/v1/admin/*`)
+- **Guru Management**: Approve/reject applications, monitor performance
+- **Platform Oversight**: User management, content moderation
+- **Analytics**: Platform usage and performance metrics
+
+### Key Benefits
+- **🔧 Maintainability**: Clear separation of concerns
+- **📈 Scalability**: Independent system scaling  
+- **🔒 Security**: Role-based access with separate authentication
+- **👥 User Experience**: Tailored interfaces for each role
+
+## 📁 Folder Structure
 
 ```
 Backend/
-├── src/                     # Source code
-│   ├── controllers/         # API controllers
-│   │   ├── courseController.js
-│   │   └── paymentController.js
-│   ├── middleware/          # Custom middleware
-│   │   ├── auth.js
-│   │   ├── roleCheck.js
-│   │   └── courseValidation.js
-│   ├── models/              # Database models
-│   │   ├── User.js
-│   │   ├── Course.js
-│   │   ├── Progress.js
-│   │   ├── Enrollment.js
-│   │   └── Assessment.js
-│   ├── routes/              # API routes
-│   │   ├── authRoutes.js
-│   │   ├── courses.js
-│   │   └── payments.js
-│   ├── config/              # Configuration files
-│   │   ├── database.js
-│   │   └── cloudinary.js
-│   └── app.js               # Express app configuration
-├── tests/                   # Comprehensive test suites
-│   ├── README.md           # Testing documentation
-│   ├── setup.js            # Test environment setup
-│   ├── payment/            # Payment gateway tests
-│   │   ├── simple-validation.ps1
-│   │   ├── clean-payment-test.ps1
-│   │   ├── working-payment-test.ps1
-│   │   └── debug-user-test.ps1
-│   ├── course/             # Course management tests
-│   │   ├── test-course-api.js
-│   │   ├── test-course-controller.js
-│   │   └── test-course-management.js
-│   ├── models/             # Database model tests
-│   │   ├── test-lms-models.js
-│   │   └── test-route.js
-│   ├── integration/        # Integration tests
-│   ├── unit/               # Unit tests
-│   └── utils/              # Test utilities
-├── docs/                   # Comprehensive documentation
-│   ├── README.md          # Documentation overview
-│   ├── PHASE1_DOCUMENTATION.md  # Phase 1 completion details
-│   ├── PHASE2_ARCHITECTURE.md   # Phase 2 system architecture
-│   ├── api/               # API documentation
-│   │   ├── README.md      # API overview
-│   │   └── [endpoint docs]
-│   ├── testing/           # Testing documentation
-│   │   ├── README.md      # Testing overview
-│   │   └── PAYMENT_GATEWAY_TESTING_GUIDE.md
-│   └── deployment/        # Deployment documentation
-│       ├── README.md      # Deployment overview
-│       └── [deployment guides]
-├── package.json
-├── .env.example
-└── README.md              # This file
+├── docs/                          # 📚 Documentation
+│   ├── api/                       # API references
+│   ├── architecture/              # System design
+│   └── *.md                       # General docs
+├── scripts/                       # 🛠️ Utility scripts  
+├── src/                          # 💻 Source code
+│   ├── models/                    # Data models
+│   ├── controllers/               # Business logic
+│   ├── routes/                    # API endpoints  
+│   ├── middleware/                # Request processing
+│   └── services/                  # External integrations
+├── tests/                        # 🧪 Test suites
+└── uploads/                      # 📁 File storage
 ```
 
----
+> **📋 Complete Structure**: See [`docs/FOLDER_STRUCTURE.md`](./docs/FOLDER_STRUCTURE.md)
 
-## 🔌 API Documentation
+## 🔐 Authentication Flow
 
-### **Base URL**
-```
-Development: http://localhost:5000/api/v1
-Production: https://api.shlokayug.com/api/v1
-```
-
-### **Authentication**
+### Guru Authentication
 ```javascript
-Headers: {
-  'Authorization': 'Bearer <JWT_TOKEN>',
-  'Content-Type': 'application/json'
-}
+// Application submission
+POST /api/v1/guru/apply
+
+// Admin review  
+POST /api/v1/admin/gurus/approve/:id
+POST /api/v1/admin/gurus/reject/:id
+
+// Guru login (after approval)
+POST /api/v1/guru/login
 ```
 
-### **Core Endpoints (Phase 1)**
-```
-Authentication:
-POST   /auth/register          # User registration
-POST   /auth/login             # User login  
-POST   /auth/logout            # User logout
+### User Authentication
+```javascript
+// Self-registration
+POST /api/v1/auth/register  
 
-Course Management:
-GET    /courses                # List courses (public)
-GET    /courses/:id            # Get course details
-POST   /courses                # Create course (guru only)
-PUT    /courses/:id            # Update course (instructor only)
-DELETE /courses/:id            # Delete course (instructor only)
-PATCH  /courses/:id/publish    # Publish course
-PATCH  /courses/:id/unpublish  # Unpublish course
-
-Content Management:
-POST   /courses/:id/units                                      # Add unit
-POST   /courses/:courseId/units/:unitId/lessons                # Add lesson
-POST   /courses/:courseId/units/:unitId/lessons/:lessonId/lectures # Add lecture
-
-Instructor Dashboard:
-GET    /courses/instructor/my-courses           # Get instructor's courses
-GET    /courses/instructor/:id/analytics        # Get course analytics
+// Immediate access
+POST /api/v1/auth/login
 ```
 
----
+## 📖 API Documentation
 
-## 📈 Next Steps & Roadmap
+### Core Endpoints
 
-### **Immediate Next: Phase 2 Development**
-1. **Enrollment System Controllers**
-   - Course enrollment API
-   - Access control management
-   - Device tracking implementation
+#### Guru System
+- **`POST /api/v1/guru/apply`** - Submit guru application
+- **`POST /api/v1/guru/login`** - Guru authentication
+- **`GET /api/v1/guru/profile`** - Get guru profile
+- **`PUT /api/v1/guru/profile`** - Update guru profile
 
-2. **Payment Integration**
-   - Razorpay gateway integration
-   - Subscription management
-   - Revenue sharing calculations
-   - Payment analytics
+#### Admin Guru Management
+- **`GET /api/v1/admin/gurus/pending`** - Get pending applications
+- **`POST /api/v1/admin/gurus/approve/:id`** - Approve guru
+- **`POST /api/v1/admin/gurus/reject/:id`** - Reject guru
+- **`GET /api/v1/admin/gurus/stats`** - Get guru statistics
 
-3. **Testing & Validation**
-   - Enrollment flow testing
-   - Payment process validation
-   - Integration testing with existing systems
+#### User System  
+- **`POST /api/v1/auth/register`** - User registration
+- **`POST /api/v1/auth/login`** - User authentication
+- **`GET /api/v1/users/profile`** - Get user profile
 
-### **Future Phases**
-- **Phase 3:** Learning progress tracking and analytics
-- **Phase 4:** Enhanced user management and profiles
-- **Phase 5:** Assessment and quiz management system
-- **Phase 6:** Media upload and content delivery system
+> **📚 Complete API Reference**: See [`docs/api/GURU_API_REFERENCE.md`](./docs/api/GURU_API_REFERENCE.md)
+
+## 🧪 Testing
+
+### Run Tests
+```bash
+# All tests
+npm test
+
+# Specific test suite
+npm run test:gurus
+npm run test:users  
+npm run test:admin
+```
+
+### Test Coverage
+- **✅ Model Separation**: Validates guru/user independence
+- **✅ Authentication**: Tests separate auth flows
+- **✅ Admin Workflow**: End-to-end guru approval process  
+- **✅ API Endpoints**: Comprehensive endpoint testing
+
+## 🚀 Deployment
+
+### Development
+```bash
+npm run dev          # Development server with hot reload
+npm run test:watch   # Continuous testing
+```
+
+### Production
+```bash
+npm start           # Production server
+npm run build       # Build assets (if applicable)
+```
+
+### Environment Setup
+1. **Database**: Ensure MongoDB is running
+2. **Admin User**: Created automatically on first startup  
+3. **File Storage**: Configure Cloudinary for media uploads
+4. **Email Service**: Setup SMTP for notifications
+
+## 📊 Project Statistics
+
+### Current Implementation
+- **🏗️ Models**: 18 database models
+- **🔀 Routes**: 12 route modules
+- **🎮 Controllers**: 8 controller modules  
+- **🛡️ Middleware**: 10 middleware functions
+- **🧪 Tests**: Comprehensive test coverage
+- **📚 Documentation**: Complete API references
+
+### Guru System Metrics
+- **👨‍🏫 Total Gurus**: Dynamic (admin managed)
+- **📋 Application States**: pending → approved/rejected
+- **🔐 Authentication**: Independent JWT system
+- **📊 Admin Oversight**: Full lifecycle management
 
 ---
 
 ## 🤝 Contributing
 
-### **Development Guidelines**
-1. Follow existing code structure and naming conventions
-2. Write comprehensive tests for new features
-3. Update documentation for any API changes
-4. Use ESLint and Prettier for code formatting
-5. Follow Git workflow with feature branches
+### Development Workflow
+1. **Feature Development**
+   ```bash
+   git checkout -b feature/guru-feature-name
+   # Develop in appropriate system (guru/user/admin)
+   npm test
+   git commit -m "Add guru feature"
+   ```
 
-### **Testing Requirements**
-- All new features must have test coverage
-- Integration tests required for API endpoints
-- Model validation tests for database changes
-- Performance testing for critical operations
+2. **Testing Requirements**
+   - Unit tests for new functionality
+   - Integration tests for API endpoints  
+   - Separation validation for guru/user features
+
+3. **Documentation Updates**
+   - Update API documentation for new endpoints
+   - Add examples and usage patterns
+   - Update folder structure if needed
+
+### Code Standards
+- **Separation Principle**: Maintain guru/user independence
+- **Security First**: Validate all inputs, secure all endpoints
+- **Documentation**: Document all new features and endpoints
+- **Testing**: Comprehensive test coverage required
+
+## 📞 Support
+
+### Documentation
+- **🏗️ Architecture**: [`docs/ROUTE_SEPARATION_GUIDE.md`](./docs/ROUTE_SEPARATION_GUIDE.md)
+- **📁 Structure**: [`docs/FOLDER_STRUCTURE.md`](./docs/FOLDER_STRUCTURE.md)
+- **📖 API Reference**: [`docs/api/GURU_API_REFERENCE.md`](./docs/api/GURU_API_REFERENCE.md)
+
+### Common Issues
+- **Database Connection**: Ensure MongoDB is running and URI is correct
+- **Admin Access**: Check admin credentials in environment variables
+- **File Uploads**: Verify Cloudinary configuration
+- **Email Issues**: Confirm SMTP settings for notifications
 
 ---
 
-## 🎊 Current Status Summary
+## 🙏 About ShlokaYug
 
-**🎯 Phase 1 Status: ✅ COMPLETE**
-- Full Course Management System operational
-- Comprehensive testing completed
-- Production-ready foundation established
-- Ready for Phase 2 development
+**ShlokaYug** is dedicated to preserving and sharing Sanskrit knowledge through modern technology. Our platform connects passionate gurus with eager students in a structured, secure environment.
 
-**📊 System Health:**
-- ✅ Database models: Enhanced and validated
-- ✅ API endpoints: Fully functional with authentication  
-- ✅ Testing coverage: 100% pass rate
-- ✅ Documentation: Complete and up-to-date
-- ✅ Code quality: Optimized and maintainable
+### Mission
+Democratizing access to traditional Sanskrit education while maintaining the authenticity and depth of traditional guru-student relationships.
 
-**🚀 Ready for Phase 2:** Enrollment & Payment System implementation
+### Vision  
+Creating the world's premier platform for Sanskrit learning with cutting-edge technology and traditional wisdom.
 
 ---
 
-*Project Status as of November 20, 2025*  
-*Phase 1: ✅ COMPLETE | Phase 2: 🚀 READY TO START*
+**Built with ❤️ for Sanskrit Education**
+
+*For technical questions or contributions, please refer to our documentation or create an issue.*

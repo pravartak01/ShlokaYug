@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const EnrollmentV2 = require('../models/EnrollmentEnhanced');
-const PaymentTransaction = require('../models/PaymentTransaction');
+const Enrollment = require('../models/Enrollment');
+const PaymentTransaction = require('../models/PaymentTransactionSimple');
 const Course = require('../models/Course');
 const User = require('../models/User');
 
@@ -32,7 +32,7 @@ const getMySubscriptions = async (req, res) => {
       filter['subscription.status'] = { $in: ['active', 'trialing'] };
     }
 
-    const subscriptions = await EnrollmentV2.find(filter)
+    const subscriptions = await Enrollment.find(filter)
       .populate('courseId', 'title description instructor thumbnail duration')
       .populate('userId', 'name email')
       .sort({ 'subscription.nextBillingDate': 1 });
@@ -152,7 +152,7 @@ const pauseSubscription = async (req, res) => {
     const { reason, pauseDuration } = req.body;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId).populate('courseId', 'title');
+    const enrollment = await Enrollment.findById(enrollmentId).populate('courseId', 'title');
 
     if (!enrollment) {
       return res.status(404).json({
@@ -227,7 +227,7 @@ const resumeSubscription = async (req, res) => {
     const { enrollmentId } = req.params;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId).populate('courseId', 'title');
+    const enrollment = await Enrollment.findById(enrollmentId).populate('courseId', 'title');
 
     if (!enrollment) {
       return res.status(404).json({
@@ -287,7 +287,7 @@ const cancelSubscription = async (req, res) => {
     const { reason, immediate = false, feedback } = req.body;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId).populate('courseId', 'title');
+    const enrollment = await Enrollment.findById(enrollmentId).populate('courseId', 'title');
 
     if (!enrollment) {
       return res.status(404).json({
@@ -365,7 +365,7 @@ const renewSubscription = async (req, res) => {
     const { billingCycle } = req.body;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId).populate(
+    const enrollment = await Enrollment.findById(enrollmentId).populate(
       'courseId',
       'title pricing'
     );
@@ -510,7 +510,7 @@ const updateSubscriptionPreferences = async (req, res) => {
     const { billingCycle, autoRenewal, deviceLimit } = req.body;
     const userId = req.user.id;
 
-    const enrollment = await EnrollmentV2.findById(enrollmentId).populate('courseId', 'title');
+    const enrollment = await Enrollment.findById(enrollmentId).populate('courseId', 'title');
 
     if (!enrollment) {
       return res.status(404).json({
@@ -570,7 +570,7 @@ const updateSubscriptionPreferences = async (req, res) => {
 
     // Apply updates
     if (Object.keys(updateFields).length > 0) {
-      await EnrollmentV2.updateOne({ _id: enrollmentId }, { $set: updateFields });
+      await Enrollment.updateOne({ _id: enrollmentId }, { $set: updateFields });
 
       // Add audit log
       await enrollment.addAuditLog({
@@ -582,7 +582,7 @@ const updateSubscriptionPreferences = async (req, res) => {
     }
 
     // Get updated enrollment
-    const updatedEnrollment = await EnrollmentV2.findById(enrollmentId).populate(
+    const updatedEnrollment = await Enrollment.findById(enrollmentId).populate(
       'courseId',
       'title'
     );
@@ -651,7 +651,7 @@ const getSubscriptionAnalytics = async (req, res) => {
     }
 
     // Get subscription analytics
-    const analytics = await EnrollmentV2.aggregate([
+    const analytics = await Enrollment.aggregate([
       { $match: matchStage },
       {
         $group: {
@@ -702,7 +702,7 @@ const getSubscriptionAnalytics = async (req, res) => {
     ]);
 
     // Get churn analysis
-    const churnAnalysis = await EnrollmentV2.aggregate([
+    const churnAnalysis = await Enrollment.aggregate([
       { $match: { ...matchStage, 'subscription.status': 'cancelled' } },
       {
         $group: {
@@ -731,7 +731,7 @@ const getSubscriptionAnalytics = async (req, res) => {
               month: { $month: '$enrollmentDate' },
             };
 
-    const subscriptionTrends = await EnrollmentV2.aggregate([
+    const subscriptionTrends = await Enrollment.aggregate([
       { $match: matchStage },
       {
         $group: {
@@ -796,3 +796,4 @@ module.exports = {
   updateSubscriptionPreferences,
   getSubscriptionAnalytics,
 };
+

@@ -160,8 +160,8 @@ const validateDeviceAccess = async (req, res, next) => {
       return next(); // Let other validation handle missing params
     }
 
-    const EnrollmentEnhanced = require('../models/EnrollmentEnhanced');
-    const enrollment = await EnrollmentEnhanced.findById(enrollmentId)
+    const Enrollment = require('../models/Enrollment');
+    const enrollment = await Enrollment.findById(enrollmentId)
       .populate('courseId', 'title');
 
     if (!enrollment) {

@@ -209,8 +209,8 @@ router.get(
       const { enrollmentId } = req.params;
       const userId = req.user.id;
 
-      const EnrollmentEnhanced = require('../models/EnrollmentEnhanced');
-      const enrollment = await EnrollmentEnhanced.findById(enrollmentId)
+      const Enrollment = require('../models/Enrollment');
+      const enrollment = await Enrollment.findById(enrollmentId)
         .populate('courseId', 'title description instructor thumbnail duration pricing')
         .populate('userId', 'name email');
 
@@ -399,7 +399,7 @@ router.get(
         sortOrder = 'desc',
       } = req.query;
 
-      const EnrollmentEnhanced = require('../models/EnrollmentEnhanced');
+      const Enrollment = require('../models/Enrollment');
 
       // Build filter
       const filter = { enrollmentType: 'subscription' };
@@ -448,9 +448,9 @@ router.get(
           ],
         };
 
-        subscriptions = await EnrollmentEnhanced.paginate(searchFilter, options);
+        subscriptions = await Enrollment.paginate(searchFilter, options);
       } else {
-        subscriptions = await EnrollmentEnhanced.paginate(filter, options);
+        subscriptions = await Enrollment.paginate(filter, options);
       }
 
       const subscriptionData = subscriptions.docs.map((enrollment) => ({
@@ -510,3 +510,4 @@ router.get(
 );
 
 module.exports = router;
+

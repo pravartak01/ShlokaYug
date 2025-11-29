@@ -18,13 +18,6 @@ const enrollmentRoutes = require('./routes/enrollments');
 const paymentRoutes = require('./routes/payments');
 const subscriptionRoutes = require('./routes/subscriptions');
 
-// Video Sharing Platform Routes
-const videoRoutes = require('./routes/videos');
-const shortsRoutes = require('./routes/shorts');
-
-// Community Social Platform Routes
-const communityRoutes = require('./routes/community');
-
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -167,13 +160,6 @@ app.use(`/api/${API_VERSION}/courses`, courseRoutes);
 app.use(`/api/${API_VERSION}/enrollments`, enrollmentRoutes);
 app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
 app.use(`/api/${API_VERSION}/subscriptions`, subscriptionRoutes);
-
-// Video Sharing Platform Routes
-app.use(`/api/${API_VERSION}/videos`, videoRoutes);
-app.use(`/api/${API_VERSION}/shorts`, shortsRoutes);
-
-// Community Social Platform Routes
-app.use(`/api/${API_VERSION}/community`, communityRoutes);
 
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
