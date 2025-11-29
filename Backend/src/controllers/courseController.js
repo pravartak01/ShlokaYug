@@ -788,11 +788,50 @@ const publishCourse = async (req, res) => {
         validationErrors.push('At least one lecture is required');
       }
     }
-    if (!course.pricing || !course.pricing.type || (course.pricing.type !== 'free' && (!course.pricing.amount || course.pricing.amount <= 0))) {
-      validationErrors.push('Valid pricing information is required');
+    // Pricing validation - check both old and new pricing structure
+    if (!course.pricing) {
+      validationErrors.push('Pricing information is required');
+    } else {
+      const pricingType = course.pricing.type;
+      const oldAmount = course.pricing.amount;
+      const oneTimeAmount = course.pricing.oneTime?.amount;
+      const subscriptionAmount = course.pricing.subscription?.monthly?.amount;
+      
+      console.log('💰 Pricing validation:', {
+        type: pricingType,
+        oldAmount,
+        oneTimeAmount,
+        subscriptionAmount,
+        fullPricing: course.pricing
+      });
+      
+      // If no type is set, check if there's any amount (backward compatibility)
+      if (!pricingType) {
+        // Accept if there's any amount (even 0 for free courses)
+        if (oldAmount === undefined && oldAmount === null && 
+            oneTimeAmount === undefined && oneTimeAmount === null && 
+            subscriptionAmount === undefined && subscriptionAmount === null) {
+          validationErrors.push('Pricing amount is required');
+        }
+        // If amount is 0, treat as free course (valid)
+      } else if (pricingType === 'free') {
+        // Free courses are valid
+      } else if (pricingType === 'one_time' || pricingType === 'paid') {
+        // Check old structure (pricing.amount) or new structure (pricing.oneTime.amount)
+        const amount = oneTimeAmount || oldAmount;
+        if (amount === undefined || amount === null || amount < 0) {
+          validationErrors.push('Valid pricing amount is required for paid courses');
+        }
+      } else if (pricingType === 'subscription') {
+        // Check subscription pricing
+        if (subscriptionAmount === undefined || subscriptionAmount === null || subscriptionAmount < 0) {
+          validationErrors.push('Valid subscription pricing is required');
+        }
+      }
     }
 
     if (validationErrors.length > 0) {
+      console.log('❌ Validation errors:', validationErrors);
       return res.status(400).json({
         success: false,
         message: 'Course is not ready for publishing',
@@ -1164,6 +1203,70 @@ const getCourseAnalytics = async (req, res) => {
   }
 };
 
+/**
+ * Upload video for course lecture
+ * POST /api/courses/upload-video
+ * Access: Private (Gurus only)
+ */
+const uploadLectureVideo = async (req, res) => {
+  try {
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Video file is required'
+      });
+    }
+
+    // Upload to Cloudinary with increased timeout
+    const cloudinary = require('cloudinary').v2;
+    
+    console.log(`📤 Uploading video: ${req.file.originalname} (${(req.file.size / (1024 * 1024)).toFixed(2)} MB)`);
+    
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: 'video',
+      folder: 'ShlokaYug/course-videos',
+      quality: 'auto',
+      format: 'mp4',
+      timeout: 600000 // 10 minutes timeout for large videos
+    });
+
+    console.log(`✅ Video uploaded successfully: ${uploadResult.secure_url}`);
+
+    // Delete temporary file
+    await fs.unlink(req.file.path);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        url: uploadResult.secure_url,
+        cloudinaryId: uploadResult.public_id,
+        duration: uploadResult.duration,
+        format: uploadResult.format,
+        size: uploadResult.bytes
+      }
+    });
+
+  } catch (error) {
+    console.error('Upload lecture video error:', error);
+    
+    // Try to clean up file if it exists
+    if (req.file?.path) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (unlinkError) {
+        console.error('Failed to delete temp file:', unlinkError);
+      }
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to upload video',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   // Course CRUD
   createCourse,
@@ -1183,5 +1286,8 @@ module.exports = {
 
   // Instructor Dashboard
   getInstructorCourses,
-  getCourseAnalytics
+  getCourseAnalytics,
+  
+  // Upload
+  uploadLectureVideo
 };

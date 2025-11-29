@@ -84,7 +84,7 @@ const videoSchema = new mongoose.Schema({
     },
     duration: {
       type: Number, // in seconds
-      required: true
+      default: 0 // Set during video processing
     },
     resolution: {
       width: Number,
@@ -131,7 +131,7 @@ const videoSchema = new mongoose.Schema({
     maxlength: 50
   }],
   
-  language: {
+  contentLanguage: {
     type: String,
     enum: ['sanskrit', 'hindi', 'english', 'bengali', 'tamil', 'telugu', 'marathi', 'gujarati', 'other'],
     default: 'hindi',

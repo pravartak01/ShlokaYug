@@ -637,18 +637,62 @@ const LectureModal = ({ courseId, unitId, lessonId, onClose, onSuccess }) => {
       textContent: '',
     },
   });
+  const [videoFile, setVideoFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const handleVideoFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (max 500MB)
+      if (file.size > 500 * 1024 * 1024) {
+        setError('Video file size must be less than 500MB');
+        return;
+      }
+      setVideoFile(file);
+      setError(null);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
       setError(null);
-      await apiService.addLecture(courseId, unitId, lessonId, formData);
+
+      let finalFormData = { ...formData };
+
+      // If video file is selected, upload it first
+      if (videoFile && formData.type === 'video') {
+        setUploading(true);
+        setUploadProgress(0);
+        const uploadFormData = new FormData();
+        uploadFormData.append('video', videoFile);
+        uploadFormData.append('type', 'lecture');
+        uploadFormData.append('courseId', courseId);
+
+        try {
+          const uploadResponse = await apiService.uploadVideo(uploadFormData, {
+            onUploadProgress: (progressEvent) => {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(percentCompleted);
+            }
+          });
+          finalFormData.content.videoUrl = uploadResponse.data.url || uploadResponse.data.videoUrl;
+        } catch (uploadErr) {
+          throw new Error(uploadErr.response?.data?.message || 'Failed to upload video');
+        } finally {
+          setUploading(false);
+          setUploadProgress(0);
+        }
+      }
+
+      await apiService.addLecture(courseId, unitId, lessonId, finalFormData);
       onSuccess();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add lecture');
+      setError(err.message || err.response?.data?.message || 'Failed to add lecture');
     } finally {
       setLoading(false);
     }
@@ -662,6 +706,24 @@ const LectureModal = ({ courseId, unitId, lessonId, onClose, onSuccess }) => {
         {error && (
           <div className="vintage-alert vintage-alert-error mb-4">
             {error}
+          </div>
+        )}
+
+        {uploading && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-blue-900">Uploading video...</span>
+              <span className="text-sm font-bold text-blue-900">{uploadProgress}%</span>
+            </div>
+            <div className="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+              <div 
+                className="bg-blue-600 h-full rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+            <p className="text-xs text-blue-700 mt-2">
+              {videoFile?.name} ({(videoFile?.size / (1024 * 1024)).toFixed(2)} MB)
+            </p>
           </div>
         )}
 
@@ -721,19 +783,41 @@ const LectureModal = ({ courseId, unitId, lessonId, onClose, onSuccess }) => {
           </div>
 
           {formData.type === 'video' && (
-            <div>
-              <label className="vintage-label">Video URL</label>
-              <input
-                type="url"
-                value={formData.content.videoUrl}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  content: { ...formData.content, videoUrl: e.target.value }
-                })}
-                placeholder="https://youtube.com/watch?v=..."
-                className="vintage-input w-full"
-              />
-            </div>
+            <>
+              <div>
+                <label className="vintage-label">Upload Video File</label>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoFileChange}
+                  className="vintage-input w-full"
+                />
+                {videoFile && (
+                  <p className="vintage-text-sm mt-1 text-green-600">
+                    Selected: {videoFile.name} ({(videoFile.size / (1024 * 1024)).toFixed(2)} MB)
+                  </p>
+                )}
+                <p className="vintage-text-sm mt-1 text-vintage-ink/60">
+                  Maximum file size: 500MB
+                </p>
+              </div>
+
+              <div className="text-center vintage-text-sm text-vintage-ink/60 py-2">OR</div>
+
+              <div>
+                <label className="vintage-label">Video URL (YouTube/Vimeo)</label>
+                <input
+                  type="url"
+                  value={formData.content.videoUrl}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    content: { ...formData.content, videoUrl: e.target.value }
+                  })}
+                  placeholder="https://youtube.com/watch?v=..."
+                  className="vintage-input w-full"
+                />
+              </div>
+            </>
           )}
 
           {formData.type === 'article' && (
@@ -762,10 +846,10 @@ const LectureModal = ({ courseId, unitId, lessonId, onClose, onSuccess }) => {
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="vintage-btn"
+              disabled={loading || uploading}
+              className="vintage-btn disabled:opacity-50"
             >
-              {loading ? 'Adding...' : 'Add Lecture'}
+              {uploading ? 'Uploading Video...' : loading ? 'Adding...' : 'Add Lecture'}
             </button>
           </div>
         </form>

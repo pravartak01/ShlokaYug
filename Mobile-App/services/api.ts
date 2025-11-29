@@ -42,6 +42,16 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
 
+      // Check if request is multipart/form-data (for file uploads)
+      const isMultipart = config.headers?.['Content-Type'] === 'multipart/form-data' ||
+                          config.data instanceof FormData ||
+                          (config.data && config.data._parts);
+      
+      if (isMultipart && config.headers) {
+        // Let React Native handle the Content-Type with boundary
+        delete config.headers['Content-Type'];
+      }
+
       // Log request in development
       if (__DEV__) {
         console.log('🚀 API Request:', {

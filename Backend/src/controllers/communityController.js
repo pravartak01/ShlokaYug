@@ -50,7 +50,7 @@ class CommunityController {
       }
       
       // Validate content
-      if (!text && !videoId && (!req.files || !req.files.images)) {
+      if (!text && !videoId && (!req.files || req.files.length === 0)) {
         return res.status(400).json({
           success: false,
           error: {
@@ -63,11 +63,11 @@ class CommunityController {
         author: userId,
         content: {
           text,
-          hashtags: hashtags || [],
-          mentions: mentions || []
+          hashtags: hashtags ? (typeof hashtags === 'string' ? JSON.parse(hashtags) : hashtags) : [],
+          mentions: mentions ? (typeof mentions === 'string' ? JSON.parse(mentions) : mentions) : []
         },
         visibility,
-        location
+        location: location ? (typeof location === 'string' ? JSON.parse(location) : location) : undefined
       };
       
       // Handle video attachment
@@ -84,13 +84,12 @@ class CommunityController {
         postData.postType = 'video';
       }
       
-      // Handle image uploads
-      if (req.files && req.files.images) {
-        const images = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+      // Handle image uploads (multer stores files in req.files as array)
+      if (req.files && req.files.length > 0) {
         const imageUploads = [];
         
-        for (const image of images) {
-          const result = await cloudinary.uploader.upload(image.tempFilePath, {
+        for (const image of req.files) {
+          const result = await cloudinary.uploader.upload(image.path, {
             folder: 'ShlokaYug/community/images',
             resource_type: 'image',
             transformation: [
@@ -103,6 +102,12 @@ class CommunityController {
             url: result.secure_url,
             publicId: result.public_id,
             alt: `Image by ${req.user.username}`
+          });
+          
+          // Clean up temp file
+          const fs = require('fs');
+          fs.unlink(image.path, (err) => {
+            if (err) console.error('Failed to delete temp file:', err);
           });
         }
         

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { getHinduDate, getDailySanskritQuote, getFormattedDate, fetchPanchangData, PanchangData } from './utils';
 import { useAuth } from '../../context/AuthContext';
 
@@ -11,6 +12,7 @@ interface HeaderProps {
 
 export default function Header({ children }: HeaderProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const [panchangData, setPanchangData] = useState<PanchangData | null>(null);
   const [loading, setLoading] = useState(true);
   const hinduDate = getHinduDate();
@@ -45,9 +47,17 @@ export default function Header({ children }: HeaderProps) {
             {formattedDate}
           </Text>
         </View>
-        <TouchableOpacity className="bg-white/20 p-3 rounded-full">
-          <Ionicons name="notifications" size={24} color="white" />
-        </TouchableOpacity>
+        <View className="flex-row gap-2">
+          <TouchableOpacity className="bg-white/20 p-3 rounded-full">
+            <Ionicons name="notifications" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            className="bg-white/20 p-3 rounded-full"
+            onPress={() => router.push('/profile')}
+          >
+            <Ionicons name="person" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Hindu Calendar Date / Panchang */}

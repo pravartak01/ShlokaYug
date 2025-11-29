@@ -18,6 +18,13 @@ const enrollmentRoutes = require('./routes/enrollments');
 const paymentRoutes = require('./routes/payments');
 const subscriptionRoutes = require('./routes/subscriptions');
 
+// Video Sharing Platform Routes
+const videoRoutes = require('./routes/videos');
+const shortsRoutes = require('./routes/shorts');
+
+// Community Social Platform Routes
+const communityRoutes = require('./routes/community');
+
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -66,6 +73,11 @@ app.use(
 app.use(
   cors({
     origin(origin, callback) {
+      // In development, allow all origins
+      if (process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      }
+
       const allowedOrigins = [
         process.env.FRONTEND_URL,
         process.env.MOBILE_APP_URL,
@@ -88,6 +100,8 @@ app.use(
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 600, // Cache preflight for 10 minutes
   })
 );
 
@@ -109,8 +123,8 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Data sanitization against NoSQL injection
 app.use(mongoSanitize());
@@ -153,6 +167,13 @@ app.use(`/api/${API_VERSION}/courses`, courseRoutes);
 app.use(`/api/${API_VERSION}/enrollments`, enrollmentRoutes);
 app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
 app.use(`/api/${API_VERSION}/subscriptions`, subscriptionRoutes);
+
+// Video Sharing Platform Routes
+app.use(`/api/${API_VERSION}/videos`, videoRoutes);
+app.use(`/api/${API_VERSION}/shorts`, shortsRoutes);
+
+// Community Social Platform Routes
+app.use(`/api/${API_VERSION}/community`, communityRoutes);
 
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
@@ -199,14 +220,15 @@ async function initializeServices() {
 
 // Start server
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0'; // Listen on all network interfaces
 
 if (require.main === module) {
   initializeServices()
     .then(() => {
-      const server = app.listen(PORT, () => {
+      const server = app.listen(PORT, HOST, () => {
         console.log(`
 🕉️  ShlokaYug Backend API Server
-📍 Running on port ${PORT}
+📍 Running on ${HOST}:${PORT}
 🌍 Environment: ${process.env.NODE_ENV}
 📚 API Version: ${API_VERSION}
 ${process.env.NODE_ENV === 'development' ? `📖 Documentation: http://localhost:${PORT}/api-docs` : ''}
