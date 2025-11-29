@@ -50,7 +50,7 @@ class CommunityController {
       }
       
       // Validate content
-      if (!text && !videoId && (!req.files || !req.files.images)) {
+      if (!text && !videoId && (!req.files || req.files.length === 0)) {
         return res.status(400).json({
           success: false,
           error: {
@@ -85,12 +85,12 @@ class CommunityController {
       }
       
       // Handle image uploads
-      if (req.files && req.files.images) {
-        const images = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+      if (req.files && req.files.length > 0) {
+        const images = req.files;
         const imageUploads = [];
         
         for (const image of images) {
-          const result = await cloudinary.uploader.upload(image.tempFilePath, {
+          const result = await cloudinary.uploader.upload(image.path, {
             folder: 'ShlokaYug/community/images',
             resource_type: 'image',
             transformation: [
