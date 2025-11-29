@@ -11,7 +11,7 @@ import {
   ShlokaForAnalysis,
 } from '../types/voiceAnalysis';
 
-const GEMINI_API_KEY = 'AIzaSyCjJxOpT_75O5sFDchH8E30TY5rQOQRvI8';
+const GEMINI_API_KEY = process.env.GOOGLE_AI_API_KEY || '';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 // Helper to generate score label
