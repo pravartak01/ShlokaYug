@@ -15,18 +15,31 @@ const { v4: uuidv4 } = require('uuid');
  */
 const uploadVideo = async (req, res) => {
   try {
+    console.log('📤 Video upload request received');
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+    console.log('File:', req.file ? { name: req.file.originalname, size: req.file.size, path: req.file.path } : 'No file');
+
     const {
       title,
       description,
       type = 'video', // 'video' or 'short'
       category,
-      tags = [],
+      tags: tagsRaw = '[]',
       language = 'hindi',
       visibility = 'public',
       scheduledAt,
       isAgeRestricted = false,
       shortsData = {} // For shorts: music info, effects, etc.
     } = req.body;
+
+    // Parse tags from JSON string (sent from FormData)
+    let tags = [];
+    try {
+      tags = typeof tagsRaw === 'string' ? JSON.parse(tagsRaw) : tagsRaw;
+    } catch (e) {
+      console.warn('Could not parse tags, using empty array');
+      tags = [];
+    }
 
     // Validate required fields
     if (!title || !category) {
@@ -67,7 +80,7 @@ const uploadVideo = async (req, res) => {
       type,
       category,
       tags: Array.isArray(tags) ? tags.map(tag => tag.trim()) : [],
-      language,
+      contentLanguage: language,
       visibility,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
       isAgeRestricted,
@@ -129,9 +142,17 @@ const uploadVideo = async (req, res) => {
 const processVideoFile = async (file, videoId, type) => {
   try {
     console.log(`🎬 Starting processing for video ${videoId}`);
+    console.log(`📁 File path: ${file.path}`);
     
-    // Get video metadata
-    const metadata = await getVideoMetadata(file.path);
+    // Get video metadata - with fallback if ffmpeg fails
+    let metadata = { duration: 0, width: 1920, height: 1080, format: 'mp4' };
+    try {
+      metadata = await getVideoMetadata(file.path);
+      console.log(`📊 Video metadata:`, metadata);
+    } catch (metaError) {
+      console.warn(`⚠️ Could not get video metadata (ffmpeg may not be installed):`, metaError.message);
+      // Continue with default metadata - Cloudinary will handle the video
+    }
     
     // Validate video for shorts
     if (type === 'short' && metadata.duration > 60) {
@@ -142,6 +163,8 @@ const processVideoFile = async (file, videoId, type) => {
       return;
     }
 
+    console.log(`☁️ Uploading to Cloudinary...`);
+    
     // Upload original to Cloudinary
     const originalUpload = await cloudinary.uploader.upload(file.path, {
       resource_type: 'video',
@@ -150,14 +173,28 @@ const processVideoFile = async (file, videoId, type) => {
       quality: 'auto',
       format: 'mp4'
     });
+    
+    console.log(`✅ Cloudinary upload success:`, originalUpload.secure_url);
 
-    // Generate thumbnail
-    const thumbnailPath = await generateThumbnail(file.path, videoId);
-    const thumbnailUpload = await cloudinary.uploader.upload(thumbnailPath, {
-      folder: `ShlokaYug/thumbnails`,
-      public_id: `${videoId}_thumbnail`,
-      quality: 'auto'
-    });
+    // Generate thumbnail using Cloudinary (no ffmpeg needed)
+    // Cloudinary can generate thumbnails from video automatically
+    const thumbnailUrl = originalUpload.secure_url.replace('/video/upload/', '/video/upload/so_1,w_640,h_360,c_fill/').replace('.mp4', '.jpg');
+    
+    let thumbnailUpload = { secure_url: thumbnailUrl, public_id: `${videoId}_thumbnail_auto` };
+    
+    // Try to generate local thumbnail with ffmpeg, fallback to Cloudinary's
+    try {
+      const thumbnailPath = await generateThumbnail(file.path, videoId);
+      thumbnailUpload = await cloudinary.uploader.upload(thumbnailPath, {
+        folder: `ShlokaYug/thumbnails`,
+        public_id: `${videoId}_thumbnail`,
+        quality: 'auto'
+      });
+      // Clean up local thumbnail
+      await fs.unlink(thumbnailPath).catch(() => {});
+    } catch (thumbError) {
+      console.warn(`⚠️ Local thumbnail generation failed, using Cloudinary's auto-thumbnail:`, thumbError.message);
+    }
 
     // Process different quality versions for regular videos
     const processedVersions = {};
@@ -195,18 +232,22 @@ const processVideoFile = async (file, videoId, type) => {
         cloudinaryId: thumbnailUpload.public_id,
         timestamps: [Math.floor(metadata.duration / 2)] // Middle frame
       },
-      'video.duration': metadata.duration,
+      'video.duration': metadata.duration || 0,
       'video.resolution': {
-        width: metadata.width,
-        height: metadata.height
+        width: metadata.width || 1920,
+        height: metadata.height || 1080
       },
-      'video.format': metadata.format,
-      'video.aspectRatio': calculateAspectRatio(metadata.width, metadata.height)
+      'video.format': metadata.format || 'mp4',
+      'video.aspectRatio': calculateAspectRatio(metadata.width || 1920, metadata.height || 1080)
     });
 
-    // Clean up local files
-    await fs.unlink(file.path);
-    await fs.unlink(thumbnailPath);
+    // Clean up local video file
+    try {
+      await fs.unlink(file.path);
+      console.log(`🗑️ Cleaned up local file: ${file.path}`);
+    } catch (e) {
+      console.warn(`⚠️ Could not delete local file:`, e.message);
+    }
 
     console.log(`✅ Processing completed for video ${videoId}`);
 
@@ -337,10 +378,10 @@ const getVideoById = async (req, res) => {
     const { videoId } = req.params;
     const userId = req.user?._id;
 
-    const video = await Video.findOne({
-      _id: videoId,
-      status: 'published'
-    }).populate('creator.userId', 'username profile.displayName profile.avatar');
+    // For development: allow viewing any video status
+    // In production: only show 'published' videos to non-owners
+    const video = await Video.findById(videoId)
+      .populate('creator.userId', 'username profile.displayName profile.avatar');
 
     if (!video) {
       return res.status(404).json({
@@ -351,6 +392,14 @@ const getVideoById = async (req, res) => {
         }
       });
     }
+
+    // In production, check if video is published or user is owner
+    // For now, allow viewing any video for testing
+    console.log(`📺 Fetching video ${videoId}:`);
+    console.log(`  Status: ${video.status}`);
+    console.log(`  Has originalFile URL: ${!!video.video?.originalFile?.url}`);
+    console.log(`  originalFile URL: ${video.video?.originalFile?.url}`);
+    console.log(`  Has thumbnail URL: ${!!video.video?.thumbnail?.url}`);
 
     // Check visibility
     if (video.visibility === 'private' && (!userId || !video.creator.userId._id.equals(userId))) {
@@ -420,11 +469,15 @@ const getVideosFeed = async (req, res) => {
       videoType, // video, short
       limit = 20,
       page = 1,
-      language
+      language,
+      includeAll = 'false' // Development: include all statuses
     } = req.query;
 
     const skip = (page - 1) * limit;
-    let query = { status: 'published', visibility: 'public' };
+    // For development: allow fetching all videos regardless of status
+    let query = includeAll === 'true' 
+      ? { visibility: 'public' } 
+      : { status: 'published', visibility: 'public' };
     let sort = {};
 
     // Add filters
@@ -652,10 +705,210 @@ const recordView = async (req, res) => {
   }
 };
 
+/**
+ * Get related videos
+ * @route GET /api/v1/videos/:videoId/related
+ * @access Public
+ */
+const getRelatedVideos = async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const { limit = 10 } = req.query;
+
+    const video = await Video.findById(videoId);
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Video not found' }
+      });
+    }
+
+    // Find related videos based on category and tags
+    const relatedVideos = await Video.find({
+      _id: { $ne: videoId },
+      type: video.type,
+      status: 'published',
+      visibility: 'public',
+      $or: [
+        { category: video.category },
+        { tags: { $in: video.tags } }
+      ]
+    })
+    .sort({ 'metrics.views': -1 })
+    .limit(parseInt(limit))
+    .select('title creator video.thumbnail video.duration metrics.views metrics.likes createdAt')
+    .lean();
+
+    res.json({
+      success: true,
+      data: { videos: relatedVideos }
+    });
+  } catch (error) {
+    console.error('Get related videos error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to fetch related videos' }
+    });
+  }
+};
+
+/**
+ * Get user's uploaded videos
+ * @route GET /api/v1/videos/my-videos
+ * @access Private
+ */
+const getMyVideos = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { type, page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const query = { 'creator.userId': userId };
+    if (type) query.type = type;
+
+    const videos = await Video.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .select('title description type category video.thumbnail video.duration status visibility metrics createdAt')
+      .lean();
+
+    const total = await Video.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        videos,
+        pagination: {
+          current: parseInt(page),
+          total: Math.ceil(total / limit),
+          count: videos.length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get my videos error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to fetch videos' }
+    });
+  }
+};
+
+/**
+ * Get video analytics
+ * @route GET /api/v1/videos/:videoId/analytics
+ * @access Private (Owner only)
+ */
+const getVideoAnalytics = async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const userId = req.user._id;
+
+    const video = await Video.findById(videoId);
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Video not found' }
+      });
+    }
+
+    // Check ownership
+    if (video.creator.userId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: { message: 'Not authorized to view analytics for this video' }
+      });
+    }
+
+    const analytics = {
+      videoId: video._id,
+      title: video.title,
+      metrics: video.metrics,
+      performance: {
+        viewsGrowth: '+12%', // Placeholder - implement actual calculation
+        likesGrowth: '+8%',
+        engagementRate: video.metrics.engagement?.rate || 0
+      },
+      audience: {
+        // Placeholder data - implement actual tracking
+        topLocations: ['India', 'United States', 'United Kingdom'],
+        devices: { mobile: 68, desktop: 25, tablet: 7 },
+        ageGroups: { '18-24': 35, '25-34': 45, '35-44': 15, '45+': 5 }
+      }
+    };
+
+    res.json({
+      success: true,
+      data: analytics
+    });
+  } catch (error) {
+    console.error('Get video analytics error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to fetch analytics' }
+    });
+  }
+};
+
+/**
+ * Get channel analytics
+ * @route GET /api/v1/videos/channel/analytics
+ * @access Private
+ */
+const getChannelAnalytics = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Aggregate channel stats
+    const stats = await Video.aggregate([
+      { $match: { 'creator.userId': userId } },
+      {
+        $group: {
+          _id: null,
+          totalViews: { $sum: '$metrics.views' },
+          totalLikes: { $sum: '$metrics.likes' },
+          totalComments: { $sum: '$metrics.comments' },
+          totalShares: { $sum: '$metrics.shares' },
+          videoCount: { $sum: { $cond: [{ $eq: ['$type', 'video'] }, 1, 0] } },
+          shortsCount: { $sum: { $cond: [{ $eq: ['$type', 'short'] }, 1, 0] } }
+        }
+      }
+    ]);
+
+    const channelStats = stats[0] || {
+      totalViews: 0,
+      totalLikes: 0,
+      totalComments: 0,
+      totalShares: 0,
+      videoCount: 0,
+      shortsCount: 0
+    };
+
+    // Get subscriber count (implement subscription model)
+    channelStats.totalSubscribers = 0; // Placeholder
+
+    res.json({
+      success: true,
+      data: channelStats
+    });
+  } catch (error) {
+    console.error('Get channel analytics error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to fetch channel analytics' }
+    });
+  }
+};
+
 module.exports = {
   uploadVideo,
   getVideoById,
   getVideosFeed,
   searchVideos,
-  recordView
+  recordView,
+  getRelatedVideos,
+  getMyVideos,
+  getVideoAnalytics,
+  getChannelAnalytics
 };

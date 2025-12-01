@@ -604,3 +604,192 @@ module.exports = {
   toggleSubscription,
   getUserSubscriptions
 };
+
+/**
+ * Share video (increment share count)
+ * @route POST /api/v1/videos/:videoId/share
+ * @access Private
+ */
+const shareVideo = async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    
+    const video = await Video.findById(videoId);
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Video not found' }
+      });
+    }
+
+    // Increment share count
+    video.metrics.shares = (video.metrics.shares || 0) + 1;
+    await video.save();
+
+    res.json({
+      success: true,
+      data: {
+        message: 'Video shared successfully',
+        shares: video.metrics.shares
+      }
+    });
+  } catch (error) {
+    console.error('Share video error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to share video' }
+    });
+  }
+};
+
+/**
+ * Bookmark video
+ * @route POST /api/v1/videos/:videoId/bookmark
+ * @access Private
+ */
+const bookmarkVideo = async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const userId = req.user._id;
+
+    const video = await Video.findById(videoId);
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Video not found' }
+      });
+    }
+
+    // Check if already bookmarked
+    const existingPlaylist = await Playlist.findOne({
+      userId,
+      name: 'Bookmarks',
+      isDefault: true
+    });
+
+    if (existingPlaylist) {
+      if (existingPlaylist.videos.includes(videoId)) {
+        return res.json({
+          success: true,
+          data: { message: 'Video already bookmarked', isBookmarked: true }
+        });
+      }
+      existingPlaylist.videos.push(videoId);
+      await existingPlaylist.save();
+    } else {
+      // Create bookmarks playlist
+      await Playlist.create({
+        userId,
+        name: 'Bookmarks',
+        description: 'Saved videos',
+        isDefault: true,
+        videos: [videoId]
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { message: 'Video bookmarked successfully', isBookmarked: true }
+    });
+  } catch (error) {
+    console.error('Bookmark video error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to bookmark video' }
+    });
+  }
+};
+
+/**
+ * Remove bookmark
+ * @route DELETE /api/v1/videos/:videoId/bookmark
+ * @access Private
+ */
+const removeBookmark = async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const userId = req.user._id;
+
+    const playlist = await Playlist.findOne({
+      userId,
+      name: 'Bookmarks',
+      isDefault: true
+    });
+
+    if (!playlist) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Bookmarks not found' }
+      });
+    }
+
+    playlist.videos = playlist.videos.filter(v => v.toString() !== videoId);
+    await playlist.save();
+
+    res.json({
+      success: true,
+      data: { message: 'Bookmark removed successfully', isBookmarked: false }
+    });
+  } catch (error) {
+    console.error('Remove bookmark error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to remove bookmark' }
+    });
+  }
+};
+
+/**
+ * Get user bookmarks
+ * @route GET /api/v1/videos/bookmarks
+ * @access Private
+ */
+const getBookmarks = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { page = 1, limit = 20 } = req.query;
+
+    const playlist = await Playlist.findOne({
+      userId,
+      name: 'Bookmarks',
+      isDefault: true
+    }).populate({
+      path: 'videos',
+      select: 'title creator video.thumbnail video.duration metrics.views createdAt',
+      options: {
+        skip: (page - 1) * limit,
+        limit: parseInt(limit)
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        videos: playlist?.videos || [],
+        pagination: {
+          current: parseInt(page),
+          count: playlist?.videos?.length || 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get bookmarks error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to fetch bookmarks' }
+    });
+  }
+};
+
+module.exports = {
+  toggleVideoReaction,
+  addComment,
+  getVideoComments,
+  toggleCommentLike,
+  toggleSubscription,
+  getUserSubscriptions,
+  shareVideo,
+  bookmarkVideo,
+  removeBookmark,
+  getBookmarks
+};

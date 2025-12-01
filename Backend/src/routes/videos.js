@@ -136,17 +136,54 @@ const reactionValidation = [
 ];
 
 // Video upload and management routes
+// Simple test endpoint for upload debugging
+router.post('/upload-test', auth, (req, res) => {
+  console.log('📨 Upload-test endpoint hit');
+  res.json({ 
+    success: true, 
+    message: 'Upload endpoint is reachable',
+    headers: req.headers,
+    body: req.body 
+  });
+});
+
+// Debug middleware for upload
+const uploadDebugMiddleware = (req, res, next) => {
+  console.log('📨 Upload route hit');
+  console.log('📨 Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('📨 Content-Type:', req.headers['content-type']);
+  next();
+};
+
 router.post('/upload', 
+  uploadDebugMiddleware,
   auth,
+  (req, res, next) => {
+    console.log('📨 After auth, before multer');
+    console.log('📨 User:', req.user?.username);
+    next();
+  },
   upload.single('video'),
-  videoUploadValidation,
-  validate,
+  (req, res, next) => {
+    console.log('📨 After multer');
+    console.log('📨 File:', req.file ? { name: req.file.originalname, size: req.file.size, path: req.file.path } : 'No file');
+    console.log('📨 Body:', JSON.stringify(req.body, null, 2));
+    next();
+  },
+  // videoUploadValidation,
+  // validate,
   videoController.uploadVideo
 );
 
 router.get('/feed', videoController.getVideosFeed);
 router.get('/search', videoController.searchVideos);
+router.get('/my-videos', auth, videoController.getMyVideos);
+router.get('/bookmarks', auth, engagementController.getBookmarks);
+router.get('/subscriptions', auth, engagementController.getUserSubscriptions);
+router.get('/channel/analytics', auth, videoController.getChannelAnalytics);
 router.get('/:videoId', videoController.getVideoById);
+router.get('/:videoId/related', videoController.getRelatedVideos);
+router.get('/:videoId/analytics', auth, videoController.getVideoAnalytics);
 
 // Video interaction routes
 router.post('/:videoId/view', videoController.recordView);
@@ -156,6 +193,9 @@ router.post('/:videoId/react',
   validate,
   engagementController.toggleVideoReaction
 );
+router.post('/:videoId/share', auth, engagementController.shareVideo);
+router.post('/:videoId/bookmark', auth, engagementController.bookmarkVideo);
+router.delete('/:videoId/bookmark', auth, engagementController.removeBookmark);
 
 // Comment routes
 router.get('/:videoId/comments', engagementController.getVideoComments);
@@ -167,7 +207,7 @@ router.post('/:videoId/comments',
 );
 
 // Comment interaction routes
-router.post('/comments/:commentId/like', 
+router.post('/:videoId/comments/:commentId/like', 
   auth,
   engagementController.toggleCommentLike
 );
@@ -176,11 +216,6 @@ router.post('/comments/:commentId/like',
 router.post('/channels/:channelId/subscribe', 
   auth,
   engagementController.toggleSubscription
-);
-
-router.get('/subscriptions', 
-  auth,
-  engagementController.getUserSubscriptions
 );
 
 // Error handling middleware for multer

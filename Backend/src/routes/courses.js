@@ -1,4 +1,7 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const router = express.Router();
 
@@ -20,6 +23,7 @@ const {
   unpublishCourse,
   getInstructorCourses,
   getCourseAnalytics,
+  uploadLectureVideo,
 } = require('../controllers/courseController');
 
 // Import validations
@@ -152,5 +156,84 @@ router.get(
  * @access  Private (Course instructor only)
  */
 router.get('/instructor/:id/analytics', auth, getCourseAnalyticsValidation, getCourseAnalytics);
+
+// ============================================================================
+// VIDEO UPLOAD ROUTES
+// ============================================================================
+
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '../../uploads/course-videos');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer configuration for video uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname);
+    cb(null, `lecture-${uniqueSuffix}${extension}`);
+  }
+});
+
+// File filter for videos
+const fileFilter = (req, file, cb) => {
+  const allowedMimes = [
+    'video/mp4',
+    'video/mpeg',
+    'video/quicktime',
+    'video/x-msvideo',
+    'video/x-ms-wmv',
+    'video/webm'
+  ];
+
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only video files are allowed.'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 500 * 1024 * 1024 // 500MB max file size
+  }
+});
+
+/**
+ * @route   POST /api/courses/upload-video
+ * @desc    Upload video for course lecture
+ * @access  Private (Gurus only)
+ */
+router.post(
+  '/upload-video',
+  auth,
+  checkRole(['guru']),
+  upload.single('video'),
+  uploadLectureVideo
+);
+
+// Error handling middleware for multer
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File too large. Maximum size is 500MB.'
+      });
+    }
+  } else if (error.message === 'Invalid file type. Only video files are allowed.') {
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+  next(error);
+});
 
 module.exports = router;

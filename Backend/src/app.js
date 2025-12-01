@@ -18,22 +18,8 @@ const enrollmentRoutes = require('./routes/enrollments');
 const paymentRoutes = require('./routes/payments');
 const subscriptionRoutes = require('./routes/subscriptions');
 
-// Phase 3 Routes - Critical LMS Systems
-const progressRoutes = require('./routes/progress');
-const assessmentRoutes = require('./routes/assessments');
-const contentRoutes = require('./routes/content');
-
-// Phase 4 Routes - Video Sharing Platform (YouTube-like)
-const videoRoutes = require('./routes/videos');
-const shortsRoutes = require('./routes/shorts');
-
-// Phase 5 Routes - Community Features (Twitter-like)
+// Community Routes
 const communityRoutes = require('./routes/community');
-
-// Phase 6 Routes - Challenge System
-const challengeRoutes = require('./routes/challengeRoutes');
-const adminChallengeRoutes = require('./routes/adminChallengeRoutes');
-const certificateRoutes = require('./routes/certificateRoutes');
 
 // CRITICAL: Admin Routes for Platform Management
 const adminRoutes = require('./routes/admin');
@@ -52,7 +38,6 @@ const adminRoutes = require('./routes/admin');
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
-const validateRequest = require('./middleware/validateRequest');
 
 // Import database connection
 const connectDB = require('./config/database');
@@ -86,6 +71,11 @@ app.use(
 app.use(
   cors({
     origin(origin, callback) {
+      // In development, allow all origins
+      if (process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      }
+
       const allowedOrigins = [
         process.env.FRONTEND_URL,
         process.env.MOBILE_APP_URL,
@@ -108,6 +98,8 @@ app.use(
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 600, // Cache preflight for 10 minutes
   })
 );
 
@@ -129,8 +121,8 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Data sanitization against NoSQL injection
 app.use(mongoSanitize());
@@ -174,22 +166,8 @@ app.use(`/api/${API_VERSION}/enrollments`, enrollmentRoutes);
 app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
 app.use(`/api/${API_VERSION}/subscriptions`, subscriptionRoutes);
 
-// Phase 3 Routes - Critical LMS Systems
-app.use(`/api/${API_VERSION}/progress`, progressRoutes);
-app.use(`/api/${API_VERSION}/assessments`, assessmentRoutes);
-app.use(`/api/${API_VERSION}/content`, contentRoutes);
-
-// Phase 4 Routes - Video Sharing Platform (YouTube-like)
-app.use(`/api/${API_VERSION}/videos`, videoRoutes);
-app.use(`/api/${API_VERSION}/shorts`, shortsRoutes);
-
-// Phase 5 Routes - Community Features (Twitter-like)
+// Community Routes
 app.use(`/api/${API_VERSION}/community`, communityRoutes);
-
-// Phase 6 Routes - Challenge System
-app.use(`/api/${API_VERSION}/challenges`, challengeRoutes);
-app.use(`/api/${API_VERSION}/admin/challenges`, adminChallengeRoutes);
-app.use(`/api/${API_VERSION}/certificates`, certificateRoutes);
 
 // CRITICAL: Admin Routes (Must be protected)
 app.use(`/api/${API_VERSION}/admin`, adminRoutes);
@@ -239,13 +217,14 @@ async function initializeServices() {
 
 // Start server
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0'; // Listen on all network interfaces
 
 if (require.main === module) {
   initializeServices()
     .then(() => {
-      const server = app.listen(PORT, () => {
+      const server = app.listen(PORT, HOST, () => {
         console.log(`
-🎵  SVARAM Backend API Server
+🕉️  ShlokaYug Backend API Server
 📍 Running on port ${PORT}
 🌍 Environment: ${process.env.NODE_ENV}
 📚 API Version: ${API_VERSION}

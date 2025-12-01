@@ -197,6 +197,18 @@ const apiService = {
     const response = await apiClient.get(`/enrollments/course/${courseId}`);
     return response.data;
   },
+
+  // Upload APIs
+  uploadVideo: async (formData, config = {}) => {
+    const response = await apiClient.post('/courses/upload-video', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 600000, // 10 minutes timeout for video uploads
+      ...config,
+    });
+    return response.data;
+  },
 };
 
 export default apiService;

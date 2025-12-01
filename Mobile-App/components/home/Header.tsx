@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { getHinduDate, getDailySanskritQuote, getFormattedDate, fetchPanchangData, PanchangData } from './utils';
 import { useAuth } from '../../context/AuthContext';
+import { SideDrawer } from '../common';
 
 interface HeaderProps {
   children?: React.ReactNode;
@@ -11,8 +13,10 @@ interface HeaderProps {
 
 export default function Header({ children }: HeaderProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const [panchangData, setPanchangData] = useState<PanchangData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const hinduDate = getHinduDate();
   const dailyQuote = getDailySanskritQuote();
   const formattedDate = getFormattedDate();
@@ -29,26 +33,49 @@ export default function Header({ children }: HeaderProps) {
   }, []);
 
   return (
-    <LinearGradient
-      colors={['#f97316', '#ea580c', '#c2410c']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      className="px-6 pt-12 pb-8 rounded-b-3xl"
-    >
-      {/* User Greeting */}
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-1">
-          <Text className="text-white text-2xl font-bold">
-            Namaste, {user?.profile?.firstName || user?.username || 'Guest'} 👋
-          </Text>
-          <Text className="text-white/90 text-sm mt-1">
-            {formattedDate}
-          </Text>
+    <>
+      {/* Side Drawer */}
+      <SideDrawer
+        isVisible={isDrawerVisible}
+        onClose={() => setIsDrawerVisible(false)}
+      />
+
+      <LinearGradient
+        colors={['#f97316', '#ea580c', '#c2410c']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="px-6 pt-12 pb-8 rounded-b-3xl"
+      >
+        {/* User Greeting */}
+        <View className="flex-row items-center justify-between mb-4">
+          {/* Hamburger Menu Button */}
+          <TouchableOpacity 
+            className="bg-white/20 p-3 rounded-full mr-3"
+            onPress={() => setIsDrawerVisible(true)}
+          >
+            <Ionicons name="menu" size={24} color="white" />
+          </TouchableOpacity>
+          
+          <View className="flex-1">
+            <Text className="text-white text-2xl font-bold">
+              Namaste, {user?.profile?.firstName || user?.username || 'Guest'} 👋
+            </Text>
+            <Text className="text-white/90 text-sm mt-1">
+              {formattedDate}
+            </Text>
+          </View>
+          <View className="flex-row gap-2">
+            <TouchableOpacity className="bg-white/20 p-3 rounded-full">
+              <Ionicons name="notifications" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              className="bg-white/20 p-3 rounded-full"
+              onPress={() => router.push('/profile')}
+            >
+              <Ionicons name="person" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
-        <TouchableOpacity className="bg-white/20 p-3 rounded-full">
-          <Ionicons name="notifications" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
 
       {/* Hindu Calendar Date / Panchang */}
       <View className="bg-white/10 px-4 py-3 rounded-xl mb-4">
@@ -130,5 +157,6 @@ export default function Header({ children }: HeaderProps) {
 
       {children}
     </LinearGradient>
+    </>
   );
 }

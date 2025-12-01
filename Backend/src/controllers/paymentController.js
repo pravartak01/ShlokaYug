@@ -223,8 +223,13 @@ const verifyPaymentSignature = async (req, res) => {
     const { 
       razorpay_order_id, 
       razorpay_payment_id, 
-      razorpay_signature 
+      razorpay_signature,
+      courseId // Extract courseId from request
     } = req.body;
+
+    console.log('🔐 Verifying payment for course:', courseId);
+    console.log('🔐 Order ID:', razorpay_order_id);
+    console.log('🔐 Payment ID:', razorpay_payment_id);
 
     // Generate expected signature
     const expectedSignature = crypto
@@ -251,6 +256,12 @@ const verifyPaymentSignature = async (req, res) => {
       transaction.completedAt = new Date();
       transaction.razorpay.paymentId = razorpay_payment_id;
       transaction.paymentMethod = 'razorpay';
+      // Update courseId if provided
+      if (courseId && !transaction.courseId) {
+        transaction.courseId = courseId;
+        transaction.metadata = transaction.metadata || {};
+        transaction.metadata.courseId = courseId;
+      }
       global.testTransactions.set(razorpay_order_id, transaction);
       console.log('✓ Payment verified and updated in memory storage');
     }
@@ -280,8 +291,24 @@ const verifyPaymentSignature = async (req, res) => {
             paymentTransaction.status = 'completed';
             paymentTransaction.razorpayPaymentId = razorpay_payment_id;
             paymentTransaction.razorpaySignature = razorpay_signature;
+            
+            // Update courseId if provided and not already set
+            if (courseId) {
+              if (!paymentTransaction.courseId) {
+                paymentTransaction.courseId = courseId;
+              }
+              if (!paymentTransaction.metadata) {
+                paymentTransaction.metadata = {};
+              }
+              if (!paymentTransaction.metadata.courseId) {
+                paymentTransaction.metadata.courseId = courseId;
+              }
+              console.log('✓ Updated courseId in transaction:', courseId);
+            }
+            
             await paymentTransaction.save();
             console.log('✓ PaymentTransactionSimple updated:', paymentTransaction.transactionId);
+            console.log('✓ Transaction courseId:', paymentTransaction.courseId || paymentTransaction.metadata?.courseId);
             
             // Trigger auto-enrollment after successful payment
             try {
@@ -289,6 +316,7 @@ const verifyPaymentSignature = async (req, res) => {
               console.log('✅ Auto-enrollment triggered for transaction:', paymentTransaction.transactionId);
             } catch (enrollmentError) {
               console.warn('❌ Auto-enrollment failed:', enrollmentError.message);
+              console.error('❌ Stack:', enrollmentError.stack);
               // Don't fail the payment verification if enrollment fails
             }
           } else {

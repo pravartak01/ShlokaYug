@@ -186,13 +186,45 @@ const CreateCourse = () => {
         },
 
         // Pricing structure matching validation
-        pricing: {
-          type: courseData.isFree ? 'free' : courseData.pricingType,
-          amount: courseData.isFree 
-            ? 0 
-            : parseFloat(courseData.price) || 0,
-          currency: 'INR',
-        },
+        pricing: (() => {
+          if (courseData.isFree) {
+            return {
+              type: 'free',
+              amount: 0,
+              currency: 'INR'
+            };
+          }
+          
+          const priceValue = parseFloat(courseData.price) || 0;
+          
+          if (courseData.pricingType === 'one_time') {
+            return {
+              type: 'one_time',
+              currency: 'INR',
+              oneTime: {
+                amount: priceValue
+              }
+            };
+          } else if (courseData.pricingType === 'subscription') {
+            return {
+              type: 'subscription',
+              currency: 'INR',
+              subscription: {
+                monthly: {
+                  amount: priceValue
+                },
+                subscriptionPeriod: courseData.subscriptionPeriod || 'monthly'
+              }
+            };
+          }
+          
+          // Fallback to old structure for compatibility
+          return {
+            type: courseData.pricingType,
+            amount: priceValue,
+            currency: 'INR'
+          };
+        })(),
 
         // Learning objectives (not outcomes!)
         learningObjectives: courseData.learningObjectives.filter((o) => o.trim()),
@@ -208,11 +240,6 @@ const CreateCourse = () => {
         ...(courseData.shortDescription && { shortDescription: courseData.shortDescription }),
         ...(courseData.subCategory && { subCategory: courseData.subCategory }),
       };
-
-      // Add subscription period if needed
-      if (courseData.pricingType === 'subscription' && !courseData.isFree) {
-        payload.pricing.subscriptionPeriod = courseData.subscriptionPeriod;
-      }
 
       console.log('Submitting course data:', payload);
       const response = await apiService.createCourse(payload);
