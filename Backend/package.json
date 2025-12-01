@@ -1,7 +1,7 @@
 {
-  "name": "shlokayug-backend",
+  "name": "svaram-backend",
   "version": "1.0.0",
-  "description": "Backend API for ShlokaYug - Sanskrit Learning Platform with Chandas Analysis",
+  "description": "Backend API for SVARAM - Sanskrit Learning Platform with Chandas Analysis",
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
@@ -27,7 +27,7 @@
     "karaoke",
     "learning-management"
   ],
-  "author": "ShlokaYug Team",
+  "author": "SVARAM Team",
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.2.1",
@@ -96,12 +96,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/pravartak01/ShlokaYug.git"
+    "url": "https://github.com/pravartak01/SVARAM.git"
   },
   "bugs": {
-    "url": "https://github.com/pravartak01/ShlokaYug/issues"
+    "url": "https://github.com/pravartak01/SVARAM/issues"
   },
-  "homepage": "https://github.com/pravartak01/ShlokaYug#readme",
+  "homepage": "https://github.com/pravartak01/SVARAM#readme",
   "jest": {
     "testEnvironment": "node",
     "coverageDirectory": "coverage",

@@ -30,6 +30,11 @@ const shortsRoutes = require('./routes/shorts');
 // Phase 5 Routes - Community Features (Twitter-like)
 const communityRoutes = require('./routes/community');
 
+// Phase 6 Routes - Challenge System
+const challengeRoutes = require('./routes/challengeRoutes');
+const adminChallengeRoutes = require('./routes/adminChallengeRoutes');
+const certificateRoutes = require('./routes/certificateRoutes');
+
 // CRITICAL: Admin Routes for Platform Management
 const adminRoutes = require('./routes/admin');
 
@@ -151,7 +156,7 @@ if (process.env.NODE_ENV === 'development') {
 app.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'ShlokaYug Backend API is running',
+    message: 'SVARAM Backend API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     version: process.env.npm_package_version || '1.0.0',
@@ -180,6 +185,11 @@ app.use(`/api/${API_VERSION}/shorts`, shortsRoutes);
 
 // Phase 5 Routes - Community Features (Twitter-like)
 app.use(`/api/${API_VERSION}/community`, communityRoutes);
+
+// Phase 6 Routes - Challenge System
+app.use(`/api/${API_VERSION}/challenges`, challengeRoutes);
+app.use(`/api/${API_VERSION}/admin/challenges`, adminChallengeRoutes);
+app.use(`/api/${API_VERSION}/certificates`, certificateRoutes);
 
 // CRITICAL: Admin Routes (Must be protected)
 app.use(`/api/${API_VERSION}/admin`, adminRoutes);
@@ -235,12 +245,12 @@ if (require.main === module) {
     .then(() => {
       const server = app.listen(PORT, () => {
         console.log(`
-🕉️  ShlokaYug Backend API Server
+🎵  SVARAM Backend API Server
 📍 Running on port ${PORT}
 🌍 Environment: ${process.env.NODE_ENV}
 📚 API Version: ${API_VERSION}
 ${process.env.NODE_ENV === 'development' ? `📖 Documentation: http://localhost:${PORT}/api-docs` : ''}
-🙏 Sanskrit Learning Platform Backend Ready!
+🎶 Sanskrit Learning Platform Backend Ready!
       `);
       });
 

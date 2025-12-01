@@ -225,6 +225,48 @@ This document provides a comprehensive list of every single route available in t
 
 ---
 
+## 🏆 Challenge System Routes
+
+### **Admin Challenge Management** (`/api/v1/admin/challenges/*`)
+
+| Method | Route | Description | Access |
+|--------|--------|-------------|---------|
+| `POST` | `/api/v1/admin/challenges` | Create new challenge | Admin |
+| `GET` | `/api/v1/admin/challenges` | Get all challenges (admin view) | Admin |
+| `GET` | `/api/v1/admin/challenges/analytics` | Challenge system analytics | Admin |
+| `GET` | `/api/v1/admin/challenges/:id` | Get challenge details | Admin |
+| `PUT` | `/api/v1/admin/challenges/:id` | Update challenge | Admin |
+| `DELETE` | `/api/v1/admin/challenges/:id` | Delete challenge | Admin |
+| `POST` | `/api/v1/admin/challenges/:id/activate` | Activate challenge | Admin |
+| `GET` | `/api/v1/admin/challenges/:id/leaderboard` | Get challenge leaderboard | Admin |
+| `GET` | `/api/v1/admin/challenges/:id/participants` | Get challenge participants | Admin |
+| `POST` | `/api/v1/admin/challenges/:challengeId/participants/:participantId/certificate` | Issue certificate | Admin |
+| `GET` | `/api/v1/admin/challenges/:id/analytics` | Challenge-specific analytics | Admin |
+
+### **User Challenge Participation** (`/api/v1/challenges/*`)
+
+| Method | Route | Description | Access |
+|--------|--------|-------------|---------|
+| `GET` | `/api/v1/challenges` | Get active challenges | Protected |
+| `GET` | `/api/v1/challenges/my-challenges` | Get user's challenge history | Protected |
+| `GET` | `/api/v1/challenges/:id` | Get challenge details | Protected |
+| `POST` | `/api/v1/challenges/:id/join` | Join/register for challenge | Protected |
+| `POST` | `/api/v1/challenges/:id/start` | Start challenge attempt | Protected |
+| `POST` | `/api/v1/challenges/:id/submit` | Submit challenge response | Protected |
+| `POST` | `/api/v1/challenges/:id/complete` | Complete challenge | Protected |
+| `GET` | `/api/v1/challenges/:id/leaderboard` | Get challenge leaderboard | Protected |
+
+### **Certificate Management** (`/api/v1/certificates/*`)
+
+| Method | Route | Description | Access |
+|--------|--------|-------------|---------|
+| `GET` | `/api/v1/certificates/verify/:verificationCode` | Verify certificate | Public |
+| `GET` | `/api/v1/certificates/my-certificates` | Get user's certificates | Protected |
+| `GET` | `/api/v1/certificates/download/:certificateId` | Download certificate | Protected |
+| `POST` | `/api/v1/certificates/:certificateId/share` | Share certificate | Protected |
+
+---
+
 ## 👥 Community & Social Routes
 
 ### **Community Features** (`/api/v1/community/*`)
@@ -294,27 +336,28 @@ This document provides a comprehensive list of every single route available in t
 ## 📊 Route Statistics
 
 ### **Total Route Count**
-- **Total Routes**: **135+ endpoints**
-- **Route Files**: **16 modules**
+- **Total Routes**: **170+ endpoints**
+- **Route Files**: **19 modules**
 - **Authentication Systems**: **3 (User, Guru, Admin)**
 
 ### **Routes by Category**
 - **Authentication**: 24 endpoints (User: 13, Guru: 11)
-- **Admin Management**: 19 endpoints (General: 11, Guru Management: 8)
+- **Admin Management**: 30 endpoints (General: 11, Guru Management: 8, Challenge Management: 11)
 - **Course Management**: 12 endpoints
 - **Learning & Enrollment**: 24 endpoints (Enrollments: 16, Progress: 8)
 - **Assessment**: 10 endpoints
 - **Payment & Subscriptions**: 19 endpoints (Payments: 10, Subscriptions: 9)
 - **Video Platform**: 19 endpoints (Videos: 11, Shorts: 8)
-- **Community**: 16 endpoints
+- **Challenge System**: 23 endpoints (Admin: 11, User: 8, Certificates: 4) **NEW**
+- **Community**: 17 endpoints
 - **Content Management**: 10 endpoints
 - **Notes & Certificates**: 7 endpoints (Notes: 4, Certificates: 3)
 
 ### **Access Control Summary**
-- **Public Routes**: ~30 endpoints (feeds, course discovery, video streaming)
-- **Protected Routes**: ~70 endpoints (enrolled users, basic features)
+- **Public Routes**: ~35 endpoints (feeds, course discovery, video streaming, certificate verification)
+- **Protected Routes**: ~90 endpoints (enrolled users, basic features, challenge participation)
 - **Guru Routes**: ~25 endpoints (content creation, teaching tools)
-- **Admin Routes**: ~19 endpoints (platform management, guru approval)
+- **Admin Routes**: ~30 endpoints (platform management, guru approval, challenge creation)
 
 ---
 
@@ -327,10 +370,10 @@ This document provides a comprehensive list of every single route available in t
 - `protect` - General protection (alias for auth)
 
 ### **Role-Based Access**
-- **Public**: Course discovery, video viewing, community exploration
-- **Student**: Learning, progress tracking, community participation
+- **Public**: Course discovery, video viewing, community exploration, certificate verification
+- **Student**: Learning, progress tracking, community participation, challenge participation
 - **Guru**: Content creation, student management, analytics
-- **Admin**: Platform oversight, guru approval, system management
+- **Admin**: Platform oversight, guru approval, system management, challenge creation
 
 ### **Route Security Features**
 - Rate limiting on authentication endpoints
@@ -338,6 +381,8 @@ This document provides a comprehensive list of every single route available in t
 - Role-based authorization
 - JWT token validation
 - Request sanitization and parameter pollution protection
+- Challenge-specific rate limiting (creation vs participation)
+- Certificate verification with public access
 
 ---
 
@@ -392,10 +437,42 @@ Authorization: Bearer <user_token>
 }
 ```
 
+### **Challenge System Flow** **NEW**
+```bash
+# Admin Creates Challenge
+POST /api/v1/admin/challenges
+Authorization: Bearer <admin_token>
+{
+  "title": "Sanskrit Pronunciation Challenge",
+  "description": "Master Sanskrit pronunciation",
+  "type": "pronunciation",
+  "rewards": {
+    "points": 100,
+    "badge": "Pronunciation Master"
+  }
+}
+
+# User Joins Challenge
+POST /api/v1/challenges/:challengeId/join
+Authorization: Bearer <user_token>
+
+# User Completes Challenge
+POST /api/v1/challenges/:challengeId/complete
+Authorization: Bearer <user_token>
+{
+  "responses": {...}
+}
+
+# Verify Certificate
+GET /api/v1/certificates/verify/CERT-ABC123
+# Public endpoint - no auth required
+```
+
 ---
 
 This comprehensive routes list covers every endpoint available in the ShlokaYug backend, organized by functionality and access level for easy reference and development planning.
 
-**Last Updated**: November 28, 2025  
-**Total Endpoints**: 135+  
-**Systems**: User, Guru, Admin (Complete Separation)
+**Last Updated**: December 1, 2025  
+**Total Endpoints**: 170+  
+**Systems**: User, Guru, Admin (Complete Separation) + Challenge System  
+**New Features**: Admin challenge creation, user participation, automatic leaderboards, certificate generation

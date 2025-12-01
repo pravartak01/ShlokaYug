@@ -1,12 +1,12 @@
-# ShlokaYug Backend
+# SVARAM Backend
 
-## 🕉️ Overview
-ShlokaYug is a comprehensive Sanskrit learning platform featuring separated guru and user systems with admin management capabilities. The backend provides a robust API infrastructure supporting course management, user authentication, payment processing, and detailed learning analytics with complete separation of concerns.
+## 🎵 Overview
+SVARAM is a comprehensive Sanskrit learning platform featuring separated guru and user systems with admin management capabilities, plus a complete challenge system with automatic leaderboards and certificate generation. The backend provides a robust API infrastructure supporting course management, user authentication, payment processing, community features, and detailed learning analytics with complete separation of concerns.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (v16+)
+- Node.js (v18+)
 - MongoDB
 - Cloudinary Account (for media storage)
 
@@ -21,7 +21,7 @@ npm start
 ### Environment Variables
 ```bash
 # Database
-MONGODB_URI=mongodb://localhost:27017/shlokayug
+MONGODB_URI=mongodb://localhost:27017/svaram
 
 # Authentication  
 JWT_SECRET=your-jwt-secret
@@ -39,7 +39,7 @@ CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
 # Admin Configuration
-ADMIN_EMAIL=admin@shlokayug.com
+ADMIN_EMAIL=admin@svaram.com
 ADMIN_PASSWORD=secure-admin-password
 ```
 
@@ -69,6 +69,8 @@ Our backend implements **complete separation** between guru and user systems:
 - **📈 Scalability**: Independent system scaling  
 - **🔒 Security**: Role-based access with separate authentication
 - **👥 User Experience**: Tailored interfaces for each role
+- **🏆 Gamification**: Complete challenge system with rewards
+- **🎯 Engagement**: Community features and social learning
 
 ## 📁 Folder Structure
 
@@ -119,6 +121,13 @@ POST /api/v1/auth/login
 
 ### Core Endpoints
 
+#### 🏆 Challenge System (NEW)
+- **`POST /api/v1/admin/challenges`** - Create challenge (Admin)
+- **`GET /api/v1/challenges`** - Browse active challenges
+- **`POST /api/v1/challenges/:id/join`** - Join challenge
+- **`POST /api/v1/challenges/:id/complete`** - Complete challenge
+- **`GET /api/v1/certificates/verify/:code`** - Verify certificate (Public)
+
 #### Guru System
 - **`POST /api/v1/guru/apply`** - Submit guru application
 - **`POST /api/v1/guru/login`** - Guru authentication
@@ -136,7 +145,7 @@ POST /api/v1/auth/login
 - **`POST /api/v1/auth/login`** - User authentication
 - **`GET /api/v1/users/profile`** - Get user profile
 
-> **📚 Complete API Reference**: See [`docs/api/GURU_API_REFERENCE.md`](./docs/api/GURU_API_REFERENCE.md)
+> **📚 Complete API Reference**: See [`docs/COMPLETE_ROUTES_LIST.md`](./docs/COMPLETE_ROUTES_LIST.md)
 
 ## 🧪 Testing
 
@@ -180,12 +189,20 @@ npm run build       # Build assets (if applicable)
 ## 📊 Project Statistics
 
 ### Current Implementation
-- **🏗️ Models**: 18 database models
-- **🔀 Routes**: 12 route modules
-- **🎮 Controllers**: 8 controller modules  
+- **🏗️ Models**: 21+ database models (includes challenge system)
+- **🔀 Routes**: 19+ route modules
+- **🎮 Controllers**: 11+ controller modules  
 - **🛡️ Middleware**: 10 middleware functions
 - **🧪 Tests**: Comprehensive test coverage
 - **📚 Documentation**: Complete API references
+- **🌐 Endpoints**: 170+ total API endpoints
+
+### Challenge System Features
+- **🏆 Challenge Types**: 8 different challenge types
+- **🎯 Automatic Rewards**: Points and badges system
+- **📊 Real-time Leaderboards**: Dynamic ranking
+- **🏅 Digital Certificates**: Auto-generation with verification
+- **👑 Admin Dashboard**: Complete challenge management
 
 ### Guru System Metrics
 - **👨‍🏫 Total Gurus**: Dynamic (admin managed)
@@ -237,15 +254,15 @@ npm run build       # Build assets (if applicable)
 
 ---
 
-## 🙏 About ShlokaYug
+## 🙏 About SVARAM
 
-**ShlokaYug** is dedicated to preserving and sharing Sanskrit knowledge through modern technology. Our platform connects passionate gurus with eager students in a structured, secure environment.
+**SVARAM** is dedicated to preserving and sharing Sanskrit knowledge through modern technology. Our platform connects passionate gurus with eager students in a structured, secure environment, enhanced with gamification and community features.
 
 ### Mission
-Democratizing access to traditional Sanskrit education while maintaining the authenticity and depth of traditional guru-student relationships.
+Democratizing access to traditional Sanskrit education while maintaining the authenticity and depth of traditional guru-student relationships through innovative challenge systems and community engagement.
 
 ### Vision  
-Creating the world's premier platform for Sanskrit learning with cutting-edge technology and traditional wisdom.
+Creating the world's premier platform for Sanskrit learning with cutting-edge technology, traditional wisdom, and modern gamification to inspire continuous learning.
 
 ---
 
