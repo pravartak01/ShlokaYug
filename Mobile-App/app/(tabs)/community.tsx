@@ -172,6 +172,8 @@ export default function CommunityScreen() {
       setPage(nextPage);
     } catch (error) {
       console.error('Error loading more:', error);
+      // Stop trying to load more on error to prevent infinite loop
+      setHasMore(false);
     } finally {
       setLoadingMore(false);
     }

@@ -123,7 +123,7 @@ const userSchema = new mongoose.Schema({
   
   role: {
     type: String,
-    enum: ['student', 'admin', 'moderator'],
+    enum: ['student', 'guru', 'admin', 'moderator'],
     default: 'student'
   },
 
@@ -515,6 +515,11 @@ userSchema.methods.correctPassword = async function(candidatePassword, userPassw
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
+// Alias for correctPassword - used by authController
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
 // Instance method to generate JWT token
 userSchema.methods.getSignedJwtToken = function() {
   return jwt.sign(
@@ -524,6 +529,30 @@ userSchema.methods.getSignedJwtToken = function() {
     }, 
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE }
+  );
+};
+
+// Alias for getSignedJwtToken - used by authController
+userSchema.methods.generateAuthToken = function() {
+  return jwt.sign(
+    { 
+      id: this._id,
+      role: this.role 
+    }, 
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE || '7d' }
+  );
+};
+
+// Instance method to generate refresh token
+userSchema.methods.generateRefreshToken = function() {
+  return jwt.sign(
+    { 
+      id: this._id,
+      type: 'refresh'
+    }, 
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_REFRESH_EXPIRE || '30d' }
   );
 };
 
@@ -579,6 +608,16 @@ userSchema.methods.applyForGuru = function(credentials, experience) {
 // Static method to get active users
 userSchema.statics.getActiveUsers = function() {
   return this.find({ 'metadata.isActive': true });
+};
+
+// Static method to find user by email or username
+userSchema.statics.findByIdentifier = function(identifier) {
+  return this.findOne({
+    $or: [
+      { email: identifier.toLowerCase() },
+      { username: identifier }
+    ]
+  });
 };
 
 // Static method to get users by location

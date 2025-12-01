@@ -18,6 +18,9 @@ const enrollmentRoutes = require('./routes/enrollments');
 const paymentRoutes = require('./routes/payments');
 const subscriptionRoutes = require('./routes/subscriptions');
 
+// Community Routes
+const communityRoutes = require('./routes/community');
+
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -159,6 +162,9 @@ app.use(`/api/${API_VERSION}/courses`, courseRoutes);
 app.use(`/api/${API_VERSION}/enrollments`, enrollmentRoutes);
 app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
 app.use(`/api/${API_VERSION}/subscriptions`, subscriptionRoutes);
+
+// Community Routes
+app.use(`/api/${API_VERSION}/community`, communityRoutes);
 
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
