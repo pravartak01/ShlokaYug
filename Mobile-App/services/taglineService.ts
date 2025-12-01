@@ -15,7 +15,7 @@ const getApiKey = (): string => {
   }
   
   // Fallback key from .env
-  return 'AIzaSyA39FByvcJs5HeN7kHf4JycdshBMZsgL1A';
+  return process.env.EXPO_PUBLIC_GOOGLE_AI_API_KEY || '';
 };
 
 const GEMINI_API_KEY = getApiKey();
