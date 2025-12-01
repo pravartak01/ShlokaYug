@@ -172,6 +172,10 @@ app.use(`/api/${API_VERSION}/community`, communityRoutes);
 // CRITICAL: Admin Routes (Must be protected)
 app.use(`/api/${API_VERSION}/admin`, adminRoutes);
 
+// Import admin challenge routes
+const adminChallengeRoutes = require('./routes/adminChallengeRoutes');
+app.use(`/api/${API_VERSION}/admin/challenges`, adminChallengeRoutes);
+
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);
 // app.use(`/api/${API_VERSION}/chandas`, chandasRoutes);

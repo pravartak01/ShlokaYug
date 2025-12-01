@@ -39,6 +39,30 @@ router.get('/dashboard/stats', adminController.getDashboardStats);
 // =====================================
 
 /**
+ * @route   GET /api/v1/admin/gurus
+ * @desc    Get all guru applications with filtering capabilities
+ * @access  Private (Admin only)
+ */
+router.get('/gurus',
+  [
+    query('page')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Page must be a positive integer'),
+    query('limit')
+      .optional()
+      .isInt({ min: 1, max: 50 })
+      .withMessage('Limit must be between 1 and 50'),
+    query('status')
+      .optional()
+      .isIn(['submitted', 'approved', 'rejected'])
+      .withMessage('Status must be submitted, approved, or rejected')
+  ],
+  validateRequest,
+  adminController.getAllGurus
+);
+
+/**
  * @route   GET /api/v1/admin/gurus/pending
  * @desc    Get pending guru applications for review
  * @access  Private (Admin only)

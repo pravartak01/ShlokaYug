@@ -7,6 +7,7 @@
 const User = require('../models/User');
 const Guru = require('../models/Guru');
 const Course = require('../models/Course');
+const Challenge = require('../models/Challenge');
 const CommunityPost = require('../models/CommunityPost');
 const mongoose = require('mongoose');
 
@@ -26,6 +27,8 @@ class AdminController {
         approvedGurus,
         rejectedGurus,
         totalCourses,
+        totalChallenges,
+        activeChallenges,
         pendingPosts,
         activeStudents
       ] = await Promise.all([
@@ -35,6 +38,8 @@ class AdminController {
         Guru.countDocuments({ 'accountStatus.isApproved': true }),
         Guru.countDocuments({ 'applicationStatus.status': 'rejected' }),
         Course.countDocuments(),
+        Challenge.countDocuments(),
+        Challenge.countDocuments({ status: 'active' }),
         CommunityPost.countDocuments({ 'moderation.status': 'pending' }),
         User.countDocuments({ 'metadata.lastLogin': { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } })
       ]);
@@ -61,9 +66,11 @@ class AdminController {
         data: {
           overview: {
             totalUsers,
-            pendingGurus,
-            verifiedGurus,
+            pendingGurus: pendingGuruApplications,
+            verifiedGurus: approvedGurus,
             totalCourses,
+            totalChallenges,
+            activeChallenges,
             pendingPosts,
             activeStudents
           },
@@ -72,7 +79,7 @@ class AdminController {
           },
           platformHealth,
           alerts: [
-            pendingGurus > 5 ? { type: 'warning', message: `${pendingGurus} guru applications pending review` } : null,
+            pendingGuruApplications > 5 ? { type: 'warning', message: `${pendingGuruApplications} guru applications pending review` } : null,
             pendingPosts > 10 ? { type: 'info', message: `${pendingPosts} posts awaiting moderation` } : null
           ].filter(Boolean)
         }
@@ -138,6 +145,68 @@ class AdminController {
       res.status(500).json({
         success: false,
         error: { message: 'Failed to fetch pending applications' }
+      });
+    }
+  }
+
+  /**
+   * Get all guru applications (pending, approved, rejected)
+   * GET /api/v1/admin/gurus
+   */
+  async getAllGurus(req, res) {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const status = req.query.status; // optional filter by status
+      const skip = (page - 1) * limit;
+
+      let query = {};
+      if (status && ['submitted', 'approved', 'rejected'].includes(status)) {
+        query['applicationStatus.status'] = status;
+      }
+
+      const gurus = await Guru.find(query)
+        .select('username email profile qualification applicationStatus accountStatus createdAt')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      const total = await Guru.countDocuments(query);
+
+      const formattedGurus = gurus.map(guru => ({
+        id: guru._id,
+        username: guru.username,
+        email: guru.email,
+        name: `${guru.profile.firstName} ${guru.profile.lastName}`,
+        phone: guru.profile.phoneNumber,
+        degrees: guru.qualification?.degrees || [],
+        experience: guru.qualification?.experience || 0,
+        specializations: guru.qualification?.specializations || [],
+        applicationStatus: guru.applicationStatus?.status || 'unknown',
+        applicationDate: guru.applicationStatus?.submittedAt || guru.createdAt,
+        isApproved: guru.accountStatus?.isApproved || false,
+        joinDate: guru.createdAt
+      }));
+
+      res.status(200).json({
+        success: true,
+        data: {
+          gurus: formattedGurus,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalGurus: total,
+            hasNext: page < Math.ceil(total / limit),
+            hasPrev: page > 1
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Get all gurus error:', error);
+      res.status(500).json({
+        success: false,
+        error: { message: 'Failed to fetch guru data' }
       });
     }
   }
@@ -540,6 +609,148 @@ class AdminController {
       res.status(500).json({
         success: false,
         error: { message: 'Failed to fetch moderation queue' }
+      });
+    }
+  }
+
+  /**
+   * Get all gurus with filtering capabilities (separate Guru model)
+   * GET /api/v1/admin/gurus
+   */
+  async getAllGurus(req, res) {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+      const statusFilter = req.query.status;
+
+      // Build filter query
+      let filter = {};
+      if (statusFilter) {
+        filter['applicationStatus.status'] = statusFilter;
+      }
+
+      // Get gurus with pagination
+      const [gurus, totalGurus] = await Promise.all([
+        Guru.find(filter)
+          .select('username email profile credentials expertise applicationStatus accountStatus metadata')
+          .sort({ 'applicationStatus.submittedAt': -1, createdAt: -1 })
+          .skip(skip)
+          .limit(limit),
+        Guru.countDocuments(filter)
+      ]);
+
+      // Format response data
+      const formattedGurus = gurus.map(guru => ({
+        id: guru._id,
+        username: guru.username,
+        email: guru.email,
+        name: guru.fullName || `${guru.profile.firstName} ${guru.profile.lastName}`,
+        phone: guru.profile.phoneNumber,
+        degrees: guru.credentials.education.map(edu => edu.degree),
+        experience: guru.credentials.teachingExperience.totalYears,
+        specializations: guru.expertise.specializations,
+        applicationStatus: guru.applicationStatus.status,
+        applicationDate: guru.applicationStatus.submittedAt || guru.createdAt,
+        isApproved: guru.accountStatus.isApproved,
+        joinDate: guru.createdAt
+      }));
+
+      res.status(200).json({
+        success: true,
+        data: {
+          gurus: formattedGurus,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(totalGurus / limit),
+            totalGurus,
+            hasNext: page < Math.ceil(totalGurus / limit),
+            hasPrev: page > 1
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Get all gurus error:', error);
+      res.status(500).json({
+        success: false,
+        error: { message: 'Failed to fetch gurus' }
+      });
+    }
+  }
+
+  /**
+   * Review and approve/reject guru application (for separate Guru model)
+   * POST /api/v1/admin/gurus/:userId/review
+   */
+  async reviewGuruApplication(req, res) {
+    try {
+      const { userId } = req.params;
+      const { action, notes } = req.body;
+
+      if (!['approve', 'reject'].includes(action)) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Action must be either "approve" or "reject"' }
+        });
+      }
+
+      const guru = await Guru.findById(userId);
+      if (!guru) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Guru not found' }
+        });
+      }
+
+      if (guru.applicationStatus.status !== 'submitted') {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Application is not in submitted status' }
+        });
+      }
+
+      const adminId = req.user._id;
+
+      if (action === 'approve') {
+        // Use the model's approve method
+        guru.approve(adminId, notes);
+        await guru.save();
+
+        res.status(200).json({
+          success: true,
+          message: 'Guru application approved successfully',
+          data: {
+            guruId: guru._id,
+            username: guru.username,
+            status: 'approved',
+            approvedAt: guru.applicationStatus.reviewedAt
+          }
+        });
+
+      } else {
+        // Use the model's reject method
+        guru.reject(adminId, notes);
+        await guru.save();
+
+        res.status(200).json({
+          success: true,
+          message: 'Guru application rejected',
+          data: {
+            guruId: guru._id,
+            username: guru.username,
+            status: 'rejected',
+            rejectionReason: notes,
+            rejectedAt: guru.applicationStatus.reviewedAt
+          }
+        });
+      }
+
+    } catch (error) {
+      console.error('Review guru application error:', error);
+      res.status(500).json({
+        success: false,
+        error: { message: 'Failed to review application' }
       });
     }
   }

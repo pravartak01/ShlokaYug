@@ -49,7 +49,7 @@ async function bootstrapAdmin() {
       profile: {
         firstName: 'ShlokaYug',
         lastName: 'Administrator',
-        phoneNumber: '+91-9999999999'
+        phoneNumber: '+919999999999'
       },
       verification: {
         isEmailVerified: true,
