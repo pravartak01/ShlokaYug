@@ -109,28 +109,31 @@ const getAllChallenges = async (req, res) => {
     if (difficulty) query['requirements.difficulty'] = difficulty;
     if (category) query['requirements.category'] = category;
 
-    const options = {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 },
-      populate: {
-        path: 'createdBy',
-        select: 'username profile.firstName profile.lastName'
-      }
-    };
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
 
-    const challenges = await Challenge.paginate(query, options);
+    const [challenges, totalChallenges] = await Promise.all([
+      Challenge.find(query)
+        .populate('createdBy', 'username profile.firstName profile.lastName')
+        .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+        .skip(skip)
+        .limit(limitNumber),
+      Challenge.countDocuments(query)
+    ]);
+
+    const totalPages = Math.ceil(totalChallenges / limitNumber);
 
     res.status(200).json({
       success: true,
       data: {
-        challenges: challenges.docs,
+        challenges,
         pagination: {
-          currentPage: challenges.page,
-          totalPages: challenges.totalPages,
-          totalChallenges: challenges.totalDocs,
-          hasNext: challenges.hasNextPage,
-          hasPrev: challenges.hasPrevPage
+          currentPage: pageNumber,
+          totalPages,
+          totalChallenges,
+          hasNext: pageNumber < totalPages,
+          hasPrev: pageNumber > 1
         }
       }
     });

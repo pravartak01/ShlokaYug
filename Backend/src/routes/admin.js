@@ -15,6 +15,16 @@ const { checkRole } = require('../middleware/roleCheck');
 // Import admin controller
 const adminController = require('../controllers/adminController');
 
+// Import challenge controller for admin challenge routes
+const challengeController = require('../controllers/challengeController');
+
+// Import validators
+const {
+  createChallengeValidation,
+  updateChallengeValidation,
+  challengeIdValidation
+} = require('../validators/challengeValidators');
+
 // =====================================
 // MIDDLEWARE SETUP
 // =====================================
@@ -260,6 +270,99 @@ router.get('/reports/revenue', (req, res) => {
 });
 
 // =====================================
+// CHALLENGE MANAGEMENT ROUTES
+// =====================================
+
+/**
+ * @route   GET /api/v1/admin/challenges
+ * @desc    Get all challenges with filtering and pagination
+ * @access  Private (Admin only)
+ */
+router.get('/challenges',
+  [
+    query('page')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Page must be a positive integer'),
+    query('limit')
+      .optional()
+      .isInt({ min: 1, max: 50 })
+      .withMessage('Limit must be between 1 and 50'),
+    query('status')
+      .optional()
+      .isIn(['draft', 'active', 'completed', 'cancelled'])
+      .withMessage('Invalid status filter')
+  ],
+  validateRequest,
+  challengeController.getAllChallenges
+);
+
+/**
+ * @route   POST /api/v1/admin/challenges
+ * @desc    Create new challenge
+ * @access  Private (Admin only)
+ */
+router.post('/challenges',
+  createChallengeValidation,
+  validateRequest,
+  challengeController.createChallenge
+);
+
+/**
+ * @route   GET /api/v1/admin/challenges/:id
+ * @desc    Get single challenge by ID
+ * @access  Private (Admin only)
+ */
+router.get('/challenges/:id',
+  challengeIdValidation,
+  validateRequest,
+  challengeController.getChallengeById
+);
+
+/**
+ * @route   PUT /api/v1/admin/challenges/:id
+ * @desc    Update challenge
+ * @access  Private (Admin only)
+ */
+router.put('/challenges/:id',
+  challengeIdValidation,
+  updateChallengeValidation,
+  validateRequest,
+  challengeController.updateChallenge
+);
+
+/**
+ * @route   DELETE /api/v1/admin/challenges/:id
+ * @desc    Delete challenge
+ * @access  Private (Admin only)
+ */
+router.delete('/challenges/:id',
+  challengeIdValidation,
+  validateRequest,
+  challengeController.deleteChallenge
+);
+
+/**
+ * @route   POST /api/v1/admin/challenges/:id/activate
+ * @desc    Activate challenge
+ * @access  Private (Admin only)
+ */
+router.post('/challenges/:id/activate',
+  challengeIdValidation,
+  validateRequest,
+  challengeController.activateChallenge
+);
+
+/**
+ * @route   GET /api/v1/admin/challenges/analytics
+ * @desc    Get challenge analytics
+ * @access  Private (Admin only)
+ */
+router.get('/challenges/analytics',
+  challengeController.getChallengeAnalytics
+);
+
+// =====================================
 // SYSTEM HEALTH & MONITORING
 // =====================================
 
@@ -330,11 +433,17 @@ router.use('*', (req, res) => {
       code: 'ADMIN_ROUTE_NOT_FOUND',
       availableEndpoints: [
         'GET /admin/dashboard/stats',
+        'GET /admin/gurus',
         'GET /admin/gurus/pending', 
         'POST /admin/gurus/:id/review',
         'GET /admin/users',
         'POST /admin/users/:id/moderate',
-        'GET /admin/content/moderation'
+        'GET /admin/content/moderation',
+        'GET /admin/challenges',
+        'POST /admin/challenges',
+        'PUT /admin/challenges/:id',
+        'DELETE /admin/challenges/:id',
+        'POST /admin/challenges/:id/activate'
       ]
     }
   });

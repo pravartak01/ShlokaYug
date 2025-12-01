@@ -123,9 +123,12 @@ const ChallengeManagement = () => {
     try {
       setLoading(true);
       const response = await getChallenges();
-      setChallenges(response.data || []);
+      // Extract challenges array from nested response structure
+      const challengesData = response.data?.challenges || response.data || [];
+      setChallenges(Array.isArray(challengesData) ? challengesData : []);
     } catch (error) {
       console.error('Failed to fetch challenges:', error);
+      setChallenges([]); // Ensure it's always an array
       showSnackbar('Failed to fetch challenges', 'error');
     } finally {
       setLoading(false);
@@ -285,7 +288,7 @@ const ChallengeManagement = () => {
                     Active Challenges
                   </Typography>
                   <Typography variant="h6">
-                    {challenges.filter(c => c.status === 'active').length}
+                    {Array.isArray(challenges) ? challenges.filter(c => c.status === 'active').length : 0}
                   </Typography>
                 </Box>
               </Box>
