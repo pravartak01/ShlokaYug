@@ -4,10 +4,11 @@ const videoSchema = new mongoose.Schema({
   // Basic video information
   title: {
     type: String,
-    required: [true, 'Video title is required'],
+    // required: [true, 'Video title is required'], // REMOVED - Not required, using default in controller
     trim: true,
     maxlength: [150, 'Title cannot exceed 150 characters'],
-    index: 'text'
+    index: 'text',
+    default: 'Untitled Video' // Add default value
   },
   
   description: {
@@ -119,9 +120,11 @@ const videoSchema = new mongoose.Schema({
       'educational',
       'entertainment',
       'comedy',
+      'vedic', // Added vedic category
       'other'
     ],
-    required: [true, 'Category is required'],
+    default: 'other', // Add default value
+    // required: [true, 'Category is required'], // REMOVED - Not required anymore
     index: true
   },
   

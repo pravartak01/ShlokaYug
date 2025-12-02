@@ -15,6 +15,10 @@ import DashboardPage from './pages/DashboardPage';
 import LearnPage from './pages/LearnPage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import CourseLearningPage from './pages/CourseLearningPage';
+import VideosPage from './pages/VideosPage';
+import VideoPlayerPage from './pages/VideoPlayerPage';
+import VideoUploadPage from './pages/VideoUploadPage';
+import CommunityPage from './pages/CommunityPage';
 import {
   LoginPage,
   RegisterPage,
@@ -107,6 +111,42 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <CourseLearningPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Video Routes */}
+          <Route
+            path="/videos"
+            element={
+              <ProtectedRoute>
+                <VideosPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/videos/upload"
+            element={
+              <ProtectedRoute>
+                <VideoUploadPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/videos/:videoId"
+            element={
+              <ProtectedRoute>
+                <VideoPlayerPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Community Route - Protected */}
+          <Route
+            path="/community"
+            element={
+              <ProtectedRoute>
+                <CommunityPage />
               </ProtectedRoute>
             }
           />

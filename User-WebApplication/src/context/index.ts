@@ -3,5 +3,6 @@
  * Export all context providers and hooks
  */
 
-export { AuthProvider, useAuth } from './AuthContext';
-export type { default as AuthContext } from './AuthContext';
+export { AuthProvider } from './AuthContext';
+export { useAuth, AuthContext } from './AuthContextDef';
+export type { AuthContextType } from './AuthContextDef';

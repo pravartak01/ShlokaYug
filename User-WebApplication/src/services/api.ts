@@ -1,44 +1,9 @@
 /**
  * API Client Configuration
- * Axios instance with interceptors for authentication
+ * Re-export the main API client from config for consistency
  */
 
-import axios from 'axios';
+import api from '../config/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor to add token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor to handle errors
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      window.location.href = '/auth/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default apiClient;
+// Re-export the main API client - this ensures consistent token handling
+export default api;

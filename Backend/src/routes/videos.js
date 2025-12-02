@@ -29,27 +29,27 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter for videos
-const fileFilter = (req, file, cb) => {
-  const allowedMimes = [
-    'video/mp4',
-    'video/mpeg',
-    'video/quicktime',
-    'video/x-msvideo', // AVI
-    'video/x-ms-wmv',   // WMV
-    'video/webm'
-  ];
+// File filter for videos - REMOVED TO ALLOW ALL FILE TYPES
+// const fileFilter = (req, file, cb) => {
+//   const allowedMimes = [
+//     'video/mp4',
+//     'video/mpeg',
+//     'video/quicktime',
+//     'video/x-msvideo', // AVI
+//     'video/x-ms-wmv',   // WMV
+//     'video/webm'
+//   ];
 
-  if (allowedMimes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only video files are allowed.'), false);
-  }
-};
+//   if (allowedMimes.includes(file.mimetype)) {
+//     cb(null, true);
+//   } else {
+//     cb(new Error('Invalid file type. Only video files are allowed.'), false);
+//   }
+// };
 
 const upload = multer({
   storage,
-  fileFilter,
+  // fileFilter,  // REMOVED - Accept all file types
   limits: {
     fileSize: 500 * 1024 * 1024, // 500MB max file size
     fieldSize: 10 * 1024 * 1024   // 10MB max field size
@@ -163,10 +163,13 @@ router.post('/upload',
     console.log('📨 User:', req.user?.username);
     next();
   },
-  upload.single('video'),
+  upload.fields([
+    { name: 'video', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 }
+  ]),
   (req, res, next) => {
     console.log('📨 After multer');
-    console.log('📨 File:', req.file ? { name: req.file.originalname, size: req.file.size, path: req.file.path } : 'No file');
+    console.log('📨 Files:', req.files);
     console.log('📨 Body:', JSON.stringify(req.body, null, 2));
     next();
   },

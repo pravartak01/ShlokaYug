@@ -27,6 +27,8 @@ export default function ShortsViewerScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
+  const lastViewRecordTime = useRef<Record<string, number>>({});
+  
   const [shorts, setShorts] = useState<ShortItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -46,14 +48,21 @@ export default function ShortsViewerScreen() {
         videoService.getShortsFeed({ limit: 20 }),
       ]);
 
-      const currentShort = shortRes.data || shortRes.video;
-      let feedShorts = feedRes.data?.videos || feedRes.videos || [];
+      const currentShort = shortRes.data?.video || shortRes.data || shortRes.video;
+      // API returns shorts in data.data.shorts structure
+      let feedShorts = feedRes.data?.data?.shorts || feedRes.data?.shorts || feedRes.shorts || [];
       
-      // Filter to only shorts and remove current one
-      feedShorts = feedShorts.filter((v: Video) => v.type === 'short' && v._id !== id);
+      // Aggressively filter: only valid items with _id
+      feedShorts = feedShorts.filter((v: any) => v && v._id && v._id !== id);
       
-      // Put current short first, then add feed
-      setShorts([currentShort, ...feedShorts]);
+      // Build clean array - only include current short if it has _id
+      const allShorts = [];
+      if (currentShort && currentShort._id) {
+        allShorts.push(currentShort);
+      }
+      allShorts.push(...feedShorts);
+      
+      setShorts(allShorts);
       setActiveIndex(0);
     } catch (error) {
       console.error('Error loading shorts:', error);
@@ -66,12 +75,19 @@ export default function ShortsViewerScreen() {
   const loadMoreShorts = async () => {
     try {
       const lastShort = shorts[shorts.length - 1];
+      if (!lastShort || !lastShort._id) return;
+      
       const response = await videoService.getShortsFeed({
         lastVideoId: lastShort._id,
         limit: 10,
       });
-      const newShorts = response.data?.videos || response.videos || [];
-      setShorts([...shorts, ...newShorts]);
+      // API returns shorts in data.data.shorts structure
+      const newShorts = response.data?.data?.shorts || response.data?.shorts || response.shorts || [];
+      
+      // Filter out invalid items
+      const validShorts = newShorts.filter((s: any) => s && s._id);
+      
+      setShorts([...shorts, ...validShorts]);
     } catch (error) {
       console.error('Error loading more shorts:', error);
     }
@@ -140,8 +156,32 @@ export default function ShortsViewerScreen() {
   };
 
   const renderShort = ({ item, index }: { item: ShortItem; index: number }) => {
+    // Guard: ensure item exists with required fields
+    if (!item || !item._id || !item.creator || !item.metrics) {
+      return (
+        <View style={{ height: SCREEN_HEIGHT, width: SCREEN_WIDTH }} className="bg-black items-center justify-center">
+          <Ionicons name="alert-circle" size={64} color="#6b7280" />
+          <Text className="text-white mt-4">Invalid video data</Text>
+        </View>
+      );
+    }
+
     const isActive = index === activeIndex;
-    const videoUrl = item.video.processedVersions?.['720p']?.url || item.video.originalFile.url;
+    
+    // Safe access to video URL
+    const videoUrl = item.video?.processedVersions?.['720p']?.url || 
+                     item.video?.originalFile?.url || 
+                     null;
+
+    // Skip rendering if no video URL available
+    if (!videoUrl) {
+      return (
+        <View style={{ height: SCREEN_HEIGHT, width: SCREEN_WIDTH }} className="bg-black items-center justify-center">
+          <Ionicons name="videocam-off" size={64} color="#6b7280" />
+          <Text className="text-white mt-4">Video not available</Text>
+        </View>
+      );
+    }
 
     return (
       <View style={{ height: SCREEN_HEIGHT, width: SCREEN_WIDTH }} className="bg-black">
@@ -151,12 +191,8 @@ export default function ShortsViewerScreen() {
           style={{ flex: 1 }}
           resizeMode={ResizeMode.COVER}
           shouldPlay={isActive}
-          isLooping={item.shorts?.isLoop !== false}
-          onPlaybackStatusUpdate={(status: any) => {
-            if (status.isLoaded && isActive) {
-              videoService.recordView(item._id, Math.floor(status.positionMillis / 1000));
-            }
-          }}
+          isLooping
+          useNativeControls={false}
         />
 
         {/* Overlay Controls */}
@@ -304,27 +340,35 @@ export default function ShortsViewerScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-black" edges={['top']}>
-      <FlatList
-        ref={flatListRef}
-        data={shorts}
-        renderItem={renderShort}
-        keyExtractor={(item) => item._id}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        snapToInterval={SCREEN_HEIGHT}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        onViewableItemsChanged={({ viewableItems }) => {
-          if (viewableItems.length > 0) {
-            setActiveIndex(viewableItems[0].index || 0);
-          }
-        }}
-        viewabilityConfig={{
-          itemVisiblePercentThreshold: 50,
-        }}
-        onEndReached={loadMoreShorts}
-        onEndReachedThreshold={0.5}
-      />
+      {shorts.length === 0 ? (
+        <View className="flex-1 items-center justify-center">
+          <Ionicons name="film-outline" size={64} color="#6b7280" />
+          <Text className="text-white mt-4">No shorts available</Text>
+        </View>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={shorts}
+          renderItem={renderShort}
+          keyExtractor={(item, index) => item?._id || `short-${index}`}
+          pagingEnabled
+          showsVerticalScrollIndicator={false}
+          snapToInterval={SCREEN_HEIGHT}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          removeClippedSubviews={false}
+          onViewableItemsChanged={({ viewableItems }) => {
+            if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+              setActiveIndex(viewableItems[0].index);
+            }
+          }}
+          viewabilityConfig={{
+            itemVisiblePercentThreshold: 50,
+          }}
+          onEndReached={loadMoreShorts}
+          onEndReachedThreshold={0.5}
+        />
+      )}
     </SafeAreaView>
   );
 }

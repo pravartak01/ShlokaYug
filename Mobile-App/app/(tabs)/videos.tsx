@@ -377,7 +377,7 @@ export default function VideosScreen() {
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5">
-            {videos.filter(v => v.type === 'short').slice(0, 10).map(renderShortsCard)}
+            {videos.filter(v => v.type === 'short').slice(0, 10).map((video) => renderShortsCard(video))}
           </ScrollView>
         </View>
       )}
@@ -399,7 +399,7 @@ export default function VideosScreen() {
           <Text className="text-gray-900 text-lg font-bold mb-4">
             {videoFilter === 'shorts' ? 'All Shorts' : 'Recommended Videos'}
           </Text>
-          {videos.filter(v => videoFilter === 'all' ? v.type === 'video' : true).map(renderVideoCard)}
+          {videos.filter(v => videoFilter === 'all' ? v.type === 'video' : true).map((video) => renderVideoCard(video))}
         </View>
       )}
     </ScrollView>
@@ -522,7 +522,7 @@ export default function VideosScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          myVideos.map(renderVideoCard)
+          myVideos.map((video) => renderVideoCard(video))
         )}
       </View>
     </ScrollView>

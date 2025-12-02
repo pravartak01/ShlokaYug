@@ -40,8 +40,8 @@ export const fetchPanchangData = async (): Promise<PanchangData | null> => {
 
     // You need to replace these with your actual API credentials
     // Get them from https://astrologyapi.com/
-    const userId = '647638'; // Replace with your user ID
-    const apiKey = 'fd87d1f7df94332f699d408c27447536c47cef3e'; // Replace with your API key
+    const userId = '647637'; // Replace with your user ID
+    const apiKey = '691d72c84ccb8ac7a0402c1903fa5133ac29d119'; // Replace with your API key
     
     const credentials = btoa(`${userId}:${apiKey}`);
     
@@ -121,9 +121,10 @@ export const getDailySanskritQuote = () => {
   const shloka = ENHANCED_SHLOKAS[quoteIndex];
   
   return {
-    sanskrit: shloka.devanagari.split('\n')[0], // First line only
-    translation: shloka.translation.substring(0, 100) + '...', // Short version
-    source: shloka.source
+    sanskrit: shloka.devanagari.split('\n').slice(0, 2).join('\n'), // First two lines
+    translation: shloka.translation, // Full translation for complete meaning
+    source: shloka.source,
+    meaning: shloka.meaning || shloka.translation // Complete meaning/explanation
   };
 };
 

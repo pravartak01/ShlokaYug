@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { getHinduDate, getDailySanskritQuote, getFormattedDate, fetchPanchangData, PanchangData } from './utils';
@@ -17,11 +16,158 @@ export default function Header({ children }: HeaderProps) {
   const [panchangData, setPanchangData] = useState<PanchangData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const [quoteExpanded, setQuoteExpanded] = useState(false);
   const hinduDate = getHinduDate();
   const dailyQuote = getDailySanskritQuote();
   const formattedDate = getFormattedDate();
+  
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(-30)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const quoteSlide = useRef(new Animated.Value(30)).current;
+  const quoteFade = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  // Get engaging, motivational greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    const dayOfWeek = new Date().getDay();
+    const random = Math.floor(Date.now() / 86400000) % 10; // Changes daily
+    
+    // Morning greetings (before 12)
+    const morningGreetings = [
+      'Rise & Shine',
+      'New Day, New Verse',
+      'Awaken Your Mind',
+      'Start Strong',
+      'Fresh Beginning',
+    ];
+    
+    // Afternoon greetings (12-17)
+    const afternoonGreetings = [
+      'Keep Going',
+      'Stay Inspired',
+      'Midday Wisdom',
+      'Power Through',
+      'Stay Focused',
+    ];
+    
+    // Evening greetings (17-20)
+    const eveningGreetings = [
+      'Wind Down',
+      'Reflect & Relax',
+      'Evening Peace',
+      'Peaceful Vibes',
+      'Calm Your Mind',
+    ];
+    
+    // Night greetings (after 20)
+    const nightGreetings = [
+      'Rest Well',
+      'Sweet Dreams',
+      'Night Wisdom',
+      'Peaceful Night',
+      'Unwind Time',
+    ];
+    
+    // Weekend special
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      const weekendGreetings = ['Weekend Vibes', 'Relax & Learn', 'Soul Sunday', 'Sacred Saturday'];
+      return weekendGreetings[random % weekendGreetings.length];
+    }
+    
+    if (hour < 12) return morningGreetings[random % morningGreetings.length];
+    if (hour < 17) return afternoonGreetings[random % afternoonGreetings.length];
+    if (hour < 20) return eveningGreetings[random % eveningGreetings.length];
+    return nightGreetings[random % nightGreetings.length];
+  };
+
+  // Get greeting icon based on time
+  const getGreetingIcon = (): keyof typeof Ionicons.glyphMap => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'sunny';
+    if (hour < 17) return 'partly-sunny';
+    if (hour < 20) return 'moon';
+    return 'cloudy-night';
+  };
+
+  // Get time-based accent color
+  const getTimeAccent = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return { primary: '#f59e0b', secondary: '#fef3c7', text: '#92400e' };
+    if (hour < 17) return { primary: '#f97316', secondary: '#ffedd5', text: '#9a3412' };
+    if (hour < 20) return { primary: '#8b5cf6', secondary: '#ede9fe', text: '#5b21b6' };
+    return { primary: '#855332', secondary: '#F5EDE8', text: '#5C3D2A' };
+  };
+
+  const timeAccent = getTimeAccent();
 
   useEffect(() => {
+    // Staggered entrance animation
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(quoteFade, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.spring(quoteSlide, {
+          toValue: 0,
+          tension: 50,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Subtle pulse animation for notification badge
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+
+    // Shimmer effect
+    const shimmer = Animated.loop(
+      Animated.timing(shimmerAnim, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true,
+      })
+    );
+    shimmer.start();
+
     const loadPanchangData = async () => {
       setLoading(true);
       const data = await fetchPanchangData();
@@ -30,7 +176,12 @@ export default function Header({ children }: HeaderProps) {
     };
 
     loadPanchangData();
-  }, []);
+
+    return () => {
+      pulse.stop();
+      shimmer.stop();
+    };
+  }, [fadeAnim, slideAnim, scaleAnim, quoteFade, quoteSlide, pulseAnim, shimmerAnim]);
 
   return (
     <>
@@ -40,123 +191,231 @@ export default function Header({ children }: HeaderProps) {
         onClose={() => setIsDrawerVisible(false)}
       />
 
-      <LinearGradient
-        colors={['#f97316', '#ea580c', '#c2410c']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="px-6 pt-12 pb-8 rounded-b-3xl"
-      >
-        {/* User Greeting */}
-        <View className="flex-row items-center justify-between mb-4">
-          {/* Hamburger Menu Button */}
-          <TouchableOpacity 
-            className="bg-white/20 p-3 rounded-full mr-3"
-            onPress={() => setIsDrawerVisible(true)}
-          >
-            <Ionicons name="menu" size={24} color="white" />
-          </TouchableOpacity>
-          
-          <View className="flex-1">
-            <Text className="text-white text-2xl font-bold">
-              Namaste, {user?.profile?.firstName || user?.username || 'Guest'} 👋
-            </Text>
-            <Text className="text-white/90 text-sm mt-1">
-              {formattedDate}
-            </Text>
+      <View className="bg-white px-5 pt-3 pb-4">
+        {/* Top Row - User Info & Actions */}
+        <Animated.View 
+          className="flex-row items-center justify-between mb-4"
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+          }}
+        >
+          {/* Menu & User Info */}
+          <View className="flex-row items-center flex-1">
+            <TouchableOpacity 
+              className="w-12 h-12 bg-gray-50 rounded-2xl items-center justify-center mr-3"
+              onPress={() => setIsDrawerVisible(true)}
+              activeOpacity={0.7}
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
+              <Ionicons name="menu" size={24} color="#374151" />
+            </TouchableOpacity>
+            
+            <View className="flex-1">
+              <View className="flex-row items-center mb-0.5">
+                <Ionicons name={getGreetingIcon()} size={16} color={timeAccent.primary} />
+                <Text className="text-gray-500 text-sm ml-1.5 font-medium">{getGreeting()}</Text>
+              </View>
+              <Text className="text-gray-900 text-xl font-bold tracking-tight">
+                {user?.profile?.firstName || user?.username || 'Guest'}
+              </Text>
+            </View>
           </View>
-          <View className="flex-row gap-2">
-            <TouchableOpacity className="bg-white/20 p-3 rounded-full">
-              <Ionicons name="notifications" size={24} color="white" />
+          
+          {/* Action Buttons */}
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity 
+              className="w-12 h-12 bg-gray-50 rounded-2xl items-center justify-center"
+              activeOpacity={0.7}
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
+              <View className="relative">
+                <Ionicons name="notifications" size={24} color="#374151" />
+                <Animated.View 
+                  className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"
+                  style={{ transform: [{ scale: pulseAnim }] }}
+                />
+              </View>
             </TouchableOpacity>
             <TouchableOpacity 
-              className="bg-white/20 p-3 rounded-full"
+              className="w-12 h-12 rounded-2xl items-center justify-center overflow-hidden"
               onPress={() => router.push('/profile')}
+              activeOpacity={0.7}
+              style={{
+                backgroundColor: timeAccent.secondary,
+                shadowColor: timeAccent.primary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.15,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
             >
-              <Ionicons name="person" size={24} color="white" />
+              <Ionicons name="person" size={22} color={timeAccent.primary} />
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
 
-      {/* Hindu Calendar Date / Panchang */}
-      <View className="bg-white/10 px-4 py-3 rounded-xl mb-4">
-        <View className="flex-row items-center mb-2">
-          <Ionicons name="calendar" size={18} color="white" />
-          <Text className="text-white/90 text-sm ml-2 font-semibold">Hindu Panchang</Text>
-          {loading && <ActivityIndicator size="small" color="white" className="ml-2" />}
-        </View>
-        
-        {panchangData ? (
-          <>
-            {/* Tithi and Day */}
-            <View className="mb-2">
-              <Text className="text-white text-lg font-bold">
-                {panchangData.tithi}
+        {/* Compact Date & Panchang Row */}
+        <Animated.View 
+          className="flex-row items-center justify-between mb-4 bg-gray-50 rounded-2xl px-4 py-3"
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }}
+        >
+          <View className="flex-row items-center flex-1">
+            <View 
+              className="w-9 h-9 rounded-xl items-center justify-center mr-3"
+              style={{ backgroundColor: timeAccent.secondary }}
+            >
+              <Ionicons name="calendar" size={18} color={timeAccent.primary} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-gray-800 text-sm font-semibold">{formattedDate}</Text>
+              <Text className="text-gray-500 text-xs mt-0.5">
+                {loading ? 'Loading...' : (panchangData?.tithi || hinduDate.tithi)}
               </Text>
-              <Text className="text-white/80 text-xs mt-0.5">
-                {panchangData.day}
+            </View>
+          </View>
+          
+          {/* Panchang badge */}
+          <View className="bg-white rounded-xl px-3 py-1.5 border border-gray-100">
+            {loading ? (
+              <ActivityIndicator size="small" color={timeAccent.primary} />
+            ) : (
+              <Text className="text-xs font-semibold" style={{ color: timeAccent.primary }}>
+                {panchangData?.nakshatra || hinduDate.paksha}
               </Text>
-            </View>
+            )}
+          </View>
+        </Animated.View>
 
-            {/* Nakshatra and Yog */}
-            <View className="flex-row justify-between mb-2">
-              <View className="flex-1 mr-2">
-                <Text className="text-white/70 text-xs">Nakshatra</Text>
-                <Text className="text-white text-sm font-semibold">
-                  {panchangData.nakshatra}
+        {/* Daily Quote Card - Modern Glassmorphism Style */}
+        <Animated.View 
+          style={{
+            opacity: quoteFade,
+            transform: [{ translateY: quoteSlide }],
+          }}
+        >
+          <TouchableOpacity 
+            activeOpacity={0.9}
+            onPress={() => setQuoteExpanded(!quoteExpanded)}
+          >
+            <View 
+              className="rounded-3xl overflow-hidden"
+              style={{
+                backgroundColor: '#f8fafc',
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+                shadowColor: '#855332',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+                elevation: 4,
+              }}
+            >
+              {/* Decorative top accent */}
+              <View 
+                className="h-1 w-full"
+                style={{ 
+                  backgroundColor: timeAccent.primary,
+                }}
+              />
+              
+              <View className="p-4">
+                {/* Header Row */}
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="flex-row items-center">
+                    <View 
+                      className="w-8 h-8 rounded-lg items-center justify-center mr-2"
+                      style={{ backgroundColor: timeAccent.secondary }}
+                    >
+                      <Ionicons name="book" size={16} color={timeAccent.primary} />
+                    </View>
+                    <View>
+                      <Text className="text-gray-900 text-xs font-bold uppercase tracking-wider">
+                        Quote of the Day
+                      </Text>
+                      <Text className="text-gray-400 text-[10px] font-medium">
+                        {dailyQuote.source}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="flex-row items-center">
+                    <Ionicons 
+                      name={quoteExpanded ? 'chevron-up' : 'chevron-down'} 
+                      size={16} 
+                      color="#9ca3af" 
+                    />
+                  </View>
+                </View>
+                
+                {/* Sanskrit Text */}
+                <View className="bg-white rounded-xl p-3 mb-3 border border-gray-100">
+                  <Text className="text-gray-800 text-base font-medium leading-6 text-center" style={{ fontFamily: 'System' }}>
+                    {dailyQuote.sanskrit}
+                  </Text>
+                </View>
+                
+                {/* Translation/Meaning */}
+                <Text 
+                  className="text-gray-600 text-sm leading-5"
+                  numberOfLines={quoteExpanded ? undefined : 2}
+                >
+                  {dailyQuote.translation}
                 </Text>
-              </View>
-              <View className="flex-1">
-                <Text className="text-white/70 text-xs">Yog</Text>
-                <Text className="text-white text-sm font-semibold">
-                  {panchangData.yog}
-                </Text>
+                
+                {/* Expanded meaning section */}
+                {quoteExpanded && dailyQuote.meaning && dailyQuote.meaning !== dailyQuote.translation && (
+                  <View className="mt-3 pt-3 border-t border-gray-100">
+                    <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      Deeper Meaning
+                    </Text>
+                    <Text className="text-gray-600 text-sm leading-5">
+                      {dailyQuote.meaning}
+                    </Text>
+                  </View>
+                )}
+                
+                {/* Action row */}
+                <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                  <TouchableOpacity className="flex-row items-center">
+                    <Ionicons name="heart-outline" size={16} color="#9ca3af" />
+                    <Text className="text-gray-400 text-xs ml-1">Save</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity className="flex-row items-center">
+                    <Ionicons name="share-social-outline" size={16} color="#9ca3af" />
+                    <Text className="text-gray-400 text-xs ml-1">Share</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    className="flex-row items-center px-3 py-1.5 rounded-lg"
+                    style={{ backgroundColor: timeAccent.secondary }}
+                  >
+                    <Ionicons name="play" size={12} color={timeAccent.primary} />
+                    <Text className="text-xs ml-1 font-semibold" style={{ color: timeAccent.primary }}>
+                      Listen
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
+          </TouchableOpacity>
+        </Animated.View>
 
-            {/* Sunrise and Sunset */}
-            <View className="flex-row justify-between items-center pt-2 border-t border-white/20">
-              <View className="flex-row items-center">
-                <Ionicons name="sunny" size={14} color="#FDB813" />
-                <Text className="text-white/80 text-xs ml-1">Rise</Text>
-                <Text className="text-white text-sm font-semibold ml-2">
-                  {panchangData.sunrise}
-                </Text>
-              </View>
-              <View className="flex-row items-center">
-                <Ionicons name="moon" size={14} color="#FFE5B4" />
-                <Text className="text-white/80 text-xs ml-1">Set</Text>
-                <Text className="text-white text-sm font-semibold ml-2">
-                  {panchangData.sunset}
-                </Text>
-              </View>
-            </View>
-          </>
-        ) : (
-          <Text className="text-white text-base font-semibold mt-1">
-            {hinduDate.formatted}
-          </Text>
-        )}
+        {children}
       </View>
-
-      {/* Daily Sanskrit Quote */}
-      <View className="bg-white/10 p-4 rounded-xl">
-        <View className="flex-row items-center mb-2">
-          <Ionicons name="book-outline" size={16} color="white" />
-          <Text className="text-white/80 text-xs ml-2">Quote of the Day</Text>
-        </View>
-        <Text className="text-white text-base font-medium mb-2 leading-6">
-          {dailyQuote.sanskrit}
-        </Text>
-        <Text className="text-white/90 text-xs italic" numberOfLines={2}>
-          {dailyQuote.translation}
-        </Text>
-        <Text className="text-white/70 text-xs mt-1">
-          — {dailyQuote.source}
-        </Text>
-      </View>
-
-      {children}
-    </LinearGradient>
     </>
   );
 }

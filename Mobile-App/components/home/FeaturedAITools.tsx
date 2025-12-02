@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface AITool {
@@ -10,105 +9,101 @@ interface AITool {
   icon: string;
   isPremium: boolean;
   isNew?: boolean;
-  features: string[];
+  bgColor: string;
+  iconColor: string;
 }
 
 const aiTools: AITool[] = [
   {
     id: 'composer',
     title: 'AI Composer',
-    description: 'Generate authentic Sanskrit shlokas with perfect chandas',
+    description: 'Generate Sanskrit shlokas',
     icon: 'sparkles',
     isPremium: true,
     isNew: true,
-    features: ['Custom themes', 'Multiple meters', 'Instant generation']
+    bgColor: 'bg-purple-500',
+    iconColor: '#ffffff'
   },
   {
     id: 'tagline',
     title: 'Tagline Generator',
-    description: 'Create Sanskrit taglines for organizations & brands',
+    description: 'Create Sanskrit taglines',
     icon: 'bulb',
     isPremium: true,
-    features: ['Brand-specific', 'Cultural relevance', 'Professional']
+    bgColor: 'bg-blue-500',
+    iconColor: '#ffffff'
   },
   {
     id: 'pronunciation',
-    title: 'Pronunciation Coach',
-    description: 'AI-powered feedback with confidence scoring',
+    title: 'Voice Coach',
+    description: 'AI pronunciation feedback',
     icon: 'mic',
     isPremium: false,
-    features: ['Real-time feedback', 'Accent training', 'Progress tracking']
+    bgColor: 'bg-green-500',
+    iconColor: '#ffffff'
   },
   {
     id: 'meter-detection',
     title: 'Meter Detection',
-    description: 'Detect chandas pattern from audio recordings',
+    description: 'Detect chandas patterns',
     icon: 'analytics',
     isPremium: true,
-    features: ['Audio upload', 'Pattern analysis', 'Instant results']
+    bgColor: 'bg-[#855332]',
+    iconColor: '#ffffff'
   }
 ];
 
 export default function FeaturedAITools() {
   return (
-    <View className="px-6 mt-8 mb-4">
+    <View className="py-6 bg-white">
       {/* Section Header */}
-      <View className="mb-4">
-        <View className="flex-row items-center justify-between mb-2">
-          <View className="flex-1">
-            <View className="flex-row items-center mb-1">
-              <Ionicons name="sparkles" size={20} color="#f97316" />
-              <Text className="text-ancient-800 text-xl font-bold ml-2">AI Tools for You</Text>
-            </View>
-            <Text className="text-ancient-600 text-sm">
-              Powerful AI features to enhance your learning
-            </Text>
-          </View>
+      <View className="px-5 mb-4">
+        <View className="flex-row items-center mb-1">
+          <Ionicons name="sparkles" size={18} color="#855332" />
+          <Text className="text-gray-900 text-lg font-bold ml-2">AI-Powered Tools</Text>
         </View>
-        
-        {/* Premium Badge */}
-        <View className="bg-saffron-50 rounded-xl border border-saffron-200 p-3 flex-row items-center">
-          <View className="bg-saffron-500 p-1.5 rounded-full mr-3">
-            <Ionicons name="diamond" size={14} color="white" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-saffron-800 font-semibold text-xs">
-              Unlock all AI tools with Premium
-            </Text>
-          </View>
-          <TouchableOpacity className="bg-saffron-500 px-3 py-1.5 rounded-full">
-            <Text className="text-white text-xs font-bold">Upgrade</Text>
-          </TouchableOpacity>
-        </View>
+        <Text className="text-gray-500 text-sm">Enhance your learning experience</Text>
       </View>
 
-      {/* AI Tools Grid (2 columns) */}
-      <View className="flex-row flex-wrap justify-between">
+      {/* Tools Horizontal Scroll */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 20 }}
+      >
         {aiTools.map((tool) => (
           <TouchableOpacity
             key={tool.id}
-            className="w-[48%] mb-4"
+            className="mr-3"
             activeOpacity={0.8}
           >
-            <View className="bg-white rounded-2xl border border-ancient-200 overflow-hidden">
-              {/* Header with Icon */}
-              <View className="bg-saffron-50 px-4 pt-4 pb-3">
-                <View className="flex-row items-start justify-between mb-2">
-                  <View className="bg-saffron-500 w-12 h-12 rounded-xl items-center justify-center">
-                    <Ionicons name={tool.icon as any} size={24} color="white" />
+            <View 
+              className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              style={{ 
+                width: 160,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+                elevation: 3,
+              }}
+            >
+              {/* Header */}
+              <View className={`${tool.bgColor} p-4`}>
+                <View className="flex-row items-start justify-between">
+                  <View className="w-12 h-12 bg-white/20 rounded-xl items-center justify-center">
+                    <Ionicons name={tool.icon as any} size={24} color={tool.iconColor} />
                   </View>
-                  
-                  {/* Badges */}
                   <View className="flex-col items-end">
                     {tool.isNew && (
-                      <View className="bg-saffron-500 px-2 py-0.5 rounded-full mb-1">
-                        <Text className="text-white text-xs font-bold">NEW</Text>
+                      <View className="bg-white px-2 py-0.5 rounded-full mb-1">
+                        <Text className="text-gray-900 text-xs font-bold">NEW</Text>
                       </View>
                     )}
                     {tool.isPremium && (
-                      <View className="bg-ancient-200 px-2 py-0.5 rounded-full flex-row items-center">
-                        <Ionicons name="diamond" size={8} color="#996f0a" />
-                        <Text className="text-ancient-700 text-xs font-bold ml-1">PRO</Text>
+                      <View className="bg-white/20 px-2 py-0.5 rounded-full flex-row items-center">
+                        <Ionicons name="diamond" size={8} color="white" />
+                        <Text className="text-white text-xs font-bold ml-1">PRO</Text>
                       </View>
                     )}
                   </View>
@@ -117,54 +112,33 @@ export default function FeaturedAITools() {
 
               {/* Content */}
               <View className="p-4">
-                <Text className="text-ancient-800 font-bold text-base mb-2">
-                  {tool.title}
-                </Text>
-                <Text className="text-ancient-600 text-xs leading-5 mb-3">
-                  {tool.description}
-                </Text>
-
-                {/* Features */}
-                <View className="mb-3">
-                  {tool.features.slice(0, 2).map((feature, idx) => (
-                    <View key={idx} className="flex-row items-center mb-1.5">
-                      <View className="w-1 h-1 bg-saffron-500 rounded-full mr-2" />
-                      <Text className="text-ancient-600 text-xs flex-1">{feature}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Action Button */}
-              <View className="px-4 pb-4">
-                <LinearGradient
-                  colors={['#f97316', '#ea580c']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  className="rounded-xl"
-                >
-                  <View className="py-2.5 flex-row items-center justify-center">
-                    <Text className="text-white font-bold text-xs">
-                      {tool.isPremium ? 'Try Premium' : 'Start Now'}
-                    </Text>
-                    <Ionicons name="arrow-forward" size={12} color="white" className="ml-1" />
-                  </View>
-                </LinearGradient>
+                <Text className="text-gray-900 font-bold text-sm mb-1">{tool.title}</Text>
+                <Text className="text-gray-500 text-xs leading-4">{tool.description}</Text>
+                
+                <TouchableOpacity className="mt-3 bg-gray-50 rounded-lg py-2">
+                  <Text className="text-gray-700 text-xs font-semibold text-center">
+                    {tool.isPremium ? 'Try Premium' : 'Start Now'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
-      {/* View All AI Tools */}
-      <TouchableOpacity className="bg-ancient-100 rounded-xl border border-ancient-200 py-3 mt-2">
-        <View className="flex-row items-center justify-center">
-          <Ionicons name="grid" size={16} color="#996f0a" />
-          <Text className="text-ancient-800 font-semibold text-sm ml-2">
-            View All AI Tools
-          </Text>
+      {/* Upgrade Banner */}
+      <View className="mx-5 mt-4 bg-[#F5EDE8] rounded-xl p-4 flex-row items-center border border-[#E8D9CF]">
+        <View className="bg-[#855332] w-10 h-10 rounded-xl items-center justify-center mr-3">
+          <Ionicons name="diamond" size={18} color="white" />
         </View>
-      </TouchableOpacity>
+        <View className="flex-1">
+          <Text className="text-gray-900 font-semibold text-sm">Unlock All AI Tools</Text>
+          <Text className="text-gray-500 text-xs">Get premium for full access</Text>
+        </View>
+        <TouchableOpacity className="bg-[#855332] px-4 py-2 rounded-xl">
+          <Text className="text-white text-xs font-bold">Upgrade</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }

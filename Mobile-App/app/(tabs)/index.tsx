@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { ScrollView, StatusBar } from 'react-native';
+import { ScrollView, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ENHANCED_SHLOKAS } from '../../data/enhancedData';
 import Header from '../../components/home/Header';
-import StatsGrid from '../../components/home/StatsGrid';
 import QuickActions from '../../components/home/QuickActions';
 import DailyRecommendations from '../../components/home/DailyRecommendations';
-import ContinueLearning from '../../components/home/ContinueLearning';
 import TrendingShlokas from '../../components/home/TrendingShlokas';
 import MoodFilters from '../../components/home/MoodFilters';
 import FeaturedAITools from '../../components/home/FeaturedAITools';
@@ -14,85 +12,54 @@ import ExploreCategories from '../../components/home/ExploreCategories';
 import LiveEvents from '../../components/home/LiveEvents';
 import CurrentShloka from '../../components/home/CurrentShloka';
 import ShlokaAnalysisModal from '../../components/home/ShlokaAnalysisModal';
+import WelcomePopup from '../../components/home/WelcomePopup';
+import { useAuth } from '../../context/AuthContext';
 
 export default function HomeScreen() {
   const [selectedShloka] = useState(ENHANCED_SHLOKAS[0]);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
-  const [stats] = useState({
-    shlokasCompleted: 47,
-    accuracy: 87,
-    streakDays: 12,
-    totalTime: 145
-  });
-
-  const quickActions = [
-    {
-      id: 'analyze',
-      title: 'Analyze Shloka',
-      subtitle: 'Upload & analyze',
-      icon: 'analytics',
-      action: () => setShowAnalysisModal(true)
-    },
-    {
-      id: 'karaoke',
-      title: 'Divine Karaoke',
-      subtitle: 'Sing with rhythm',
-      icon: 'musical-notes',
-      action: () => console.log('Karaoke')
-    },
-    {
-      id: 'speech',
-      title: 'Voice Practice',
-      subtitle: 'AI pronunciation',
-      icon: 'mic',
-      action: () => console.log('Speech')
-    },
-    {
-      id: 'games',
-      title: 'Sanskrit Games',
-      subtitle: 'Fun learning',
-      icon: 'game-controller',
-      action: () => console.log('Games')
-    }
-  ];
+  const { user } = useAuth();
 
   return (
-    <SafeAreaView className="flex-1 bg-ancient-50">
-      <StatusBar barStyle="dark-content" backgroundColor="#fdf6e3" />
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Header with User Greeting, Hindu Calendar, and Daily Quote */}
-        <Header userName="Shantanu" />
+      {/* Welcome Popup - Shows on app open */}
+      <WelcomePopup userName={user?.profile?.firstName || user?.username || 'Friend'} />
+      
+      <ScrollView 
+        className="flex-1" 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {/* 1. Header with User Greeting & Daily Quote */}
+        <Header />
 
-        {/* Stats Grid */}
-        <StatsGrid stats={stats} />
+        {/* 2. Quick Actions - All USPs in one glance */}
+        <QuickActions 
+          onAnalyze={() => setShowAnalysisModal(true)}
+        />
 
-        {/* Quick Actions */}
-        <QuickActions actions={quickActions} />
-
-        {/* Daily Recommendations */}
-        <DailyRecommendations />
-
-        {/* Continue Learning / LMS Progress */}
-        <ContinueLearning />
-
-        {/* Trending Shlokas in Community */}
-        <TrendingShlokas />
-
-        {/* Mood-Based Quick Explore Filters */}
+        {/* 3. Heal with Shlokas - Key USP Feature */}
         <MoodFilters />
 
-        {/* Featured AI Tools */}
+        {/* 4. Today's Shloka - Daily Engagement */}
+        <CurrentShloka shloka={selectedShloka} />
+
+        {/* 5. AI-Curated Daily Recommendations */}
+        <DailyRecommendations />
+
+        {/* 6. Trending Shlokas - Social Proof */}
+        <TrendingShlokas />
+
+        {/* 7. Featured AI Tools */}
         <FeaturedAITools />
 
-        {/* Explore Categories */}
+        {/* 8. Explore Categories */}
         <ExploreCategories />
 
-        {/* Live Events & Sessions */}
+        {/* 9. Live Events & Sessions */}
         <LiveEvents />
-
-        {/* Current Shloka */}
-        <CurrentShloka shloka={selectedShloka} />
       </ScrollView>
 
       {/* Shloka Analysis Modal */}

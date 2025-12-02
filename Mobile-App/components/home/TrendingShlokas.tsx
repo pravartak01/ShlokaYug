@@ -1,6 +1,5 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface TrendingShloka {
@@ -10,7 +9,9 @@ interface TrendingShloka {
   audioLength: string;
   plays: number;
   likes: number;
-  thumbnail: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconBg: string;
+  iconColor: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   tags: string[];
 }
@@ -23,7 +24,9 @@ const trendingShlokas: TrendingShloka[] = [
     audioLength: '2:30',
     plays: 15420,
     likes: 2340,
-    thumbnail: '🌅',
+    icon: 'sunny',
+    iconBg: 'bg-amber-500',
+    iconColor: '#ffffff',
     difficulty: 'intermediate',
     tags: ['Morning', 'Energy', 'Sacred']
   },
@@ -34,7 +37,9 @@ const trendingShlokas: TrendingShloka[] = [
     audioLength: '3:45',
     plays: 12890,
     likes: 1987,
-    thumbnail: '🔱',
+    icon: 'shield-checkmark',
+    iconBg: 'bg-purple-500',
+    iconColor: '#ffffff',
     difficulty: 'advanced',
     tags: ['Healing', 'Devotional', 'Power']
   },
@@ -45,7 +50,9 @@ const trendingShlokas: TrendingShloka[] = [
     audioLength: '1:50',
     plays: 11245,
     likes: 1765,
-    thumbnail: '🕉️',
+    icon: 'infinite',
+    iconBg: 'bg-[#855332]',
+    iconColor: '#ffffff',
     difficulty: 'beginner',
     tags: ['Peace', 'Meditation', 'Calm']
   },
@@ -56,7 +63,9 @@ const trendingShlokas: TrendingShloka[] = [
     audioLength: '2:15',
     plays: 9876,
     likes: 1543,
-    thumbnail: '🙏',
+    icon: 'school',
+    iconBg: 'bg-teal-500',
+    iconColor: '#ffffff',
     difficulty: 'intermediate',
     tags: ['Devotional', 'Gratitude']
   },
@@ -67,32 +76,160 @@ const trendingShlokas: TrendingShloka[] = [
     audioLength: '4:20',
     plays: 8765,
     likes: 1432,
-    thumbnail: '🐒',
+    icon: 'flash',
+    iconBg: 'bg-orange-500',
+    iconColor: '#ffffff',
     difficulty: 'intermediate',
     tags: ['Power', 'Devotional', 'Energy']
   }
 ];
 
-export default function TrendingShlokas() {
+// Animated card component
+const TrendingCard = ({ shloka, index }: { shloka: TrendingShloka; index: number }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 8,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, scaleAnim, index]);
+
   const formatNumber = (num: number) => {
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
 
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'beginner': return { bg: 'bg-green-50', text: 'text-green-700' };
+      case 'intermediate': return { bg: 'bg-[#F5EDE8]', text: 'text-[#855332]' };
+      case 'advanced': return { bg: 'bg-red-50', text: 'text-red-700' };
+      default: return { bg: 'bg-gray-50', text: 'text-gray-700' };
+    }
+  };
+
+  const diffColors = getDifficultyColor(shloka.difficulty);
+
   return (
-    <View className="mt-8 mb-4">
+    <Animated.View
+      style={{
+        opacity: fadeAnim,
+        transform: [{ scale: scaleAnim }],
+      }}
+    >
+      <TouchableOpacity
+        className="mr-4"
+        style={{ width: 260 }}
+        activeOpacity={0.8}
+      >
+        <View 
+          className="bg-white rounded-2xl overflow-hidden"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.06,
+            shadowRadius: 12,
+            elevation: 4,
+          }}
+        >
+          {/* Header with Icon */}
+          <View className="bg-gray-50 px-4 py-5 items-center">
+            <View className="flex-row items-center justify-between w-full mb-3">
+              <View className="bg-white px-2 py-1 rounded-full flex-row items-center">
+                <Ionicons name="trending-up" size={12} color="#ef4444" />
+                <Text className="text-gray-700 font-bold text-xs ml-1">#{index + 1}</Text>
+              </View>
+              <View className="bg-white px-2 py-1 rounded-full flex-row items-center">
+                <Ionicons name="headset-outline" size={12} color="#6b7280" />
+                <Text className="text-gray-500 text-xs ml-1">{shloka.audioLength}</Text>
+              </View>
+            </View>
+            <View className={`w-16 h-16 ${shloka.iconBg} rounded-2xl items-center justify-center`}>
+              <Ionicons name={shloka.icon} size={32} color={shloka.iconColor} />
+            </View>
+          </View>
+
+          {/* Content */}
+          <View className="p-4">
+            {/* Title */}
+            <Text className="text-gray-900 font-bold text-base mb-2">
+              {shloka.title}
+            </Text>
+
+            {/* Badges Row */}
+            <View className="flex-row items-center mb-3">
+              <View className="bg-[#F5EDE8] px-2.5 py-1 rounded-full flex-row items-center mr-2">
+                <Ionicons name="musical-note" size={10} color="#855332" />
+                <Text className="text-[#855332] text-xs font-medium ml-1">
+                  {shloka.chandas}
+                </Text>
+              </View>
+              <View className={`${diffColors.bg} px-2.5 py-1 rounded-full`}>
+                <Text className={`${diffColors.text} text-xs font-medium capitalize`}>
+                  {shloka.difficulty}
+                </Text>
+              </View>
+            </View>
+
+            {/* Tags */}
+            <View className="flex-row flex-wrap mb-3">
+              {shloka.tags.slice(0, 3).map((tag, idx) => (
+                <View key={idx} className="bg-gray-50 px-2 py-0.5 rounded mr-1 mb-1">
+                  <Text className="text-gray-500 text-xs">{tag}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Stats Row */}
+            <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
+              <View className="flex-row items-center">
+                <View className="flex-row items-center mr-3">
+                  <Ionicons name="play-outline" size={14} color="#6b7280" />
+                  <Text className="text-gray-500 text-xs ml-1">{formatNumber(shloka.plays)}</Text>
+                </View>
+                <View className="flex-row items-center">
+                  <Ionicons name="heart-outline" size={14} color="#ef4444" />
+                  <Text className="text-gray-500 text-xs ml-1">{formatNumber(shloka.likes)}</Text>
+                </View>
+              </View>
+              
+              <TouchableOpacity className="bg-[#855332] w-10 h-10 rounded-full items-center justify-center">
+                <Ionicons name="play" size={18} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+export default function TrendingShlokas() {
+  return (
+    <View className="py-6 bg-gray-50">
       {/* Section Header */}
-      <View className="px-6 mb-4">
+      <View className="px-5 mb-4">
         <View className="flex-row items-center justify-between">
           <View>
-            <Text className="text-ancient-800 text-xl font-bold">Trending in Community</Text>
-            <Text className="text-ancient-600 text-sm mt-1">
-              Most popular chants this week
-            </Text>
+            <Text className="text-gray-900 text-lg font-bold">Trending Now</Text>
+            <Text className="text-gray-500 text-sm">Most popular this week</Text>
           </View>
-          <TouchableOpacity className="flex-row items-center bg-saffron-100 px-3 py-2 rounded-full">
-            <Ionicons name="flame" size={16} color="#f97316" />
-            <Text className="text-saffron-700 font-semibold text-xs ml-1">Hot</Text>
+          <TouchableOpacity className="flex-row items-center bg-red-50 px-3 py-1.5 rounded-full">
+            <Ionicons name="flame" size={14} color="#ef4444" />
+            <Text className="text-red-600 font-semibold text-xs ml-1">Hot</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -101,107 +238,19 @@ export default function TrendingShlokas() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="flex-row px-6"
-        contentContainerStyle={{ paddingRight: 24 }}
+        contentContainerStyle={{ paddingHorizontal: 20 }}
       >
         {trendingShlokas.map((shloka, index) => (
-          <TouchableOpacity
-            key={shloka.id}
-            className="mr-4"
-            style={{ width: 280 }}
-            activeOpacity={0.8}
-          >
-            <View className="bg-white rounded-2xl border border-ancient-200 overflow-hidden">
-              {/* Thumbnail Header */}
-              <LinearGradient
-                colors={['#f97316', '#ea580c']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="px-4 py-6"
-              >
-                <View className="flex-row items-center justify-between mb-2">
-                  {/* Trending Badge */}
-                  <View className="bg-white/20 px-2 py-1 rounded-full flex-row items-center">
-                    <Ionicons name="trending-up" size={12} color="white" />
-                    <Text className="text-white font-bold text-xs ml-1">#{index + 1}</Text>
-                  </View>
-                  
-                  {/* Audio Length */}
-                  <View className="bg-white/20 px-2 py-1 rounded-full flex-row items-center">
-                    <Ionicons name="headset" size={12} color="white" />
-                    <Text className="text-white text-xs font-medium ml-1">{shloka.audioLength}</Text>
-                  </View>
-                </View>
-                
-                {/* Thumbnail Emoji */}
-                <View className="items-center py-2">
-                  <Text className="text-6xl">{shloka.thumbnail}</Text>
-                </View>
-              </LinearGradient>
-
-              {/* Content */}
-              <View className="p-4">
-                {/* Title */}
-                <Text className="text-ancient-800 font-bold text-base mb-2">
-                  {shloka.title}
-                </Text>
-
-                {/* Chandas Badge */}
-                <View className="flex-row items-center mb-3">
-                  <View className="bg-saffron-100 px-3 py-1 rounded-full flex-row items-center mr-2">
-                    <Ionicons name="musical-note" size={12} color="#f97316" />
-                    <Text className="text-saffron-700 text-xs font-semibold ml-1">
-                      {shloka.chandas}
-                    </Text>
-                  </View>
-                  <View className="bg-ancient-100 px-3 py-1 rounded-full">
-                    <Text className="text-ancient-700 text-xs font-medium">
-                      {shloka.difficulty}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Tags */}
-                <View className="flex-row flex-wrap mb-3">
-                  {shloka.tags.slice(0, 3).map((tag, idx) => (
-                    <View key={idx} className="bg-ancient-50 px-2 py-1 rounded mr-1 mb-1">
-                      <Text className="text-ancient-600 text-xs">{tag}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                {/* Stats Row */}
-                <View className="flex-row items-center justify-between pt-3 border-t border-ancient-200">
-                  <View className="flex-row items-center">
-                    <Ionicons name="play" size={14} color="#996f0a" />
-                    <Text className="text-ancient-600 text-xs ml-1 mr-3">
-                      {formatNumber(shloka.plays)}
-                    </Text>
-                    <Ionicons name="heart" size={14} color="#f97316" />
-                    <Text className="text-ancient-600 text-xs ml-1">
-                      {formatNumber(shloka.likes)}
-                    </Text>
-                  </View>
-                  
-                  <TouchableOpacity className="bg-saffron-500 px-4 py-1.5 rounded-full">
-                    <View className="flex-row items-center">
-                      <Ionicons name="play" size={12} color="white" />
-                      <Text className="text-white text-xs font-bold ml-1">Play</Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </TouchableOpacity>
+          <TrendingCard key={shloka.id} shloka={shloka} index={index} />
         ))}
       </ScrollView>
 
       {/* View All Button */}
-      <View className="px-6 mt-4">
-        <TouchableOpacity className="bg-ancient-100 rounded-xl border border-ancient-200 py-3">
+      <View className="px-5 mt-4">
+        <TouchableOpacity className="bg-white rounded-xl border border-gray-200 py-3">
           <View className="flex-row items-center justify-center">
-            <Text className="text-ancient-800 font-semibold text-sm">View All Trending</Text>
-            <Ionicons name="arrow-forward" size={16} color="#996f0a" className="ml-2" />
+            <Text className="text-gray-700 font-semibold text-sm">View All Trending</Text>
+            <Ionicons name="arrow-forward" size={16} color="#374151" style={{ marginLeft: 6 }} />
           </View>
         </TouchableOpacity>
       </View>

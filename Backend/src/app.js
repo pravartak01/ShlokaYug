@@ -21,8 +21,9 @@ const subscriptionRoutes = require('./routes/subscriptions');
 // Community Routes
 const communityRoutes = require('./routes/community');
 
-// CRITICAL: Admin Routes for Platform Management
-const adminRoutes = require('./routes/admin');
+// Video Routes
+const videoRoutes = require('./routes/videos');
+const shortsRoutes = require('./routes/shorts');
 
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
@@ -169,12 +170,9 @@ app.use(`/api/${API_VERSION}/subscriptions`, subscriptionRoutes);
 // Community Routes
 app.use(`/api/${API_VERSION}/community`, communityRoutes);
 
-// CRITICAL: Admin Routes (Must be protected)
-app.use(`/api/${API_VERSION}/admin`, adminRoutes);
-
-// Import admin challenge routes
-const adminChallengeRoutes = require('./routes/adminChallengeRoutes');
-app.use(`/api/${API_VERSION}/admin/challenges`, adminChallengeRoutes);
+// Video Routes
+app.use(`/api/${API_VERSION}/videos`, videoRoutes);
+app.use(`/api/${API_VERSION}/shorts`, shortsRoutes);
 
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 interface LearningProgress {
@@ -22,7 +21,7 @@ interface LearningProgress {
     completionStatus: 'completed' | 'in-progress' | 'failed';
   };
   dailyGoal: {
-    target: number; // minutes
+    target: number;
     completed: number;
     streak: number;
     isCompleted: boolean;
@@ -30,12 +29,11 @@ interface LearningProgress {
   weeklyStats: {
     lessonsCompleted: number;
     quizzesPassed: number;
-    practiceTime: number; // minutes
+    practiceTime: number;
     accuracy: number;
   };
 }
 
-// Mock data - would come from API/database
 const mockLearningData: LearningProgress = {
   currentCourse: {
     id: 'chandas-mastery-101',
@@ -70,271 +68,134 @@ const mockLearningData: LearningProgress = {
 
 export default function ContinueLearning() {
   const progress = mockLearningData;
-  
-  // Calculate daily goal progress percentage
   const dailyGoalProgress = Math.min((progress.dailyGoal.completed / progress.dailyGoal.target) * 100, 100);
   
-  // Get appropriate icon and color for last activity
-  const getActivityIcon = (type: string, status: string) => {
-    if (type === 'lesson') return { icon: 'book', color: '#f97316' };
-    if (type === 'quiz') return { icon: 'help-circle', color: '#ea580c' };
-    if (type === 'practice') return { icon: 'musical-notes', color: '#f97316' };
-    return { icon: 'checkmark-circle', color: '#f97316' };
+  const getActivityIcon = (type: string) => {
+    if (type === 'lesson') return { icon: 'book', color: '#3b82f6', bg: 'bg-blue-50' };
+    if (type === 'quiz') return { icon: 'help-circle', color: '#22c55e', bg: 'bg-green-50' };
+    if (type === 'practice') return { icon: 'musical-notes', color: '#8b5cf6', bg: 'bg-purple-50' };
+    return { icon: 'checkmark-circle', color: '#6b7280', bg: 'bg-gray-50' };
   };
   
-  const activityStyle = getActivityIcon(progress.lastActivity.type, progress.lastActivity.completionStatus);
+  const activityStyle = getActivityIcon(progress.lastActivity.type);
 
   return (
-    <View className="px-6 mt-8 mb-8">
+    <View className="px-5 py-6">
       {/* Section Header */}
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-1">
-          <Text className="text-ancient-800 text-xl font-bold">Continue Your Journey</Text>
-          <Text className="text-ancient-600 text-sm mt-1">
-            Pick up where you left off
-          </Text>
+      <View className="flex-row items-center justify-between mb-5">
+        <View>
+          <Text className="text-gray-900 text-lg font-bold">Continue Learning</Text>
+          <Text className="text-gray-500 text-sm">Pick up where you left off</Text>
         </View>
-        <TouchableOpacity className="bg-saffron-100 px-3 py-2 rounded-full">
-          <View className="flex-row items-center">
-            <Ionicons name="flame" size={14} color="#f97316" />
-            <Text className="text-saffron-700 font-bold text-sm ml-1">
-              {progress.dailyGoal.streak} day streak
-            </Text>
-          </View>
-        </TouchableOpacity>
+        <View className="flex-row items-center bg-red-50 px-3 py-1.5 rounded-full">
+          <Ionicons name="flame" size={14} color="#ef4444" />
+          <Text className="text-red-600 font-bold text-sm ml-1">{progress.dailyGoal.streak} days</Text>
+        </View>
       </View>
 
       {/* Main Course Card */}
-      <LinearGradient
-        colors={['#f97316', '#ea580c']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="rounded-2xl overflow-hidden mb-4"
+      <View 
+        className="bg-white rounded-2xl mb-4 overflow-hidden"
+        style={{
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 5,
+        }}
       >
-        <View className="p-5">
-          {/* Course Header */}
-          <View className="flex-row items-start mb-4">
-            <View className="bg-white/20 w-12 h-12 rounded-xl items-center justify-center mr-3">
+        {/* Course Header */}
+        <View className="bg-[#855332] p-4">
+          <View className="flex-row items-center">
+            <View className="w-14 h-14 bg-white/20 rounded-xl items-center justify-center mr-4">
               <Text className="text-3xl">{progress.currentCourse.thumbnail}</Text>
             </View>
             <View className="flex-1">
-              <Text className="text-white font-bold text-lg mb-1">
-                {progress.currentCourse.title}
-              </Text>
-              <Text className="text-white/90 text-sm">
-                {progress.currentCourse.subtitle}
-              </Text>
+              <Text className="text-white font-bold text-base">{progress.currentCourse.title}</Text>
+              <Text className="text-white/80 text-sm">{progress.currentCourse.subtitle}</Text>
             </View>
-            <View className="bg-white/20 px-3 py-1.5 rounded-full">
-              <Text className="text-white font-bold text-sm">
-                {progress.currentCourse.progress}%
-              </Text>
+            <View className="bg-white px-3 py-1.5 rounded-full">
+              <Text className="text-[#855332] font-bold text-sm">{progress.currentCourse.progress}%</Text>
             </View>
           </View>
-
-          {/* Progress Bar */}
-          <View className="mb-4">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-white/90 text-xs font-medium">
-                {progress.currentCourse.completedLessons} of {progress.currentCourse.totalLessons} lessons completed
-              </Text>
-              <Text className="text-white/80 text-xs">
-                {progress.currentCourse.estimatedTimeLeft} left
-              </Text>
-            </View>
-            <View className="bg-white/20 h-2 rounded-full overflow-hidden">
-              <View 
-                className="bg-white h-full rounded-full"
-                style={{ width: `${progress.currentCourse.progress}%` }}
-              />
-            </View>
-          </View>
-
-          {/* Resume Button */}
-          <TouchableOpacity 
-            className="bg-white rounded-xl"
-            activeOpacity={0.8}
-          >
-            <View className="flex-row items-center justify-center py-3 px-4">
-              <Ionicons name="play-circle" size={24} color="#f97316" />
-              <Text className="text-saffron-600 font-bold text-base ml-2">
-                Resume Course
-              </Text>
-              <View className="flex-1" />
-              <Ionicons name="arrow-forward" size={20} color="#f97316" />
-            </View>
-          </TouchableOpacity>
         </View>
-      </LinearGradient>
 
-      {/* Last Activity Card */}
-      <View className="bg-white rounded-2xl border border-ancient-200 p-4 mb-4">
-        <View className="flex-row items-center mb-3">
-          <Ionicons name="time-outline" size={18} color="#996f0a" />
-          <Text className="text-ancient-700 font-semibold text-sm ml-2">
-            Recent Activity
-          </Text>
-        </View>
-        
-        <View className="flex-row items-center">
-          <View 
-            className="w-10 h-10 rounded-full items-center justify-center mr-3"
-            style={{ backgroundColor: `${activityStyle.color}15` }}
-          >
-            <Ionicons name={activityStyle.icon as any} size={20} color={activityStyle.color} />
-          </View>
-          
-          <View className="flex-1">
-            <Text className="text-ancient-800 font-semibold text-base">
-              {progress.lastActivity.title}
+        {/* Progress Section */}
+        <View className="p-4">
+          <View className="flex-row items-center justify-between mb-2">
+            <Text className="text-gray-500 text-xs">
+              {progress.currentCourse.completedLessons} of {progress.currentCourse.totalLessons} lessons
             </Text>
-            <View className="flex-row items-center mt-1">
-              <Text className="text-ancient-600 text-xs">
-                {progress.lastActivity.type.charAt(0).toUpperCase() + progress.lastActivity.type.slice(1)}
-              </Text>
-              <View className="w-1 h-1 bg-ancient-400 rounded-full mx-2" />
-              <Text className="text-ancient-600 text-xs">
-                {progress.lastActivity.timestamp}
-              </Text>
-            </View>
+            <Text className="text-gray-400 text-xs">{progress.currentCourse.estimatedTimeLeft} left</Text>
           </View>
-          
-          {progress.lastActivity.score && (
-            <View className="bg-saffron-100 px-3 py-1.5 rounded-full">
-              <Text className="text-saffron-700 font-bold text-sm">
-                {progress.lastActivity.score}%
-              </Text>
-            </View>
-          )}
+          <View className="bg-gray-100 h-2 rounded-full overflow-hidden mb-4">
+            <View className="bg-[#855332] h-full rounded-full" style={{ width: `${progress.currentCourse.progress}%` }} />
+          </View>
+
+          <TouchableOpacity className="bg-[#855332] rounded-xl py-3.5 flex-row items-center justify-center" activeOpacity={0.8}>
+            <Ionicons name="play-circle" size={22} color="white" />
+            <Text className="text-white font-bold text-base ml-2">Resume Course</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Daily Goal Card (Duolingo-style) */}
-      <View className="bg-ancient-50 rounded-2xl border border-ancient-200 p-4 mb-4">
-        <View className="flex-row items-center justify-between mb-3">
-          <View className="flex-row items-center flex-1">
-            <View className="bg-saffron-100 p-2 rounded-full mr-3">
-              <Ionicons name="trophy" size={20} color="#f97316" />
+      {/* Last Activity & Daily Goal Row */}
+      <View className="flex-row mb-4">
+        {/* Last Activity */}
+        <View className="flex-1 mr-2 bg-white rounded-xl p-4 border border-gray-100">
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="time-outline" size={14} color="#9ca3af" />
+            <Text className="text-gray-500 text-xs font-medium ml-1">Recent</Text>
+          </View>
+          <View className="flex-row items-center">
+            <View className={`w-9 h-9 ${activityStyle.bg} rounded-lg items-center justify-center mr-2.5`}>
+              <Ionicons name={activityStyle.icon as any} size={18} color={activityStyle.color} />
             </View>
             <View className="flex-1">
-              <Text className="text-ancient-800 font-bold text-base">
-                Daily Study Goal
-              </Text>
-              <Text className="text-ancient-700 text-xs mt-0.5">
-                {progress.dailyGoal.completed} of {progress.dailyGoal.target} minutes today
-              </Text>
+              <Text className="text-gray-800 font-semibold text-sm" numberOfLines={1}>{progress.lastActivity.title}</Text>
+              <Text className="text-gray-400 text-xs">{progress.lastActivity.timestamp}</Text>
             </View>
           </View>
-          
-          {progress.dailyGoal.isCompleted ? (
-            <View className="bg-saffron-500 p-2 rounded-full">
-              <Ionicons name="checkmark" size={20} color="white" />
+        </View>
+
+        {/* Daily Goal */}
+        <View className="flex-1 ml-2 bg-white rounded-xl p-4 border border-gray-100">
+          <View className="flex-row items-center justify-between mb-2">
+            <View className="flex-row items-center">
+              <Ionicons name="trophy" size={14} color="#f59e0b" />
+              <Text className="text-gray-500 text-xs font-medium ml-1">Daily Goal</Text>
             </View>
-          ) : (
-            <Text className="text-saffron-600 font-bold text-lg">
-              {progress.dailyGoal.target - progress.dailyGoal.completed}m left
-            </Text>
-          )}
-        </View>
-
-        {/* Progress Bar */}
-        <View className="bg-ancient-200 h-3 rounded-full overflow-hidden mb-3">
-          <LinearGradient
-            colors={['#f97316', '#ea580c']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="h-full rounded-full"
-            style={{ width: `${dailyGoalProgress}%` }}
-          />
-        </View>
-
-        {/* Goal Message */}
-        {progress.dailyGoal.isCompleted ? (
-          <View className="bg-saffron-100 p-3 rounded-xl flex-row items-center">
-            <Ionicons name="star" size={16} color="#f97316" />
-            <Text className="text-saffron-800 text-sm font-semibold ml-2">
-              🎉 Goal completed! You&apos;re on fire!
-            </Text>
+            {progress.dailyGoal.isCompleted && (
+              <View className="bg-green-500 w-5 h-5 rounded-full items-center justify-center">
+                <Ionicons name="checkmark" size={12} color="white" />
+              </View>
+            )}
           </View>
-        ) : (
-          <View className="bg-ancient-100 p-3 rounded-xl flex-row items-center">
-            <Ionicons name="bulb" size={16} color="#f97316" />
-            <Text className="text-ancient-800 text-sm ml-2">
-              Just {progress.dailyGoal.target - progress.dailyGoal.completed} more minutes to reach your goal!
-            </Text>
+          <Text className="text-gray-800 font-bold text-lg mb-1">
+            {progress.dailyGoal.completed}/{progress.dailyGoal.target}m
+          </Text>
+          <View className="bg-gray-100 h-1.5 rounded-full overflow-hidden">
+            <View className="bg-[#855332] h-full rounded-full" style={{ width: `${dailyGoalProgress}%` }} />
           </View>
-        )}
+        </View>
       </View>
 
       {/* Weekly Stats Grid */}
-      <View>
-        <Text className="text-ancient-700 font-semibold text-sm mb-3">
-          This Week&apos;s Progress
-        </Text>
-        <View className="flex-row flex-wrap justify-between">
-          {/* Lessons Completed */}
-          <View className="bg-white rounded-xl border border-ancient-200 p-3 w-[48%] mb-3">
-            <View className="flex-row items-center justify-between mb-2">
-              <Ionicons name="book-outline" size={20} color="#f97316" />
-              <Text className="text-2xl font-bold text-saffron-600">
-                {progress.weeklyStats.lessonsCompleted}
-              </Text>
+      <View className="bg-white rounded-xl p-4 border border-gray-100">
+        <Text className="text-gray-900 font-semibold text-sm mb-3">This Week</Text>
+        <View className="flex-row">
+          {[
+            { icon: 'book-outline', value: progress.weeklyStats.lessonsCompleted, label: 'Lessons', color: '#3b82f6' },
+            { icon: 'checkbox-outline', value: progress.weeklyStats.quizzesPassed, label: 'Quizzes', color: '#22c55e' },
+            { icon: 'time-outline', value: `${progress.weeklyStats.practiceTime}m`, label: 'Practice', color: '#8b5cf6' },
+            { icon: 'analytics-outline', value: `${progress.weeklyStats.accuracy}%`, label: 'Accuracy', color: '#f59e0b' },
+          ].map((stat, idx) => (
+            <View key={idx} className="flex-1 items-center">
+              <Ionicons name={stat.icon as any} size={18} color={stat.color} />
+              <Text className="text-gray-900 font-bold text-lg mt-1">{stat.value}</Text>
+              <Text className="text-gray-400 text-xs">{stat.label}</Text>
             </View>
-            <Text className="text-ancient-600 text-xs">Lessons Completed</Text>
-          </View>
-
-          {/* Quizzes Passed */}
-          <View className="bg-white rounded-xl border border-ancient-200 p-3 w-[48%] mb-3">
-            <View className="flex-row items-center justify-between mb-2">
-              <Ionicons name="checkbox-outline" size={20} color="#f97316" />
-              <Text className="text-2xl font-bold text-saffron-600">
-                {progress.weeklyStats.quizzesPassed}
-              </Text>
-            </View>
-            <Text className="text-ancient-600 text-xs">Quizzes Passed</Text>
-          </View>
-
-          {/* Practice Time */}
-          <View className="bg-white rounded-xl border border-ancient-200 p-3 w-[48%]">
-            <View className="flex-row items-center justify-between mb-2">
-              <Ionicons name="time-outline" size={20} color="#ea580c" />
-              <Text className="text-2xl font-bold text-saffron-600">
-                {progress.weeklyStats.practiceTime}m
-              </Text>
-            </View>
-            <Text className="text-ancient-600 text-xs">Practice Time</Text>
-          </View>
-
-          {/* Accuracy */}
-          <View className="bg-white rounded-xl border border-ancient-200 p-3 w-[48%]">
-            <View className="flex-row items-center justify-between mb-2">
-              <Ionicons name="analytics-outline" size={20} color="#f97316" />
-              <Text className="text-2xl font-bold text-saffron-600">
-                {progress.weeklyStats.accuracy}%
-              </Text>
-            </View>
-            <Text className="text-ancient-600 text-xs">Average Accuracy</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Motivational Footer */}
-      <View className="mt-4 bg-ancient-50 rounded-xl border border-ancient-200 p-4">
-        <View className="flex-row items-center">
-          <View className="bg-saffron-100 p-2 rounded-full mr-3">
-            <Ionicons name="ribbon" size={20} color="#f97316" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-ancient-800 font-bold text-sm">
-              Keep up the great work!
-            </Text>
-            <Text className="text-ancient-700 text-xs mt-0.5">
-              You&apos;re learning faster than 78% of users this week
-            </Text>
-          </View>
-          <TouchableOpacity>
-            <Ionicons name="chevron-forward" size={20} color="#f97316" />
-          </TouchableOpacity>
+          ))}
         </View>
       </View>
     </View>

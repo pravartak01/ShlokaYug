@@ -17,7 +17,7 @@ const uploadVideo = async (req, res) => {
   try {
     console.log('📤 Video upload request received');
     console.log('Body:', JSON.stringify(req.body, null, 2));
-    console.log('File:', req.file ? { name: req.file.originalname, size: req.file.size, path: req.file.path } : 'No file');
+    console.log('Files:', req.files);
 
     const {
       title,
@@ -41,19 +41,22 @@ const uploadVideo = async (req, res) => {
       tags = [];
     }
 
-    // Validate required fields
-    if (!title || !category) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          message: 'Title and category are required',
-          code: 'VALIDATION_ERROR'
-        }
-      });
-    }
+    // Validate required fields - REMOVED VALIDATION
+    // if (!title || !category) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     error: {
+    //       message: 'Title and category are required',
+    //       code: 'VALIDATION_ERROR'
+    //     }
+    //   });
+    // }
 
-    // Check if file was uploaded
-    if (!req.file) {
+    // Check if video file was uploaded
+    const videoFile = req.files?.video?.[0];
+    const thumbnailFile = req.files?.thumbnail?.[0];
+
+    if (!videoFile) {
       return res.status(400).json({
         success: false,
         error: {
@@ -67,7 +70,7 @@ const uploadVideo = async (req, res) => {
 
     // Create initial video document
     const videoData = {
-      title: title.trim(),
+      title: title?.trim() || 'Untitled Video',
       description: description?.trim(),
       creator: {
         userId: user._id,
@@ -78,7 +81,7 @@ const uploadVideo = async (req, res) => {
         avatar: user.profile?.avatar
       },
       type,
-      category,
+      category: category || 'other',
       tags: Array.isArray(tags) ? tags.map(tag => tag.trim()) : [],
       contentLanguage: language,
       visibility,
@@ -87,8 +90,8 @@ const uploadVideo = async (req, res) => {
       status: 'processing',
       video: {
         originalFile: {
-          originalName: req.file.originalname,
-          size: req.file.size
+          originalName: videoFile.originalname,
+          size: videoFile.size
         },
         processedVersions: {},
         thumbnail: {},
@@ -110,12 +113,17 @@ const uploadVideo = async (req, res) => {
     await video.save();
 
     // Start background processing
-    processVideoFile(req.file, video._id, type);
+    processVideoFile(videoFile, video._id, type, thumbnailFile);
 
     res.status(201).json({
       success: true,
       message: 'Video uploaded successfully and is being processed',
       data: {
+        video: {
+          _id: video._id,
+          title: video.title,
+          status: video.status
+        },
         videoId: video._id,
         title: video.title,
         status: video.status,
@@ -125,6 +133,7 @@ const uploadVideo = async (req, res) => {
 
   } catch (error) {
     console.error('Video upload error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       error: {
@@ -139,10 +148,11 @@ const uploadVideo = async (req, res) => {
 /**
  * Background video processing function
  */
-const processVideoFile = async (file, videoId, type) => {
+const processVideoFile = async (file, videoId, type, thumbnailFile = null) => {
   try {
     console.log(`🎬 Starting processing for video ${videoId}`);
     console.log(`📁 File path: ${file.path}`);
+    console.log(`🖼️ Thumbnail file:`, thumbnailFile ? thumbnailFile.path : 'None provided');
     
     // Get video metadata - with fallback if ffmpeg fails
     let metadata = { duration: 0, width: 1920, height: 1080, format: 'mp4' };
@@ -176,24 +186,41 @@ const processVideoFile = async (file, videoId, type) => {
     
     console.log(`✅ Cloudinary upload success:`, originalUpload.secure_url);
 
-    // Generate thumbnail using Cloudinary (no ffmpeg needed)
-    // Cloudinary can generate thumbnails from video automatically
-    const thumbnailUrl = originalUpload.secure_url.replace('/video/upload/', '/video/upload/so_1,w_640,h_360,c_fill/').replace('.mp4', '.jpg');
+    // Handle thumbnail upload
+    let thumbnailUpload;
     
-    let thumbnailUpload = { secure_url: thumbnailUrl, public_id: `${videoId}_thumbnail_auto` };
-    
-    // Try to generate local thumbnail with ffmpeg, fallback to Cloudinary's
-    try {
-      const thumbnailPath = await generateThumbnail(file.path, videoId);
-      thumbnailUpload = await cloudinary.uploader.upload(thumbnailPath, {
+    if (thumbnailFile) {
+      // Upload user-provided thumbnail
+      console.log(`🖼️ Uploading user-provided thumbnail...`);
+      thumbnailUpload = await cloudinary.uploader.upload(thumbnailFile.path, {
         folder: `ShlokaYug/thumbnails`,
         public_id: `${videoId}_thumbnail`,
         quality: 'auto'
       });
-      // Clean up local thumbnail
-      await fs.unlink(thumbnailPath).catch(() => {});
-    } catch (thumbError) {
-      console.warn(`⚠️ Local thumbnail generation failed, using Cloudinary's auto-thumbnail:`, thumbError.message);
+      console.log(`✅ Thumbnail upload success:`, thumbnailUpload.secure_url);
+      
+      // Clean up local thumbnail file
+      await fs.unlink(thumbnailFile.path).catch(() => {});
+    } else {
+      // Generate thumbnail using Cloudinary (no ffmpeg needed)
+      // Cloudinary can generate thumbnails from video automatically
+      const thumbnailUrl = originalUpload.secure_url.replace('/video/upload/', '/video/upload/so_1,w_640,h_360,c_fill/').replace('.mp4', '.jpg');
+      
+      thumbnailUpload = { secure_url: thumbnailUrl, public_id: `${videoId}_thumbnail_auto` };
+      
+      // Try to generate local thumbnail with ffmpeg, fallback to Cloudinary's
+      try {
+        const thumbnailPath = await generateThumbnail(file.path, videoId);
+        thumbnailUpload = await cloudinary.uploader.upload(thumbnailPath, {
+          folder: `ShlokaYug/thumbnails`,
+          public_id: `${videoId}_thumbnail`,
+          quality: 'auto'
+        });
+        // Clean up local thumbnail
+        await fs.unlink(thumbnailPath).catch(() => {});
+      } catch (thumbError) {
+        console.warn(`⚠️ Local thumbnail generation failed, using Cloudinary's auto-thumbnail:`, thumbError.message);
+      }
     }
 
     // Process different quality versions for regular videos

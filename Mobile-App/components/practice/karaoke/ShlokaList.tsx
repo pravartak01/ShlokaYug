@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,11 @@ import {
   TextInput,
   Animated,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Audio } from 'expo-av';
 import {
   ShlokaData,
   ALL_SHLOKAS,
@@ -19,6 +21,7 @@ import {
   FEATURED_SHLOKAS,
   searchShlokas,
 } from '../../../data/shlokas';
+import { hasAudio, getAudioUrl } from '../../../data/shlokaAudioMap';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32;
@@ -33,7 +36,81 @@ const ShlokaList: React.FC<ShlokaListProps> = ({ onSelectShloka }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   
+  // Audio preview state
+  const [previewSound, setPreviewSound] = useState<Audio.Sound | null>(null);
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (previewSound) {
+        previewSound.unloadAsync();
+      }
+    };
+  }, [previewSound]);
+
+  // Audio preview function
+  const handleAudioPreview = async (shloka: ShlokaData) => {
+    try {
+      const audioUrl = getAudioUrl(shloka.id);
+      if (!audioUrl) {
+        console.log('No audio available for this shloka');
+        return;
+      }
+
+      // If already previewing this shloka, stop it
+      if (previewingId === shloka.id) {
+        if (previewSound) {
+          await previewSound.stopAsync();
+          await previewSound.unloadAsync();
+        }
+        setPreviewSound(null);
+        setPreviewingId(null);
+        return;
+      }
+
+      // Stop any existing preview
+      if (previewSound) {
+        await previewSound.stopAsync();
+        await previewSound.unloadAsync();
+      }
+
+      setIsLoadingAudio(true);
+      setPreviewingId(shloka.id);
+
+      // Setup audio mode
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+      });
+
+      // Load and play audio from URL
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true },
+        (status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            // Audio finished playing - reset state
+            setPreviewingId(null);
+            setPreviewSound(null);
+          }
+        }
+      );
+      
+      setPreviewSound(sound);
+      setIsLoadingAudio(false);
+
+    } catch (error) {
+      console.error('Error playing audio preview:', error);
+      setIsLoadingAudio(false);
+      setPreviewingId(null);
+    }
+  };
 
   // Filter shlokas
   const filteredShlokas = React.useMemo(() => {
@@ -128,6 +205,8 @@ const ShlokaList: React.FC<ShlokaListProps> = ({ onSelectShloka }) => {
   // Shloka List Item
   const renderShlokaItem = ({ item, index }: { item: ShlokaData; index: number }) => {
     const difficultyColor = DIFFICULTY_LEVELS.find((d) => d.id === item.difficulty)?.color || '#888';
+    const audioAvailable = hasAudio(item.id);
+    const isPreviewing = previewingId === item.id;
     
     return (
       <TouchableOpacity
@@ -170,23 +249,53 @@ const ShlokaList: React.FC<ShlokaListProps> = ({ onSelectShloka }) => {
             </View>
           </View>
 
-          {/* Tags */}
+          {/* Tags & Audio Badge */}
           <View style={styles.tagsContainer}>
-            {item.tags.slice(0, 3).map((tag, idx) => (
+            {item.tags.slice(0, 2).map((tag, idx) => (
               <View key={idx} style={styles.tag}>
                 <Text style={styles.tagText}>{tag}</Text>
               </View>
             ))}
+            {audioAvailable && (
+              <View style={[styles.tag, styles.audioTag]}>
+                <MaterialCommunityIcons name="headphones" size={10} color="#4CAF50" />
+                <Text style={[styles.tagText, { color: '#4CAF50', marginLeft: 2 }]}>Audio</Text>
+              </View>
+            )}
           </View>
         </View>
 
-        {/* Play Button */}
-        <TouchableOpacity
-          style={[styles.playButton, { backgroundColor: item.thumbnailColor }]}
-          onPress={() => onSelectShloka(item)}
-        >
-          <MaterialCommunityIcons name="play" size={24} color="#fff" />
-        </TouchableOpacity>
+        {/* Buttons Container */}
+        <View style={styles.buttonsContainer}>
+          {/* Audio Preview Button */}
+          {audioAvailable && (
+            <TouchableOpacity
+              style={[
+                styles.listenButton, 
+                isPreviewing && styles.listenButtonActive
+              ]}
+              onPress={() => handleAudioPreview(item)}
+            >
+              {isLoadingAudio && previewingId === item.id ? (
+                <ActivityIndicator size="small" color="#4CAF50" />
+              ) : (
+                <MaterialCommunityIcons 
+                  name={isPreviewing ? "stop" : "headphones"} 
+                  size={18} 
+                  color={isPreviewing ? "#fff" : "#4CAF50"} 
+                />
+              )}
+            </TouchableOpacity>
+          )}
+          
+          {/* Play/Practice Button */}
+          <TouchableOpacity
+            style={[styles.playButton, { backgroundColor: item.thumbnailColor }]}
+            onPress={() => onSelectShloka(item)}
+          >
+            <MaterialCommunityIcons name="play" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -656,6 +765,30 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonsContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 8,
+  },
+  listenButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.3)',
+  },
+  listenButtonActive: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
+  },
+  audioTag: {
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    flexDirection: 'row',
     alignItems: 'center',
   },
   emptyState: {

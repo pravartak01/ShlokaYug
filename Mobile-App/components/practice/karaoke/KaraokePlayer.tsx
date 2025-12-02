@@ -12,6 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { ShlokaData, ShlokaLine } from '../../../data/shlokas';
+import { hasAudio, getAudioUrl } from '../../../data/shlokaAudioMap';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -32,7 +33,13 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isDemoMode, setIsDemoMode] = useState(false);
-  const demoTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const demoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Reference Audio state (background guide audio at low volume)
+  const [referenceSound, setReferenceSound] = useState<Audio.Sound | null>(null);
+  const [isReferenceEnabled, setIsReferenceEnabled] = useState(false);
+  const [referenceVolume, setReferenceVolume] = useState(0.3); // 30% volume by default
+  const [hasReferenceAudio, setHasReferenceAudio] = useState(false);
 
   // Lyric state
   const [currentLineIndex, setCurrentLineIndex] = useState(-1);
@@ -54,6 +61,8 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
   useEffect(() => {
     const initAudio = async () => {
       await loadAudio();
+      // Check if reference audio is available
+      setHasReferenceAudio(hasAudio(shloka.id));
     };
     
     initAudio();
@@ -75,6 +84,9 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
     return () => {
       if (sound) {
         sound.unloadAsync();
+      }
+      if (referenceSound) {
+        referenceSound.unloadAsync();
       }
       if (demoTimerRef.current) {
         clearInterval(demoTimerRef.current);
@@ -114,6 +126,73 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
       setDuration(shloka.duration * 1000);
     }
   };
+
+  // Load reference audio (background guide audio at low volume)
+  const loadReferenceAudio = async () => {
+    try {
+      const audioUrl = getAudioUrl(shloka.id);
+      if (!audioUrl) {
+        console.log('No reference audio available for this shloka');
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        shouldDuckAndroid: true,
+      });
+
+      const { sound: refSound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: false, volume: referenceVolume }
+      );
+
+      setReferenceSound(refSound);
+      console.log('Reference audio loaded successfully');
+    } catch (error) {
+      console.log('Reference audio load error:', error);
+    }
+  };
+
+  // Toggle reference audio on/off
+  const toggleReferenceAudio = async () => {
+    if (!hasReferenceAudio) return;
+
+    if (isReferenceEnabled) {
+      // Disable reference audio
+      if (referenceSound) {
+        await referenceSound.pauseAsync();
+      }
+      setIsReferenceEnabled(false);
+    } else {
+      // Enable reference audio
+      if (!referenceSound) {
+        await loadReferenceAudio();
+      }
+      setIsReferenceEnabled(true);
+    }
+  };
+
+  // Effect to sync reference audio when enabled and playback state changes
+  useEffect(() => {
+    const syncReferenceAudio = async () => {
+      if (!isReferenceEnabled || !referenceSound) return;
+      
+      try {
+        if (isPlaying) {
+          await referenceSound.setPositionAsync(currentTime);
+          await referenceSound.playAsync();
+        } else {
+          await referenceSound.pauseAsync();
+        }
+      } catch (error) {
+        console.log('Error syncing reference audio:', error);
+      }
+    };
+
+    syncReferenceAudio();
+  }, [isReferenceEnabled, isPlaying, referenceSound]);
 
   const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
     if (status.isLoaded) {
@@ -181,12 +260,17 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
     }
   };
 
-  const handlePlaybackComplete = () => {
+  const handlePlaybackComplete = async () => {
     setIsPlaying(false);
     setCurrentLineIndex(-1);
     setCurrentWordIndex(-1);
     if (demoTimerRef.current) {
       clearInterval(demoTimerRef.current);
+    }
+    // Stop reference audio when playback completes
+    if (referenceSound) {
+      await referenceSound.pauseAsync();
+      await referenceSound.setPositionAsync(0);
     }
     onComplete?.(95); // Mock score for demo
   };
@@ -227,8 +311,22 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
       // Demo mode without audio - use timer
       if (isPlaying) {
         stopDemoPlayback();
+        // Also pause reference audio if enabled
+        if (isReferenceEnabled && referenceSound) {
+          await referenceSound.pauseAsync();
+        }
       } else {
         startDemoPlayback();
+        // Also play reference audio if enabled
+        if (isReferenceEnabled) {
+          if (!referenceSound) {
+            await loadReferenceAudio();
+          }
+          if (referenceSound) {
+            await referenceSound.setPositionAsync(currentTime);
+            await referenceSound.playAsync();
+          }
+        }
       }
       return;
     }
@@ -239,8 +337,22 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
 
     if (isPlaying) {
       await sound.pauseAsync();
+      // Also pause reference audio if enabled
+      if (isReferenceEnabled && referenceSound) {
+        await referenceSound.pauseAsync();
+      }
     } else {
       await sound.playAsync();
+      // Also play reference audio if enabled
+      if (isReferenceEnabled) {
+        if (!referenceSound) {
+          await loadReferenceAudio();
+        }
+        if (referenceSound) {
+          await referenceSound.setPositionAsync(currentTime);
+          await referenceSound.playAsync();
+        }
+      }
     }
   };
 
@@ -254,12 +366,24 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
         stopDemoPlayback();
         setTimeout(() => startDemoPlayback(), 100);
       }
+      // Also restart reference audio if enabled
+      if (isReferenceEnabled && referenceSound) {
+        await referenceSound.setPositionAsync(0);
+        if (isPlaying) {
+          await referenceSound.playAsync();
+        }
+      }
       return;
     }
     
     if (sound) {
       await sound.setPositionAsync(0);
       await sound.playAsync();
+    }
+    // Also restart reference audio if enabled
+    if (isReferenceEnabled && referenceSound) {
+      await referenceSound.setPositionAsync(0);
+      await referenceSound.playAsync();
     }
   };
 
@@ -269,6 +393,10 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
     
     if (sound) {
       await sound.setPositionAsync(position);
+    }
+    // Also seek reference audio if enabled
+    if (isReferenceEnabled && referenceSound) {
+      await referenceSound.setPositionAsync(position);
     }
   };
 
@@ -451,6 +579,22 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
             Translation
           </Text>
         </TouchableOpacity>
+
+        {hasReferenceAudio && (
+          <TouchableOpacity
+            style={[styles.toggleButton, isReferenceEnabled && styles.toggleActive]}
+            onPress={toggleReferenceAudio}
+          >
+            <MaterialCommunityIcons
+              name={isReferenceEnabled ? 'volume-high' : 'volume-low'}
+              size={20}
+              color={isReferenceEnabled ? '#fff' : '#888'}
+            />
+            <Text style={[styles.toggleText, isReferenceEnabled && styles.toggleTextActive]}>
+              Guide
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Progress Bar */}

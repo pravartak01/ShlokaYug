@@ -22,35 +22,20 @@ export default function VideoDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const videoRef = useRef<ExpoVideo>(null);
+  const lastViewRecordTime = useRef<number>(0);
+  const isPlayingRef = useRef<boolean>(false);
+  const isBufferingRef = useRef<boolean>(false);
 
   const [video, setVideo] = useState<Video | null>(null);
   const [relatedVideos, setRelatedVideos] = useState<Video[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(false);
-  const [videoError, setVideoError] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
   const [showDescription, setShowDescription] = useState(false);
-  const [selectedQuality, setSelectedQuality] = useState('720p');
-  const [watchTime, setWatchTime] = useState(0);
 
   useEffect(() => {
     loadVideoData();
-    const interval = setInterval(() => {
-      if (isPlaying) {
-        setWatchTime(prev => prev + 1);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [id, isPlaying]);
-
-  useEffect(() => {
-    // Record view after 10 seconds
-    if (watchTime === 10 && video) {
-      videoService.recordView(video._id, watchTime);
-    }
-  }, [watchTime]);
+  }, [id]);
 
   const loadVideoData = async () => {
     try {
@@ -61,13 +46,11 @@ export default function VideoDetailScreen() {
         videoService.getRelatedVideos(id as string, 10),
       ]);
 
-      // API returns: { success: true, data: { video: {...} } }
-      // videoRes is response.data, so video is at videoRes.data.video
-      const videoData = videoRes.data?.video || videoRes.video || videoRes.data;
-      console.log('📺 Loaded video data:', JSON.stringify(videoData?.video?.originalFile, null, 2));
+      // Extract video data - handle nested structures
+      const videoData = videoRes.data?.data?.video || videoRes.data?.video || videoRes.video || videoRes.data;
       setVideo(videoData);
       setComments(commentsRes.data?.comments || commentsRes.comments || []);
-      setRelatedVideos(relatedRes.data?.videos || relatedRes.videos || []);
+      setRelatedVideos(relatedRes.data?.relatedVideos || relatedRes.data?.videos || relatedRes.videos || []);
     } catch (error) {
       console.error('Error loading video:', error);
       Alert.alert('Error', 'Failed to load video');
@@ -197,45 +180,29 @@ export default function VideoDetailScreen() {
     );
   }
 
-  // Get video URL with fallbacks - handle cases where video is still processing
+  // Get video URL - simplified
   const getVideoUrl = () => {
-    let url: string | null = null;
+    // Try all possible paths
+    const possibleUrls = [
+      video.video?.processedVersions?.['720p']?.url,
+      video.video?.processedVersions?.['480p']?.url,
+      video.video?.processedVersions?.['1080p']?.url,
+      video.video?.originalFile?.url,
+      (video as any).bestVideoUrl,
+    ];
     
-    // First check processed versions
-    if (video.video?.processedVersions?.[selectedQuality as keyof typeof video.video.processedVersions]?.url) {
-      url = video.video.processedVersions[selectedQuality as keyof typeof video.video.processedVersions]!.url;
-      console.log(`🎬 Using ${selectedQuality} processed version:`, url);
-    }
-    // Fallback to original file
-    else if (video.video?.originalFile?.url) {
-      url = video.video.originalFile.url;
-      console.log('🎬 Using original file URL:', url);
-    }
-    // Check for bestVideoUrl from backend
-    else if ((video as any).bestVideoUrl) {
-      url = (video as any).bestVideoUrl;
-      console.log('🎬 Using bestVideoUrl:', url);
+    // Return first valid URL
+    for (const url of possibleUrls) {
+      if (url) {
+        return url.startsWith('http://') ? url.replace('http://', 'https://') : url;
+      }
     }
     
-    if (!url) {
-      console.log('❌ No video URL found in video object:', JSON.stringify(video.video, null, 2));
-      return null;
-    }
-    
-    // For Cloudinary videos, ensure we're using the right format for streaming
-    // Cloudinary URLs should work directly, but ensure it's HTTPS
-    if (url.includes('cloudinary.com') && url.startsWith('http://')) {
-      url = url.replace('http://', 'https://');
-    }
-    
-    return url;
+    return null;
   };
 
   const videoUrl = getVideoUrl();
-  const thumbnailUrl = video.video?.thumbnail?.url || (video as any).thumbnailUrl || null;
-  
-  console.log('🎥 Final video URL:', videoUrl);
-  console.log('🖼️ Thumbnail URL:', thumbnailUrl);
+  const thumbnailUrl = video.video?.thumbnail?.url || null;
 
   return (
     <SafeAreaView className="flex-1 bg-black">
@@ -250,73 +217,20 @@ export default function VideoDetailScreen() {
               <View style={{ width: '100%', aspectRatio: 16 / 9 }}>
                 <ExpoVideo
                   ref={videoRef}
-                  source={{ 
-                    uri: videoUrl,
-                  }}
-                  posterSource={thumbnailUrl ? { uri: thumbnailUrl } : undefined}
-                  posterStyle={{ width: '100%', height: '100%', resizeMode: 'cover' }}
-                  usePoster={!!thumbnailUrl}
+                  source={{ uri: videoUrl }}
                   style={{ width: '100%', height: '100%' }}
                   useNativeControls
                   resizeMode={ResizeMode.CONTAIN}
-                  shouldPlay={false}
-                  isLooping={false}
-                  isMuted={false}
-                  volume={1.0}
                   onPlaybackStatusUpdate={(status: any) => {
-                    if (status.isLoaded) {
-                      setIsPlaying(status.isPlaying);
-                      // Only show buffering if video is playing but buffering
-                      setIsBuffering(status.isPlaying && status.isBuffering);
-                      if (status.error) {
-                        console.error('❌ Video playback error:', status.error);
-                        setVideoError(status.error);
+                    if (status.isLoaded && status.isPlaying) {
+                      const currentTime = Math.floor(status.positionMillis / 1000);
+                      if (currentTime - lastViewRecordTime.current >= 30) {
+                        lastViewRecordTime.current = currentTime;
+                        videoService.recordView(video._id, currentTime).catch(() => {});
                       }
-                    } else if (status.error) {
-                      console.error('❌ Video load error:', status.error);
-                      setVideoError(status.error);
                     }
                   }}
-                  onError={(error) => {
-                    console.error('❌ Video component error:', error);
-                    setVideoError('Failed to load video');
-                  }}
-                  onLoad={(status) => {
-                    console.log('✅ Video loaded successfully');
-                    setVideoError(null);
-                    setIsBuffering(false);
-                  }}
-                  onLoadStart={() => {
-                    console.log('📺 Video loading started');
-                  }}
-                  onReadyForDisplay={() => {
-                    console.log('✅ Video ready for display');
-                    setIsBuffering(false);
-                  }}
                 />
-                {/* Buffering Overlay */}
-                {isBuffering && (
-                  <View className="absolute inset-0 items-center justify-center bg-black/30">
-                    <ActivityIndicator size="large" color="#f97316" />
-                    <Text className="text-white mt-2">Buffering...</Text>
-                  </View>
-                )}
-                {/* Error Overlay */}
-                {videoError && (
-                  <View className="absolute inset-0 items-center justify-center bg-black/70">
-                    <Ionicons name="alert-circle" size={48} color="#ef4444" />
-                    <Text className="text-white mt-2 text-center px-4">{videoError}</Text>
-                    <TouchableOpacity 
-                      onPress={() => {
-                        setVideoError(null);
-                        videoRef.current?.replayAsync();
-                      }}
-                      className="mt-4 bg-orange-500 px-4 py-2 rounded-full"
-                    >
-                      <Text className="text-white font-semibold">Retry</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
               </View>
             ) : (
               <View 
@@ -345,20 +259,6 @@ export default function VideoDetailScreen() {
               className="absolute top-4 left-4 bg-black/50 rounded-full p-2"
             >
               <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-
-            {/* Quality Selector */}
-            <TouchableOpacity
-              className="absolute top-4 right-4 bg-black/50 rounded-full px-3 py-2"
-              onPress={() => {
-                // Toggle quality
-                const qualities = ['240p', '480p', '720p', '1080p'];
-                const currentIndex = qualities.indexOf(selectedQuality);
-                const nextIndex = (currentIndex + 1) % qualities.length;
-                setSelectedQuality(qualities[nextIndex]);
-              }}
-            >
-              <Text className="text-white font-semibold">{selectedQuality}</Text>
             </TouchableOpacity>
           </View>
 
@@ -570,6 +470,7 @@ export default function VideoDetailScreen() {
               <View className="px-4 py-4 border-t border-gray-200">
                 <Text className="text-gray-900 text-lg font-bold mb-3">Related Videos</Text>
                 {relatedVideos.map((relatedVideo) => {
+                  if (!relatedVideo || !relatedVideo._id) return null;
                   const relatedThumbUrl = relatedVideo.video?.thumbnail?.url;
                   return (
                     <TouchableOpacity

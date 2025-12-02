@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import dashboardService, {
   getGreeting,
   getFormattedDate,
@@ -152,6 +152,7 @@ const featuredTools = [
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [panchangData, setPanchangData] = useState<PanchangData | null>(null);
@@ -250,25 +251,26 @@ const DashboardPage: React.FC = () => {
                 {/* Navigation */}
                 <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
                   {[
-                    { icon: <HomeIcon />, label: 'Dashboard', active: true, path: '/dashboard' },
+                    { icon: <HomeIcon />, label: 'Dashboard', path: '/dashboard' },
                     { icon: <BookIcon />, label: 'Learn', path: '/learn' },
-                    { icon: <VideoIcon />, label: 'Videos' },
+                    { icon: <VideoIcon />, label: 'Videos', path: '/videos' },
                     { icon: <MusicIcon />, label: 'Practice' },
-                    { icon: <UsersIcon />, label: 'Community' },
+                    { icon: <UsersIcon />, label: 'Community', path: '/community' },
                     { icon: <SparklesIcon />, label: 'AI Tools' },
                     { icon: <ChartIcon />, label: 'Progress' },
-                  ].map((item, idx) => (
-                    item.path ? (
+                  ].map((item) => {
+                    const isActive = item.path === location.pathname;
+                    return item.path ? (
                       <Link
                         key={item.label}
                         to={item.path}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                          item.active
+                          isActive
                             ? 'bg-[#644A07] text-white shadow-md'
                             : 'text-[#2C2416] hover:bg-[#E8DCC4]'
                         }`}
                       >
-                        <span className={item.active ? 'text-white' : 'text-[#644A07]'}>{item.icon}</span>
+                        <span className={isActive ? 'text-white' : 'text-[#644A07]'}>{item.icon}</span>
                         <span className="font-semibold text-sm">{item.label}</span>
                       </Link>
                     ) : (
@@ -280,8 +282,8 @@ const DashboardPage: React.FC = () => {
                         <span className="text-[#644A07]">{item.icon}</span>
                         <span className="font-semibold text-sm">{item.label}</span>
                       </motion.button>
-                    )
-                  ))}
+                    );
+                  })}
                 </nav>
 
                 {/* User Profile Card */}
