@@ -50,14 +50,14 @@ export default function CurrentShloka({ shloka }: CurrentShlokaProps) {
       {/* Section Header */}
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center">
-          <View className="w-8 h-8 bg-[#F5EDE8] rounded-lg items-center justify-center mr-2">
-            <Ionicons name="document-text" size={18} color="#855332" />
+          <View className="w-8 h-8 bg-[#FDF8E8] rounded-lg items-center justify-center mr-2">
+            <Ionicons name="document-text" size={18} color="#D4A017" />
           </View>
-          <Text className="text-gray-900 text-lg font-bold">Today&apos;s Shloka</Text>
+          <Text className="text-gray-900 text-lg font-playfair-bold">Today&apos;s Shloka</Text>
         </View>
         <TouchableOpacity className="flex-row items-center">
-          <Text className="text-[#855332] text-sm font-semibold mr-1">Archive</Text>
-          <Ionicons name="chevron-forward" size={14} color="#855332" />
+          <Text className="text-[#4A2E1C] text-sm font-poppins-semibold mr-1">Archive</Text>
+          <Ionicons name="chevron-forward" size={14} color="#4A2E1C" />
         </TouchableOpacity>
       </View>
 
@@ -69,9 +69,9 @@ export default function CurrentShloka({ shloka }: CurrentShlokaProps) {
         }}
       >
         <View 
-          className="bg-[#F5EDE8] rounded-2xl overflow-hidden border border-[#E8D9CF]"
+          className="bg-[#F3E4C8] rounded-2xl overflow-hidden border border-[#E5D1AF]"
           style={{ 
-            shadowColor: '#855332',
+            shadowColor: '#4A2E1C',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
             shadowRadius: 8,
@@ -79,13 +79,13 @@ export default function CurrentShloka({ shloka }: CurrentShlokaProps) {
           }}
         >
           {/* Header */}
-          <View className="bg-[#855332] px-4 py-3 flex-row items-center justify-between">
+          <View className="bg-[#B87333] px-4 py-3 flex-row items-center justify-between">
             <View className="flex-row items-center">
               <Ionicons name="book" size={16} color="white" />
-              <Text className="text-white font-semibold text-sm ml-2">{shloka.source}</Text>
+              <Text className="text-white font-poppins-semibold text-sm ml-2">{shloka.source}</Text>
             </View>
             <View className={`${diffColors.bg} px-2.5 py-0.5 rounded-full`}>
-              <Text className={`${diffColors.text} text-xs font-bold`}>
+              <Text className={`${diffColors.text} text-xs font-poppins-bold`}>
                 {shloka.difficulty.toUpperCase()}
               </Text>
             </View>
@@ -94,34 +94,34 @@ export default function CurrentShloka({ shloka }: CurrentShlokaProps) {
           {/* Content */}
           <View className="p-5">
             {/* Sanskrit Text */}
-            <Text className="text-gray-800 text-lg font-medium mb-3 leading-7 text-center">
+            <Text className="text-gray-800 text-lg font-sanskrit-medium mb-3 leading-7 text-center">
               {shloka.devanagari}
             </Text>
             
             {/* Divider */}
-            <View className="h-px bg-[#E8D9CF] my-3" />
+            <View className="h-px bg-[#E5D1AF] my-3" />
             
             {/* Translation */}
-            <Text className="text-gray-600 text-sm leading-5 text-center italic">
+            <Text className="text-gray-600 text-sm leading-5 text-center italic font-poppins">
               {shloka.translation}
             </Text>
 
             {/* Footer */}
             <View className="flex-row items-center justify-between mt-5">
-              <View className="flex-row items-center bg-white px-3 py-1.5 rounded-full border border-[#E8D9CF]">
-                <Ionicons name="musical-notes" size={14} color="#855332" />
-                <Text className="text-gray-600 text-xs font-medium ml-1.5">
+              <View className="flex-row items-center bg-white px-3 py-1.5 rounded-full border border-[#E5D1AF]">
+                <Ionicons name="musical-notes" size={14} color="#B87333" />
+                <Text className="text-gray-600 text-xs font-poppins-medium ml-1.5">
                   {shloka.chandas.name}
                 </Text>
               </View>
               
               <View className="flex-row items-center">
-                <TouchableOpacity className="w-10 h-10 bg-white rounded-full items-center justify-center mr-2 border border-[#E8D9CF]">
-                  <Ionicons name="volume-high" size={18} color="#855332" />
+                <TouchableOpacity className="w-10 h-10 bg-white rounded-full items-center justify-center mr-2 border border-[#E5D1AF]">
+                  <Ionicons name="volume-high" size={18} color="#B87333" />
                 </TouchableOpacity>
-                <TouchableOpacity className="bg-[#855332] px-5 py-2.5 rounded-xl flex-row items-center">
+                <TouchableOpacity className="bg-[#D4A017] px-5 py-2.5 rounded-xl flex-row items-center">
                   <Ionicons name="play" size={14} color="white" />
-                  <Text className="text-white font-bold text-sm ml-1.5">Practice</Text>
+                  <Text className="text-white font-poppins-bold text-sm ml-1.5">Practice</Text>
                 </TouchableOpacity>
               </View>
             </View>

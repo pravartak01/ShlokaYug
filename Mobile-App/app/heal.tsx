@@ -662,7 +662,7 @@ export default function HealScreen() {
     }
   };
 
-  const categoryColor = selectedCategory?.color || '#855332';
+  const categoryColor = selectedCategory?.color || '#4A2E1C';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
@@ -707,7 +707,7 @@ export default function HealScreen() {
             </View>
             <View
               style={{
-                backgroundColor: '#855332',
+                backgroundColor: '#4A2E1C',
                 paddingHorizontal: 10,
                 paddingVertical: 6,
                 borderRadius: 8,
@@ -725,7 +725,7 @@ export default function HealScreen() {
             >
               <View
                 style={{
-                  backgroundColor: '#855332',
+                  backgroundColor: '#4A2E1C',
                   borderRadius: 20,
                   padding: 20,
                   marginBottom: 8,

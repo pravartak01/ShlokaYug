@@ -1,1 +1,92 @@
 @import "tailwindcss";
+
+/* Custom Theme Colors - Sandalwood/Traditional Indian Theme */
+@theme {
+  /* Sandalwood - Primary Brown */
+  --color-sandalwood-50: #faf5f0;
+  --color-sandalwood-100: #f4e6d7;
+  --color-sandalwood-200: #e8ccae;
+  --color-sandalwood-300: #dab281;
+  --color-sandalwood-400: #ca9554;
+  --color-sandalwood-500: #c08552;
+  --color-sandalwood-600: #a0704a;
+  --color-sandalwood-700: #835941;
+  --color-sandalwood-800: #6c4839;
+  --color-sandalwood-900: #583b31;
+  --color-sandalwood-950: #2f1d18;
+
+  /* Ancient - Gold Accent */
+  --color-ancient-50: #fefde8;
+  --color-ancient-100: #fffcc2;
+  --color-ancient-200: #fff687;
+  --color-ancient-300: #ffe943;
+  --color-ancient-400: #ffd60a;
+  --color-ancient-500: #efc004;
+  --color-ancient-600: #ce9401;
+  --color-ancient-700: #a46a05;
+  --color-ancient-800: #88520c;
+  --color-ancient-900: #734311;
+  --color-ancient-950: #432305;
+
+  /* Saffron - Orange Accent */
+  --color-saffron-50: #fff8ed;
+  --color-saffron-100: #fff0d4;
+  --color-saffron-200: #ffdca8;
+  --color-saffron-300: #ffc171;
+  --color-saffron-400: #ff9a38;
+  --color-saffron-500: #ff7b11;
+  --color-saffron-600: #f05e06;
+  --color-saffron-700: #c74407;
+  --color-saffron-800: #9e360e;
+  --color-saffron-900: #7f2f0f;
+  --color-saffron-950: #451505;
+
+  /* Lotus - Purple Accent */
+  --color-lotus-50: #fdf4ff;
+  --color-lotus-100: #fae8ff;
+  --color-lotus-200: #f5d0fe;
+  --color-lotus-300: #f0abfc;
+  --color-lotus-400: #e879f9;
+  --color-lotus-500: #d946ef;
+  --color-lotus-600: #c026d3;
+  --color-lotus-700: #a21caf;
+  --color-lotus-800: #86198f;
+  --color-lotus-900: #701a75;
+  --color-lotus-950: #4a044e;
+}
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-sandalwood-50);
+  color: var(--color-sandalwood-900);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-sandalwood-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-sandalwood-400);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sandalwood-500);
+}
+
+/* Selection Styling */
+::selection {
+  background: var(--color-saffron-200);
+  color: var(--color-sandalwood-900);
+}

@@ -93,13 +93,13 @@ export default function Header({ children }: HeaderProps) {
     return 'cloudy-night';
   };
 
-  // Get time-based accent color
+  // Get time-based accent color - Using brighter Gold/Saffron/Copper palette
   const getTimeAccent = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return { primary: '#f59e0b', secondary: '#fef3c7', text: '#92400e' };
-    if (hour < 17) return { primary: '#f97316', secondary: '#ffedd5', text: '#9a3412' };
-    if (hour < 20) return { primary: '#8b5cf6', secondary: '#ede9fe', text: '#5b21b6' };
-    return { primary: '#855332', secondary: '#F5EDE8', text: '#5C3D2A' };
+    if (hour < 12) return { primary: '#D4A017', secondary: '#FDF8E8', text: '#8B6914' }; // Gold for morning
+    if (hour < 17) return { primary: '#DD7A1F', secondary: '#FEF3E8', text: '#A85C15' }; // Saffron for afternoon
+    if (hour < 20) return { primary: '#B87333', secondary: '#F9F0E6', text: '#8A5626' }; // Copper for evening
+    return { primary: '#4A2E1C', secondary: '#F3E4C8', text: '#3D2617' }; // Deep brown for night
   };
 
   const timeAccent = getTimeAccent();
@@ -220,9 +220,9 @@ export default function Header({ children }: HeaderProps) {
             <View className="flex-1">
               <View className="flex-row items-center mb-0.5">
                 <Ionicons name={getGreetingIcon()} size={16} color={timeAccent.primary} />
-                <Text className="text-gray-500 text-sm ml-1.5 font-medium">{getGreeting()}</Text>
+                <Text className="text-gray-500 text-sm ml-1.5 font-poppins-medium">{getGreeting()}</Text>
               </View>
-              <Text className="text-gray-900 text-xl font-bold tracking-tight">
+              <Text className="text-gray-900 text-xl font-playfair-bold tracking-tight">
                 {user?.profile?.firstName || user?.username || 'Guest'}
               </Text>
             </View>
@@ -283,8 +283,8 @@ export default function Header({ children }: HeaderProps) {
               <Ionicons name="calendar" size={18} color={timeAccent.primary} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-800 text-sm font-semibold">{formattedDate}</Text>
-              <Text className="text-gray-500 text-xs mt-0.5">
+              <Text className="text-gray-800 text-sm font-poppins-semibold">{formattedDate}</Text>
+              <Text className="text-gray-500 text-xs mt-0.5 font-poppins">
                 {loading ? 'Loading...' : (panchangData?.tithi || hinduDate.tithi)}
               </Text>
             </View>
@@ -295,7 +295,7 @@ export default function Header({ children }: HeaderProps) {
             {loading ? (
               <ActivityIndicator size="small" color={timeAccent.primary} />
             ) : (
-              <Text className="text-xs font-semibold" style={{ color: timeAccent.primary }}>
+              <Text className="text-xs font-poppins-semibold" style={{ color: timeAccent.primary }}>
                 {panchangData?.nakshatra || hinduDate.paksha}
               </Text>
             )}
@@ -316,13 +316,13 @@ export default function Header({ children }: HeaderProps) {
             <View 
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: '#f8fafc',
+                backgroundColor: '#FFFCF5',
                 borderWidth: 1,
-                borderColor: '#e2e8f0',
-                shadowColor: '#855332',
+                borderColor: '#E8D9CF',
+                shadowColor: '#4A2E1C',
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
                 elevation: 4,
               }}
             >
@@ -345,10 +345,10 @@ export default function Header({ children }: HeaderProps) {
                       <Ionicons name="book" size={16} color={timeAccent.primary} />
                     </View>
                     <View>
-                      <Text className="text-gray-900 text-xs font-bold uppercase tracking-wider">
+                      <Text className="text-gray-900 text-xs font-poppins-bold uppercase tracking-wider">
                         Quote of the Day
                       </Text>
-                      <Text className="text-gray-400 text-[10px] font-medium">
+                      <Text className="text-gray-400 text-[10px] font-poppins-medium">
                         {dailyQuote.source}
                       </Text>
                     </View>
@@ -364,14 +364,14 @@ export default function Header({ children }: HeaderProps) {
                 
                 {/* Sanskrit Text */}
                 <View className="bg-white rounded-xl p-3 mb-3 border border-gray-100">
-                  <Text className="text-gray-800 text-base font-medium leading-6 text-center" style={{ fontFamily: 'System' }}>
+                  <Text className="text-gray-800 text-base font-sanskrit-medium leading-6 text-center">
                     {dailyQuote.sanskrit}
                   </Text>
                 </View>
                 
                 {/* Translation/Meaning */}
                 <Text 
-                  className="text-gray-600 text-sm leading-5"
+                  className="text-gray-600 text-sm leading-5 font-poppins"
                   numberOfLines={quoteExpanded ? undefined : 2}
                 >
                   {dailyQuote.translation}
@@ -380,10 +380,10 @@ export default function Header({ children }: HeaderProps) {
                 {/* Expanded meaning section */}
                 {quoteExpanded && dailyQuote.meaning && dailyQuote.meaning !== dailyQuote.translation && (
                   <View className="mt-3 pt-3 border-t border-gray-100">
-                    <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    <Text className="text-xs font-poppins-semibold text-gray-500 uppercase tracking-wider mb-2">
                       Deeper Meaning
                     </Text>
-                    <Text className="text-gray-600 text-sm leading-5">
+                    <Text className="text-gray-600 text-sm leading-5 font-poppins">
                       {dailyQuote.meaning}
                     </Text>
                   </View>
@@ -393,18 +393,18 @@ export default function Header({ children }: HeaderProps) {
                 <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-100">
                   <TouchableOpacity className="flex-row items-center">
                     <Ionicons name="heart-outline" size={16} color="#9ca3af" />
-                    <Text className="text-gray-400 text-xs ml-1">Save</Text>
+                    <Text className="text-gray-400 text-xs ml-1 font-poppins-medium">Save</Text>
                   </TouchableOpacity>
                   <TouchableOpacity className="flex-row items-center">
                     <Ionicons name="share-social-outline" size={16} color="#9ca3af" />
-                    <Text className="text-gray-400 text-xs ml-1">Share</Text>
+                    <Text className="text-gray-400 text-xs ml-1 font-poppins-medium">Share</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     className="flex-row items-center px-3 py-1.5 rounded-lg"
                     style={{ backgroundColor: timeAccent.secondary }}
                   >
                     <Ionicons name="play" size={12} color={timeAccent.primary} />
-                    <Text className="text-xs ml-1 font-semibold" style={{ color: timeAccent.primary }}>
+                    <Text className="text-xs ml-1 font-poppins-semibold" style={{ color: timeAccent.primary }}>
                       Listen
                     </Text>
                   </TouchableOpacity>

@@ -46,8 +46,8 @@ const getTimeBasedRecommendation = (timeOfDay: string) => {
       title: 'Morning Invocation',
       subtitle: 'Start your day with divine energy',
       icon: 'sunny',
-      iconColor: '#f59e0b',
-      bgColor: 'bg-amber-50',
+      iconColor: '#D4A017', // Gold for morning radiance
+      bgColor: 'bg-[#FDF8E8]',
       benefit: 'Energizes mind and body',
       shloka: ENHANCED_SHLOKAS.find(s => s.tags.includes('morning') || s.spiritual.deity === 'Surya') || ENHANCED_SHLOKAS[0]
     },
@@ -55,8 +55,8 @@ const getTimeBasedRecommendation = (timeOfDay: string) => {
       title: 'Midday Focus',
       subtitle: 'Maintain clarity and purpose',
       icon: 'partly-sunny',
-      iconColor: '#f97316',
-      bgColor: 'bg-orange-50',
+      iconColor: '#DD7A1F', // Saffron for afternoon energy
+      bgColor: 'bg-[#FEF3E8]',
       benefit: 'Sustains energy & concentration',
       shloka: ENHANCED_SHLOKAS.find(s => s.tags.includes('dharma') || s.tags.includes('action')) || ENHANCED_SHLOKAS[0]
     },
@@ -64,8 +64,8 @@ const getTimeBasedRecommendation = (timeOfDay: string) => {
       title: 'Evening Reflection',
       subtitle: 'Reflect and express gratitude',
       icon: 'moon',
-      iconColor: '#8b5cf6',
-      bgColor: 'bg-purple-50',
+      iconColor: '#B87333', // Copper for evening warmth
+      bgColor: 'bg-[#F9F0E6]',
       benefit: 'Calms the mind, promotes peace',
       shloka: ENHANCED_SHLOKAS.find(s => s.tags.includes('peace') || s.tags.includes('gratitude')) || ENHANCED_SHLOKAS[1]
     },
@@ -73,8 +73,8 @@ const getTimeBasedRecommendation = (timeOfDay: string) => {
       title: 'Night Meditation',
       subtitle: 'Prepare for restful sleep',
       icon: 'moon-outline',
-      iconColor: '#855332',
-      bgColor: 'bg-[#F5EDE8]',
+      iconColor: '#4A2E1C', // Deep brown for night serenity
+      bgColor: 'bg-[#F3E4C8]',
       benefit: 'Relaxes body for peaceful rest',
       shloka: ENHANCED_SHLOKAS.find(s => s.tags.includes('meditation') || s.spiritual.tradition === 'Vedantic') || ENHANCED_SHLOKAS[2]
     }
@@ -182,7 +182,7 @@ const RecommendationCard = ({ rec, index }: { rec: Recommendation; index: number
                 <Text className="text-gray-400 text-xs ml-1">{rec.shloka.source}</Text>
               </View>
               
-              <TouchableOpacity className="bg-[#855332] px-4 py-2 rounded-xl">
+              <TouchableOpacity className="bg-[#DD7A1F] px-4 py-2 rounded-xl">
                 <Text className="text-white text-xs font-bold">{rec.action}</Text>
               </TouchableOpacity>
             </View>
@@ -211,8 +211,8 @@ export default function DailyRecommendations() {
         source: aiShloka.source
       },
       icon: 'sparkles',
-      iconColor: '#855332',
-      bgColor: 'bg-[#F5EDE8]',
+      iconColor: '#D4A017', // Gold for AI recommendation highlight
+      bgColor: 'bg-[#F3E4C8]',
       benefit: `${aiShloka.difficulty} level • ${aiShloka.chandas.name} meter`,
       action: 'Start Learning'
     },
@@ -262,8 +262,8 @@ export default function DailyRecommendations() {
           <Text className="text-gray-900 text-lg font-bold">Today's Picks</Text>
           <Text className="text-gray-500 text-sm">Personalized for you</Text>
         </View>
-        <View className="bg-[#F5EDE8] px-3 py-1 rounded-full">
-          <Text className="text-[#855332] text-xs font-semibold">{recommendations.length} New</Text>
+        <View className="bg-[#FEF3E8] px-3 py-1 rounded-full">
+          <Text className="text-[#DD7A1F] text-xs font-semibold">{recommendations.length} New</Text>
         </View>
       </View>
       

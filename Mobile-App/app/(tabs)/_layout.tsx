@@ -1,7 +1,16 @@
-import { Tabs } from 'expo-router';
+import { Tabs, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Animated, Platform } from 'react-native';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
+
+// Theme colors - Vintage Brown with Gold/Saffron/Copper highlights
+const COPPER = '#B87333';           // Copper for warmth (tab icons)
+const SAND = '#F3E4C8';             // Sand/Beige for backgrounds
+
+// Dark theme colors for Practice tab
+const DARK_BG = '#1a1a2e';          // Dark background matching Practice
+const DARK_ACCENT = '#667eea';      // Purple accent for Practice
+const DARK_INACTIVE = 'rgba(255,255,255,0.5)';  // Inactive icon color in dark mode
 
 // Icon mapping - solid and outline variants
 const iconMap: Record<string, { solid: keyof typeof Ionicons.glyphMap; outline: keyof typeof Ionicons.glyphMap }> = {
@@ -13,7 +22,7 @@ const iconMap: Record<string, { solid: keyof typeof Ionicons.glyphMap; outline: 
 };
 
 // Modern Professional Tab Icon with enhanced animations
-const TabIcon = ({ name, color, focused }: { name: string; color: string; focused: boolean }) => {
+const TabIcon = ({ name, color, focused, isDarkMode }: { name: string; color: string; focused: boolean; isDarkMode: boolean }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const bgOpacity = useRef(new Animated.Value(0)).current;
@@ -44,6 +53,11 @@ const TabIcon = ({ name, color, focused }: { name: string; color: string; focuse
   const icons = iconMap[name] || { solid: 'help-circle', outline: 'help-circle-outline' };
   const iconName = focused ? icons.solid : icons.outline;
 
+  // Dynamic colors based on dark mode
+  const activeColor = isDarkMode ? DARK_ACCENT : COPPER;
+  const inactiveColor = isDarkMode ? DARK_INACTIVE : '#64748b';
+  const pillBgColor = isDarkMode ? 'rgba(102, 126, 234, 0.2)' : SAND;
+
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', position: 'relative', width: 60, height: 40 }}>
       {/* Background pill for active state */}
@@ -53,7 +67,7 @@ const TabIcon = ({ name, color, focused }: { name: string; color: string; focuse
           width: 52,
           height: 34,
           borderRadius: 17,
-          backgroundColor: '#eef2ff',
+          backgroundColor: pillBgColor,
           opacity: bgOpacity,
         }}
       />
@@ -68,7 +82,7 @@ const TabIcon = ({ name, color, focused }: { name: string; color: string; focuse
         <Ionicons
           name={iconName}
           size={24}
-          color={focused ? '#6366f1' : '#64748b'}
+          color={focused ? activeColor : inactiveColor}
         />
       </Animated.View>
       
@@ -81,7 +95,7 @@ const TabIcon = ({ name, color, focused }: { name: string; color: string; focuse
             width: 4,
             height: 4,
             borderRadius: 2,
-            backgroundColor: '#6366f1',
+            backgroundColor: activeColor,
           }}
         />
       )}
@@ -90,27 +104,71 @@ const TabIcon = ({ name, color, focused }: { name: string; color: string; focuse
 };
 
 export default function TabLayout() {
+  const pathname = usePathname();
+  const isPracticeTab = pathname === '/practice';
+  
+  // Animated value for smooth color transition
+  const bgColorAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    Animated.spring(bgColorAnim, {
+      toValue: isPracticeTab ? 1 : 0,
+      friction: 8,
+      tension: 40,
+      useNativeDriver: false,
+    }).start();
+  }, [isPracticeTab, bgColorAnim]);
+  
+  // Interpolate background color
+  const animatedBgColor = bgColorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#ffffff', DARK_BG],
+  });
+  
+  // Dynamic styles based on practice tab
+  const dynamicTabBarStyle = useMemo(() => ({
+    borderTopWidth: 0,
+    height: Platform.OS === 'ios' ? 90 : 70,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 12,
+    paddingTop: 12,
+    elevation: 24,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: isPracticeTab ? 0.3 : 0.08,
+    shadowRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    position: 'absolute' as const,
+    borderTopColor: isPracticeTab ? 'rgba(102, 126, 234, 0.3)' : 'transparent',
+  }), [isPracticeTab]);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopWidth: 0,
-          height: Platform.OS === 'ios' ? 90 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 12,
-          paddingTop: 12,
-          elevation: 24,
-          shadowColor: '#6366f1',
-          shadowOffset: { width: 0, height: -8 },
-          shadowOpacity: 0.08,
-          shadowRadius: 24,
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
-          position: 'absolute',
-        },
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#94a3b8',
+        tabBarBackground: () => (
+          <Animated.View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: animatedBgColor,
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              // Add subtle glow effect for dark mode
+              ...(isPracticeTab && {
+                borderTopWidth: 1,
+                borderLeftWidth: 1,
+                borderRightWidth: 1,
+                borderColor: 'rgba(102, 126, 234, 0.2)',
+              }),
+            }}
+          />
+        ),
+        tabBarStyle: dynamicTabBarStyle,
+        tabBarActiveTintColor: isPracticeTab ? DARK_ACCENT : COPPER,
+        tabBarInactiveTintColor: isPracticeTab ? DARK_INACTIVE : '#94a3b8',
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '600',
@@ -127,7 +185,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="home" color="#6366f1" focused={focused} />
+            <TabIcon name="home" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),
         }}
       />
@@ -136,7 +194,7 @@ export default function TabLayout() {
         options={{
           title: 'Learn',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="book" color="#6366f1" focused={focused} />
+            <TabIcon name="book" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),
         }}
       />
@@ -145,7 +203,7 @@ export default function TabLayout() {
         options={{
           title: 'Videos',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="play-circle" color="#6366f1" focused={focused} />
+            <TabIcon name="play-circle" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),
         }}
       />
@@ -154,7 +212,7 @@ export default function TabLayout() {
         options={{
           title: 'Practice',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="mic" color="#6366f1" focused={focused} />
+            <TabIcon name="mic" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),
         }}
       />
@@ -163,7 +221,7 @@ export default function TabLayout() {
         options={{
           title: 'Community',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="people" color="#6366f1" focused={focused} />
+            <TabIcon name="people" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),
         }}
       />

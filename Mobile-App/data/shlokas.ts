@@ -39,77 +39,79 @@ export interface ShlokaData {
 
 // Gayatri Mantra - Most popular Vedic mantra
 export const GAYATRI_MANTRA: ShlokaData = {
-  id: 'gayatri-mantra',
-  title: 'Gayatri Mantra',
-  subtitle: 'गायत्री मंत्र',
-  source: 'Rigveda 3.62.10',
-  category: 'Vedic Mantras',
-  difficulty: 'beginner',
-  duration: 45,
-  // audioFile: require('../../assets/audio/shlokas/gayatri-mantra.mp3'),
-  audioFile: null, // TODO: Add audio file
-  thumbnailColor: '#FF6B35',
-  description: 'The Gayatri Mantra is a highly revered mantra from the Vedas, dedicated to Savitr, the Sun deity.',
-  meaning: 'We meditate on the glory of the Creator who has created the Universe, who is worthy of worship, who is the embodiment of Knowledge and Light, who is the remover of all ignorance. May He enlighten our intellect.',
-  lines: [
+  
+  "id": "gayatri-mantra",
+  "title": "Gayatri Mantra",
+  "subtitle": "गायत्री मंत्र",
+  "source": "Rigveda 3.62.10",
+  "category": "Vedic Mantras",
+  "difficulty": "beginner",
+  "duration": 45,
+  "audioFile": null,
+  "thumbnailColor": "#FF6B35",
+  "description": "The Gayatri Mantra is a highly revered mantra from the Vedas, dedicated to Savitr, the Sun deity.",
+  "meaning": "We meditate on the glory of the Creator who has created the Universe, who is worthy of worship, who is the embodiment of Knowledge and Light, who is the remover of all ignorance. May He enlighten our intellect.",
+  "lines": [
     {
-      id: 'line-1',
-      text: 'ॐ भूर्भुवः स्वः',
-      transliteration: 'Om Bhur Bhuvah Svah',
-      translation: 'Om, Earth, Atmosphere, Heaven',
-      startTime: 0,
-      endTime: 8000,
-      words: [
-        { id: 'w1', text: 'ॐ', transliteration: 'Om', startTime: 0, endTime: 2000 },
-        { id: 'w2', text: 'भूर्', transliteration: 'Bhur', startTime: 2000, endTime: 4000 },
-        { id: 'w3', text: 'भुवः', transliteration: 'Bhuvah', startTime: 4000, endTime: 6000 },
-        { id: 'w4', text: 'स्वः', transliteration: 'Svah', startTime: 6000, endTime: 8000 },
-      ],
+      "id": "line-1",
+      "text": "ॐ भूर्भुवः स्वः",
+      "transliteration": "Om Bhur Bhuvah Svah",
+      "translation": "Om, Earth, Atmosphere, Heaven",
+      "startTime": 0,
+      "endTime": 5850,
+      "words": [
+        { "id": "w1", "text": "ॐ", "transliteration": "Om", "startTime": 0, "endTime": 585 },
+        { "id": "w2", "text": "भूर्", "transliteration": "Bhur", "startTime": 585, "endTime": 1150 },
+        { "id": "w3", "text": "भुवः", "transliteration": "Bhuvah", "startTime": 1150, "endTime": 2900 },
+        { "id": "w4", "text": "स्वः", "transliteration": "Svah", "startTime": 2900, "endTime": 5850 }
+      ]
     },
     {
-      id: 'line-2',
-      text: 'तत्सवितुर्वरेण्यं',
-      transliteration: 'Tat Savitur Varenyam',
-      translation: 'That Creator, most adorable',
-      startTime: 8000,
-      endTime: 16000,
-      words: [
-        { id: 'w5', text: 'तत्', transliteration: 'Tat', startTime: 8000, endTime: 10500 },
-        { id: 'w6', text: 'सवितुर्', transliteration: 'Savitur', startTime: 10500, endTime: 13000 },
-        { id: 'w7', text: 'वरेण्यं', transliteration: 'Varenyam', startTime: 13000, endTime: 16000 },
-      ],
+      "id": "line-2",
+      "text": "तत्सवितुर्वरेण्यं",
+      "transliteration": "Tat Savitur Varenyam",
+      "translation": "That Creator, most adorable",
+      "startTime": 5850,
+      "endTime": 10330,
+      "words": [
+        { "id": "w5", "text": "तत्", "transliteration": "Tat", "startTime": 5850, "endTime": 6800 },
+        { "id": "w6", "text": "सवितुर्", "transliteration": "Savitur", "startTime": 6800, "endTime": 8200 },
+        { "id": "w7", "text": "वरेण्यं", "transliteration": "Varenyam", "startTime": 8200, "endTime": 10330 }
+      ]
     },
     {
-      id: 'line-3',
-      text: 'भर्गो देवस्य धीमहि',
-      transliteration: 'Bhargo Devasya Dhimahi',
-      translation: 'The divine light, we meditate upon',
-      startTime: 16000,
-      endTime: 24000,
-      words: [
-        { id: 'w8', text: 'भर्गो', transliteration: 'Bhargo', startTime: 16000, endTime: 18500 },
-        { id: 'w9', text: 'देवस्य', transliteration: 'Devasya', startTime: 18500, endTime: 21000 },
-        { id: 'w10', text: 'धीमहि', transliteration: 'Dhimahi', startTime: 21000, endTime: 24000 },
-      ],
+      "id": "line-3",
+      "text": "भर्गो देवस्य धीमहि",
+      "transliteration": "Bhargo Devasya Dhimahi",
+      "translation": "The divine light, we meditate upon",
+      "startTime": 10330,
+      "endTime": 15500,
+      "words": [
+        { "id": "w8", "text": "भर्गो", "transliteration": "Bhargo", "startTime": 10330, "endTime": 11500 },
+        { "id": "w9", "text": "देवस्य", "transliteration": "Devasya", "startTime": 11500, "endTime": 13200 },
+        { "id": "w10", "text": "धीमहि", "transliteration": "Dhimahi", "startTime": 13200, "endTime": 15500 }
+      ]
     },
     {
-      id: 'line-4',
-      text: 'धियो यो नः प्रचोदयात्',
-      transliteration: 'Dhiyo Yo Nah Prachodayat',
-      translation: 'May He inspire our intellect',
-      startTime: 24000,
-      endTime: 32000,
-      words: [
-        { id: 'w11', text: 'धियो', transliteration: 'Dhiyo', startTime: 24000, endTime: 26000 },
-        { id: 'w12', text: 'यो', transliteration: 'Yo', startTime: 26000, endTime: 27500 },
-        { id: 'w13', text: 'नः', transliteration: 'Nah', startTime: 27500, endTime: 29000 },
-        { id: 'w14', text: 'प्रचोदयात्', transliteration: 'Prachodayat', startTime: 29000, endTime: 32000 },
-      ],
-    },
+      "id": "line-4",
+      "text": "धियो यो नः प्रचोदयात्",
+      "transliteration": "Dhiyo Yo Nah Prachodayat",
+      "translation": "May He inspire our intellect",
+      "startTime": 15500,
+      "endTime": 20700,
+      "words": [
+        { "id": "w11", "text": "धियो", "transliteration": "Dhiyo", "startTime": 15500, "endTime": 16600 },
+        { "id": "w12", "text": "यो", "transliteration": "Yo", "startTime": 16600, "endTime": 17300 },
+        { "id": "w13", "text": "नः", "transliteration": "Nah", "startTime": 17300, "endTime": 18000 },
+        { "id": "w14", "text": "प्रचोदयात्", "transliteration": "Prachodayat", "startTime": 18000, "endTime": 20700 }
+      ]
+    }
   ],
-  tags: ['Vedic', 'Meditation', 'Sun', 'Wisdom'],
-  practiceCount: 15420,
-  rating: 4.9,
+  "tags": ["Vedic", "Meditation", "Sun", "Wisdom"],
+  "practiceCount": 15420,
+  "rating": 4.9
+
+
 };
 
 // Mahamrityunjaya Mantra

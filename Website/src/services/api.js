@@ -198,6 +198,44 @@ const apiService = {
     return response.data;
   },
 
+  getCourseEnrollments: async (courseId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await apiClient.get(`/enrollments/search?courseId=${courseId}&${queryString}`);
+    return response.data;
+  },
+
+  getEnrollmentAnalytics: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await apiClient.get(`/enrollments/analytics?${queryString}`);
+    return response.data;
+  },
+
+  getInstructorDashboardStats: async () => {
+    const response = await apiClient.get('/guru/dashboard-stats');
+    return response.data;
+  },
+
+  getRevenueStats: async (period = 'month') => {
+    const response = await apiClient.get(`/guru/revenue?period=${period}`);
+    return response.data;
+  },
+
+  getAllStudents: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await apiClient.get(`/guru/students?${queryString}`);
+    return response.data;
+  },
+
+  sendMessageToStudent: async (studentId, message) => {
+    const response = await apiClient.post(`/messages/send`, { recipientId: studentId, content: message });
+    return response.data;
+  },
+
+  issueCertificate: async (enrollmentId) => {
+    const response = await apiClient.post(`/certificates/issue/${enrollmentId}`);
+    return response.data;
+  },
+
   // Upload APIs
   uploadVideo: async (formData, config = {}) => {
     const response = await apiClient.post('/courses/upload-video', formData, {
@@ -206,6 +244,16 @@ const apiService = {
       },
       timeout: 600000, // 10 minutes timeout for video uploads
       ...config,
+    });
+    return response.data;
+  },
+
+  uploadCourseThumbnail: async (courseId, formData) => {
+    const response = await apiClient.post(`/courses/${courseId}/thumbnail`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 30000, // 30 seconds timeout for thumbnail uploads
     });
     return response.data;
   },

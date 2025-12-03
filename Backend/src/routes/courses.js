@@ -205,6 +205,87 @@ const upload = multer({
   }
 });
 
+// Thumbnail upload configuration
+const thumbnailDir = path.join(__dirname, '../../uploads/course-thumbnails');
+if (!fs.existsSync(thumbnailDir)) {
+  fs.mkdirSync(thumbnailDir, { recursive: true });
+}
+
+const thumbnailStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, thumbnailDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname);
+    cb(null, `thumbnail-${uniqueSuffix}${extension}`);
+  }
+});
+
+const imageFilter = (req, file, cb) => {
+  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only image files are allowed.'), false);
+  }
+};
+
+const thumbnailUpload = multer({
+  storage: thumbnailStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB max file size for thumbnails
+  }
+});
+
+/**
+ * @route   POST /api/courses/:id/thumbnail
+ * @desc    Upload thumbnail for course
+ * @access  Private (Course instructor only)
+ */
+router.post(
+  '/:id/thumbnail',
+  auth,
+  checkRole(['guru']),
+  thumbnailUpload.single('thumbnail'),
+  async (req, res) => {
+    try {
+      const Course = require('../models/Course');
+      const course = await Course.findById(req.params.id);
+      
+      if (!course) {
+        return res.status(404).json({ success: false, message: 'Course not found' });
+      }
+      
+      // Check if user is the instructor
+      if (course.instructor.userId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, message: 'Not authorized' });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No thumbnail file uploaded' });
+      }
+      
+      // Construct the URL for the thumbnail
+      const thumbnailUrl = `/uploads/course-thumbnails/${req.file.filename}`;
+      
+      // Update course with thumbnail URL
+      course.thumbnail = thumbnailUrl;
+      await course.save();
+      
+      res.status(200).json({
+        success: true,
+        message: 'Thumbnail uploaded successfully',
+        data: { thumbnailUrl }
+      });
+    } catch (error) {
+      console.error('Thumbnail upload error:', error);
+      res.status(500).json({ success: false, message: 'Failed to upload thumbnail' });
+    }
+  }
+);
+
 /**
  * @route   POST /api/courses/upload-video
  * @desc    Upload video for course lecture

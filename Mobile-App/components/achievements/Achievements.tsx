@@ -211,7 +211,7 @@ const ACHIEVEMENTS_DATA: Achievement[] = [
 const STATS_DATA: StatItem[] = [
   { id: '1', label: 'Shlokas Learned', value: 23, icon: 'book', color: '#3b82f6', trend: 'up', trendValue: '+5 this week' },
   { id: '2', label: 'Hours Practiced', value: 12, icon: 'time', color: '#10b981', suffix: 'h', trend: 'up', trendValue: '+2h' },
-  { id: '3', label: 'Categories', value: 5, icon: 'grid', color: '#8b5cf6' },
+  { id: '3', label: 'Categories', value: 5, icon: 'grid', color: '#a0704a' },
   { id: '4', label: 'Favorites', value: 8, icon: 'heart', color: '#ec4899' },
 ];
 

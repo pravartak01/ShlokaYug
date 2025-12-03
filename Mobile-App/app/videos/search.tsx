@@ -84,7 +84,7 @@ export default function SearchScreen() {
           </Text>
         </View>
         {item.type === 'short' && (
-          <View className="absolute top-2 left-2 bg-orange-500 px-2 py-1 rounded-full">
+          <View className="absolute top-2 left-2 bg-[#DD7A1F] px-2 py-1 rounded-full">
             <Text className="text-white text-xs font-bold">SHORT</Text>
           </View>
         )}
@@ -143,7 +143,7 @@ export default function SearchScreen() {
             onPress={() => setSelectedCategory(cat.id)}
             className={`mr-2 px-4 py-2 rounded-full flex-row items-center ${
               selectedCategory === cat.id
-                ? 'bg-orange-500'
+                ? 'bg-[#DD7A1F]'
                 : 'bg-gray-100 border border-gray-300'
             }`}
           >
@@ -172,12 +172,12 @@ export default function SearchScreen() {
             key={sort}
             onPress={() => setSortBy(sort)}
             className={`mr-2 px-3 py-1 rounded-full ${
-              sortBy === sort ? 'bg-orange-100' : 'bg-transparent'
+              sortBy === sort ? 'bg-[#FEF3E8]' : 'bg-transparent'
             }`}
           >
             <Text
               className={`text-sm font-semibold capitalize ${
-                sortBy === sort ? 'text-orange-600' : 'text-gray-600'
+                sortBy === sort ? 'text-[#DD7A1F]' : 'text-gray-600'
               }`}
             >
               {sort}
@@ -189,7 +189,7 @@ export default function SearchScreen() {
       {/* Results */}
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#f97316" />
+          <ActivityIndicator size="large" color="#DD7A1F" />
           <Text className="text-gray-600 mt-3">Searching...</Text>
         </View>
       ) : results.length > 0 ? (

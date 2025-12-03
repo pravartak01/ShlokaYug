@@ -159,7 +159,7 @@ export default function VideoDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-black items-center justify-center">
-        <ActivityIndicator size="large" color="#f97316" />
+        <ActivityIndicator size="large" color="#DD7A1F" />
         <Text className="text-white mt-3">Loading video...</Text>
       </SafeAreaView>
     );
@@ -172,7 +172,7 @@ export default function VideoDetailScreen() {
         <Text className="text-gray-500 text-lg mt-4">Video not found</Text>
         <TouchableOpacity
           onPress={() => router.back()}
-          className="mt-6 bg-orange-500 px-6 py-3 rounded-full"
+          className="mt-6 bg-[#DD7A1F] px-6 py-3 rounded-full"
         >
           <Text className="text-white font-semibold">Go Back</Text>
         </TouchableOpacity>
@@ -245,7 +245,7 @@ export default function VideoDetailScreen() {
                   />
                 ) : null}
                 <View className="absolute inset-0 items-center justify-center bg-black/50">
-                  <ActivityIndicator size="large" color="#f97316" />
+                  <ActivityIndicator size="large" color="#DD7A1F" />
                   <Text className="text-white mt-3 text-center px-4">
                     Video is being processed...{'\n'}Please check back shortly.
                   </Text>
@@ -289,17 +289,17 @@ export default function VideoDetailScreen() {
                 <TouchableOpacity
                   onPress={handleLike}
                   className={`flex-row items-center px-4 py-2 rounded-full ${
-                    video.isLiked ? 'bg-orange-100' : 'bg-gray-100'
+                    video.isLiked ? 'bg-[#FEF3E8]' : 'bg-gray-100'
                   }`}
                 >
                   <Ionicons
                     name={video.isLiked ? 'thumbs-up' : 'thumbs-up-outline'}
                     size={20}
-                    color={video.isLiked ? '#f97316' : '#6b7280'}
+                    color={video.isLiked ? '#DD7A1F' : '#6b7280'}
                   />
                   <Text
                     className={`ml-2 font-semibold ${
-                      video.isLiked ? 'text-orange-600' : 'text-gray-700'
+                      video.isLiked ? 'text-[#DD7A1F]' : 'text-gray-700'
                     }`}
                   >
                     {formatViews(video.metrics?.likes || 0)}
@@ -343,7 +343,7 @@ export default function VideoDetailScreen() {
                     className="w-10 h-10 rounded-full bg-gray-300"
                   />
                 ) : (
-                  <View className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 items-center justify-center">
+                  <View className="w-10 h-10 rounded-full bg-[#B87333] items-center justify-center">
                     <Text className="text-white font-bold">
                       {(video.creator?.displayName || 'U')[0].toUpperCase()}
                     </Text>
@@ -359,7 +359,7 @@ export default function VideoDetailScreen() {
               <TouchableOpacity
                 onPress={handleSubscribe}
                 className={`px-5 py-2 rounded-full ${
-                  video.isSubscribed ? 'bg-gray-200' : 'bg-orange-500'
+                  video.isSubscribed ? 'bg-gray-200' : 'bg-[#DD7A1F]'
                 }`}
               >
                 <Text
@@ -383,7 +383,7 @@ export default function VideoDetailScreen() {
               >
                 {video.description}
               </Text>
-              <Text className="text-orange-600 font-semibold text-sm mt-2">
+              <Text className="text-[#DD7A1F] font-semibold text-sm mt-2">
                 {showDescription ? 'Show less' : 'Show more'}
               </Text>
             </TouchableOpacity>
@@ -407,7 +407,7 @@ export default function VideoDetailScreen() {
                 {commentText.trim() && (
                   <TouchableOpacity
                     onPress={handleAddComment}
-                    className="bg-orange-500 rounded-full p-2 ml-2"
+                    className="bg-[#DD7A1F] rounded-full p-2 ml-2"
                   >
                     <Ionicons name="send" size={20} color="white" />
                   </TouchableOpacity>
@@ -447,7 +447,7 @@ export default function VideoDetailScreen() {
                           <Ionicons
                             name={comment.isLiked ? 'thumbs-up' : 'thumbs-up-outline'}
                             size={16}
-                            color={comment.isLiked ? '#f97316' : '#6b7280'}
+                            color={comment.isLiked ? '#DD7A1F' : '#6b7280'}
                           />
                           {(comment.likes?.count || 0) > 0 && (
                             <Text className="text-gray-600 text-xs ml-1">
@@ -485,8 +485,8 @@ export default function VideoDetailScreen() {
                           resizeMode="cover"
                         />
                       ) : (
-                        <View className="w-40 h-24 rounded-lg bg-gradient-to-br from-orange-400 to-pink-500 items-center justify-center">
-                          <Ionicons name="videocam" size={24} color="white" />
+                        <View className="w-40 h-24 rounded-lg bg-[#F3E4C8] items-center justify-center">
+                          <Ionicons name="videocam" size={24} color="#B87333" />
                         </View>
                       )}
                       <View className="flex-1 ml-3">

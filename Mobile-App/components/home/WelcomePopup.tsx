@@ -5,8 +5,7 @@ import {
   TouchableOpacity, 
   Modal, 
   Animated, 
-  Dimensions,
-  Platform 
+  Dimensions 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -54,7 +53,7 @@ const getTimeBasedContent = (): TimeBasedContent => {
         source: 'Bhagavad Gita 2.48',
       },
     ];
-    return { ...content[randomIndex], icon: 'sparkles', accentColor: '#8b5cf6', bgGradient: '#ede9fe' };
+    return { ...content[randomIndex], icon: 'sparkles', accentColor: '#B87333', bgGradient: '#F9F0E6' };
   }
   
   // Morning (7-12)
@@ -82,7 +81,7 @@ const getTimeBasedContent = (): TimeBasedContent => {
         source: 'Taittiriya Upanishad',
       },
     ];
-    return { ...content[randomIndex], icon: 'sunny', accentColor: '#f59e0b', bgGradient: '#fef3c7' };
+    return { ...content[randomIndex], icon: 'sunny', accentColor: '#D4A017', bgGradient: '#FDF8E8' };
   }
   
   // Afternoon (12-17)
@@ -110,7 +109,7 @@ const getTimeBasedContent = (): TimeBasedContent => {
         source: 'Katha Upanishad',
       },
     ];
-    return { ...content[randomIndex], icon: 'flame', accentColor: '#f97316', bgGradient: '#ffedd5' };
+    return { ...content[randomIndex], icon: 'flame', accentColor: '#DD7A1F', bgGradient: '#FEF3E8' };
   }
   
   // Evening (17-20)
@@ -138,7 +137,7 @@ const getTimeBasedContent = (): TimeBasedContent => {
         source: 'Brihadaranyaka Upanishad',
       },
     ];
-    return { ...content[randomIndex], icon: 'moon', accentColor: '#8b5cf6', bgGradient: '#ede9fe' };
+    return { ...content[randomIndex], icon: 'moon', accentColor: '#B87333', bgGradient: '#F9F0E6' };
   }
   
   // Night (20-4)
@@ -165,7 +164,7 @@ const getTimeBasedContent = (): TimeBasedContent => {
       source: 'Vedic Prayer',
     },
   ];
-  return { ...content[randomIndex], icon: 'star', accentColor: '#855332', bgGradient: '#F5EDE8' };
+  return { ...content[randomIndex], icon: 'star', accentColor: '#4A2E1C', bgGradient: '#F3E4C8' };
 };
 
 interface WelcomePopupProps {
@@ -347,14 +346,14 @@ export default function WelcomePopup({ userName = 'Friend' }: WelcomePopupProps)
               
               {/* Greeting */}
               <Text 
-                className="text-2xl font-bold text-center mb-2"
+                className="text-2xl font-playfair-bold text-center mb-2"
                 style={{ color: content.accentColor }}
               >
                 {content.greeting}
               </Text>
               
               {/* Friendly Message */}
-              <Text className="text-gray-600 text-center text-sm leading-5 px-2">
+              <Text className="text-gray-600 text-center text-sm leading-5 px-2 font-poppins">
                 {content.friendlyMessage.replace('human', userName)}
               </Text>
             </View>
@@ -372,27 +371,26 @@ export default function WelcomePopup({ userName = 'Friend' }: WelcomePopupProps)
                   >
                     <Ionicons name="book" size={12} color={content.accentColor} />
                   </View>
-                  <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <Text className="text-xs font-poppins-semibold text-gray-500 uppercase tracking-wider">
                     Today&apos;s Blessing
                   </Text>
                 </View>
                 
                 {/* Sanskrit Text */}
                 <Text 
-                  className="text-gray-800 text-lg font-semibold text-center leading-7 mb-3"
-                  style={{ fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif' }}
+                  className="text-gray-800 text-lg font-sanskrit-semibold text-center leading-7 mb-3"
                 >
                   {content.shloka}
                 </Text>
                 
                 {/* Translation */}
-                <Text className="text-gray-600 text-sm text-center leading-5 italic">
+                <Text className="text-gray-600 text-sm text-center leading-5 italic font-poppins">
                   &ldquo;{content.shlokaTranslation}&rdquo;
                 </Text>
                 
                 {/* Source */}
                 <Text 
-                  className="text-xs text-center mt-2 font-medium"
+                  className="text-xs text-center mt-2 font-poppins-medium"
                   style={{ color: content.accentColor }}
                 >
                   — {content.source}
@@ -416,7 +414,7 @@ export default function WelcomePopup({ userName = 'Friend' }: WelcomePopupProps)
                 >
                   <View className="flex-row items-center">
                     <Ionicons name="sparkles" size={18} color="#ffffff" />
-                    <Text className="text-white font-bold text-base ml-2">
+                    <Text className="text-white font-poppins-bold text-base ml-2">
                       Let&apos;s Begin!
                     </Text>
                   </View>
@@ -424,7 +422,7 @@ export default function WelcomePopup({ userName = 'Friend' }: WelcomePopupProps)
               </Animated.View>
 
               {/* Motivational footer */}
-              <Text className="text-gray-400 text-xs text-center mt-4">
+              <Text className="text-gray-400 text-xs text-center mt-4 font-poppins">
                 Every verse brings you closer to wisdom ✨
               </Text>
             </View>

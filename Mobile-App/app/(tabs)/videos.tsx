@@ -159,9 +159,9 @@ export default function VideosScreen() {
               resizeMode="cover"
             />
           ) : (
-            <View className="w-full h-52 rounded-xl bg-gradient-to-br from-purple-500 to-orange-500 items-center justify-center">
-              <Ionicons name="videocam" size={48} color="white" />
-              <Text className="text-white font-medium mt-2">Video Processing</Text>
+            <View className="w-full h-52 rounded-xl bg-[#F3E4C8] items-center justify-center">
+              <Ionicons name="videocam" size={48} color="#B87333" />
+              <Text className="text-[#B87333] font-medium mt-2">Video Processing</Text>
             </View>
           )}
           {/* Duration Badge */}
@@ -172,7 +172,7 @@ export default function VideosScreen() {
           </View>
           {/* Short Badge */}
           {video.type === 'short' && (
-            <View className="absolute top-2 left-2 bg-orange-500 px-2 py-1 rounded-full">
+            <View className="absolute top-2 left-2 bg-[#DD7A1F] px-2 py-1 rounded-full">
               <Text className="text-white text-xs font-bold">SHORT</Text>
             </View>
           )}
@@ -194,7 +194,7 @@ export default function VideosScreen() {
                 className="w-9 h-9 rounded-full bg-gray-300"
               />
             ) : (
-              <View className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 items-center justify-center">
+              <View className="w-9 h-9 rounded-full bg-[#B87333] items-center justify-center">
                 <Text className="text-white font-bold text-sm">
                   {(video.creator?.displayName || 'U')[0].toUpperCase()}
                 </Text>
@@ -244,8 +244,8 @@ export default function VideosScreen() {
               resizeMode="cover"
             />
           ) : (
-            <View className="w-full h-64 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 items-center justify-center">
-              <Ionicons name="videocam" size={32} color="white" />
+            <View className="w-full h-64 rounded-xl bg-[#F3E4C8] items-center justify-center">
+              <Ionicons name="videocam" size={32} color="#B87333" />
             </View>
           )}
           <LinearGradient
@@ -271,13 +271,13 @@ export default function VideosScreen() {
     <ScrollView
       className="flex-1"
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#f97316" />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#DD7A1F" />
       }
       showsVerticalScrollIndicator={false}
     >
       {/* Header with gradient */}
       <LinearGradient
-        colors={['#f97316', '#ea580c']}
+        colors={['#DD7A1F', '#B87333']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="px-5 pt-6 pb-4"
@@ -301,7 +301,7 @@ export default function VideosScreen() {
             >
               <Text
                 className={`text-center font-semibold capitalize ${
-                  feedType === type ? 'text-orange-600' : 'text-white'
+                  feedType === type ? 'text-[#DD7A1F]' : 'text-white'
                 }`}
               >
                 {type}
@@ -323,7 +323,7 @@ export default function VideosScreen() {
             onPress={() => setSelectedCategory(cat.id)}
             className={`mr-2 px-4 py-2 rounded-full flex-row items-center ${
               selectedCategory === cat.id
-                ? 'bg-orange-500'
+                ? 'bg-[#DD7A1F]'
                 : 'bg-gray-100 border border-gray-300'
             }`}
           >
@@ -350,12 +350,12 @@ export default function VideosScreen() {
             key={filter}
             onPress={() => setVideoFilter(filter)}
             className={`mr-3 px-4 py-2 rounded-full ${
-              videoFilter === filter ? 'bg-orange-100 border-2 border-orange-500' : 'bg-gray-100'
+              videoFilter === filter ? 'bg-[#FEF3E8] border-2 border-[#DD7A1F]' : 'bg-gray-100'
             }`}
           >
             <Text
               className={`font-semibold capitalize ${
-                videoFilter === filter ? 'text-orange-600' : 'text-gray-600'
+                videoFilter === filter ? 'text-[#DD7A1F]' : 'text-gray-600'
               }`}
             >
               {filter}
@@ -366,14 +366,14 @@ export default function VideosScreen() {
 
       {/* Shorts Section (if showing shorts or all) */}
       {(videoFilter === 'all' || videoFilter === 'shorts') && (
-        <View className="py-4 bg-gradient-to-r from-pink-50 to-orange-50">
+        <View className="py-4 bg-[#FDF8E8]">
           <View className="flex-row items-center justify-between px-5 mb-3">
             <View className="flex-row items-center">
-              <Ionicons name="flash" size={24} color="#f97316" />
+              <Ionicons name="flash" size={24} color="#DD7A1F" />
               <Text className="text-gray-900 text-xl font-bold ml-2">Shorts</Text>
             </View>
             <TouchableOpacity onPress={() => router.push('/shorts')}>
-              <Text className="text-orange-600 font-semibold">View All</Text>
+              <Text className="text-[#DD7A1F] font-semibold">View All</Text>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5">
@@ -385,7 +385,7 @@ export default function VideosScreen() {
       {/* Regular Videos */}
       {loading ? (
         <View className="py-20 items-center justify-center">
-          <ActivityIndicator size="large" color="#f97316" />
+          <ActivityIndicator size="large" color="#DD7A1F" />
           <Text className="text-gray-600 mt-3">Loading videos...</Text>
         </View>
       ) : videos.length === 0 ? (
@@ -409,13 +409,13 @@ export default function VideosScreen() {
     <ScrollView
       className="flex-1"
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#f97316" />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#B87333" />
       }
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
       <LinearGradient
-        colors={['#7c3aed', '#6d28d9']}
+        colors={['#B87333', '#4A2E1C']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="px-5 pt-6 pb-4"
@@ -432,8 +432,8 @@ export default function VideosScreen() {
           onPress={() => router.push('/videos/upload')}
           className="bg-white rounded-xl py-4 flex-row items-center justify-center"
         >
-          <Ionicons name="add-circle" size={24} color="#7c3aed" />
-          <Text className="text-purple-600 font-bold text-lg ml-2">Upload Video</Text>
+          <Ionicons name="add-circle" size={24} color="#B87333" />
+          <Text className="text-[#B87333] font-bold text-lg ml-2">Upload Video</Text>
         </TouchableOpacity>
       </LinearGradient>
 
@@ -461,20 +461,20 @@ export default function VideosScreen() {
             </Text>
           </View>
 
-          <View className="flex-1 min-w-[45%] bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
+          <View className="flex-1 min-w-[45%] bg-[#F9F0E6] p-4 rounded-xl border border-[#E5D1AF]">
             <View className="flex-row items-center justify-between mb-2">
-              <Ionicons name="videocam" size={24} color="#7c3aed" />
-              <Text className="text-purple-600 text-xs font-semibold">VIDEOS</Text>
+              <Ionicons name="videocam" size={24} color="#B87333" />
+              <Text className="text-[#B87333] text-xs font-semibold">VIDEOS</Text>
             </View>
             <Text className="text-gray-900 text-2xl font-bold">
               {myVideos.filter(v => v.type === 'video').length}
             </Text>
           </View>
 
-          <View className="flex-1 min-w-[45%] bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200">
+          <View className="flex-1 min-w-[45%] bg-[#FEF3E8] p-4 rounded-xl border border-[#F5D4B3]">
             <View className="flex-row items-center justify-between mb-2">
-              <Ionicons name="flash" size={24} color="#f97316" />
-              <Text className="text-orange-600 text-xs font-semibold">SHORTS</Text>
+              <Ionicons name="flash" size={24} color="#DD7A1F" />
+              <Text className="text-[#DD7A1F] text-xs font-semibold">SHORTS</Text>
             </View>
             <Text className="text-gray-900 text-2xl font-bold">
               {myVideos.filter(v => v.type === 'short').length}
@@ -490,12 +490,12 @@ export default function VideosScreen() {
             key={filter}
             onPress={() => setVideoFilter(filter)}
             className={`mr-3 px-4 py-2 rounded-full ${
-              videoFilter === filter ? 'bg-purple-100 border-2 border-purple-500' : 'bg-gray-100'
+              videoFilter === filter ? 'bg-[#F9F0E6] border-2 border-[#B87333]' : 'bg-gray-100'
             }`}
           >
             <Text
               className={`font-semibold capitalize ${
-                videoFilter === filter ? 'text-purple-600' : 'text-gray-600'
+                videoFilter === filter ? 'text-[#B87333]' : 'text-gray-600'
               }`}
             >
               {filter}
@@ -516,7 +516,7 @@ export default function VideosScreen() {
             </Text>
             <TouchableOpacity
               onPress={() => router.push('/videos/upload')}
-              className="mt-6 bg-purple-500 px-6 py-3 rounded-full"
+              className="mt-6 bg-[#B87333] px-6 py-3 rounded-full"
             >
               <Text className="text-white font-semibold">Upload Your First Video</Text>
             </TouchableOpacity>
@@ -535,9 +535,8 @@ export default function VideosScreen() {
         <View className="flex-row p-2 mx-5 my-3 bg-gray-100 rounded-full">
           <TouchableOpacity
             onPress={() => setActiveTab('discover')}
-            className={`flex-1 py-3 rounded-full flex-row items-center justify-center ${
-              activeTab === 'discover' ? 'bg-orange-500' : 'bg-transparent'
-            }`}
+            className={`flex-1 py-3 rounded-full flex-row items-center justify-center`}
+            style={activeTab === 'discover' ? { backgroundColor: '#DD7A1F' } : undefined}
           >
             <Ionicons
               name="compass"
@@ -555,9 +554,8 @@ export default function VideosScreen() {
 
           <TouchableOpacity
             onPress={() => setActiveTab('studio')}
-            className={`flex-1 py-3 rounded-full flex-row items-center justify-center ${
-              activeTab === 'studio' ? 'bg-purple-500' : 'bg-transparent'
-            }`}
+            className={`flex-1 py-3 rounded-full flex-row items-center justify-center`}
+            style={activeTab === 'studio' ? { backgroundColor: '#B87333' } : undefined}
           >
             <Ionicons
               name="create"

@@ -73,7 +73,7 @@ export default function ContinueLearning() {
   const getActivityIcon = (type: string) => {
     if (type === 'lesson') return { icon: 'book', color: '#3b82f6', bg: 'bg-blue-50' };
     if (type === 'quiz') return { icon: 'help-circle', color: '#22c55e', bg: 'bg-green-50' };
-    if (type === 'practice') return { icon: 'musical-notes', color: '#8b5cf6', bg: 'bg-purple-50' };
+    if (type === 'practice') return { icon: 'musical-notes', color: '#a0704a', bg: 'bg-sandalwood-50' };
     return { icon: 'checkmark-circle', color: '#6b7280', bg: 'bg-gray-50' };
   };
   
@@ -105,7 +105,7 @@ export default function ContinueLearning() {
         }}
       >
         {/* Course Header */}
-        <View className="bg-[#855332] p-4">
+        <View className="bg-[#4A2E1C] p-4">
           <View className="flex-row items-center">
             <View className="w-14 h-14 bg-white/20 rounded-xl items-center justify-center mr-4">
               <Text className="text-3xl">{progress.currentCourse.thumbnail}</Text>
@@ -115,7 +115,7 @@ export default function ContinueLearning() {
               <Text className="text-white/80 text-sm">{progress.currentCourse.subtitle}</Text>
             </View>
             <View className="bg-white px-3 py-1.5 rounded-full">
-              <Text className="text-[#855332] font-bold text-sm">{progress.currentCourse.progress}%</Text>
+              <Text className="text-[#4A2E1C] font-bold text-sm">{progress.currentCourse.progress}%</Text>
             </View>
           </View>
         </View>
@@ -129,10 +129,10 @@ export default function ContinueLearning() {
             <Text className="text-gray-400 text-xs">{progress.currentCourse.estimatedTimeLeft} left</Text>
           </View>
           <View className="bg-gray-100 h-2 rounded-full overflow-hidden mb-4">
-            <View className="bg-[#855332] h-full rounded-full" style={{ width: `${progress.currentCourse.progress}%` }} />
+            <View className="bg-[#4A2E1C] h-full rounded-full" style={{ width: `${progress.currentCourse.progress}%` }} />
           </View>
 
-          <TouchableOpacity className="bg-[#855332] rounded-xl py-3.5 flex-row items-center justify-center" activeOpacity={0.8}>
+          <TouchableOpacity className="bg-[#4A2E1C] rounded-xl py-3.5 flex-row items-center justify-center" activeOpacity={0.8}>
             <Ionicons name="play-circle" size={22} color="white" />
             <Text className="text-white font-bold text-base ml-2">Resume Course</Text>
           </TouchableOpacity>
@@ -175,7 +175,7 @@ export default function ContinueLearning() {
             {progress.dailyGoal.completed}/{progress.dailyGoal.target}m
           </Text>
           <View className="bg-gray-100 h-1.5 rounded-full overflow-hidden">
-            <View className="bg-[#855332] h-full rounded-full" style={{ width: `${dailyGoalProgress}%` }} />
+            <View className="bg-[#4A2E1C] h-full rounded-full" style={{ width: `${dailyGoalProgress}%` }} />
           </View>
         </View>
       </View>
@@ -187,7 +187,7 @@ export default function ContinueLearning() {
           {[
             { icon: 'book-outline', value: progress.weeklyStats.lessonsCompleted, label: 'Lessons', color: '#3b82f6' },
             { icon: 'checkbox-outline', value: progress.weeklyStats.quizzesPassed, label: 'Quizzes', color: '#22c55e' },
-            { icon: 'time-outline', value: `${progress.weeklyStats.practiceTime}m`, label: 'Practice', color: '#8b5cf6' },
+            { icon: 'time-outline', value: `${progress.weeklyStats.practiceTime}m`, label: 'Practice', color: '#a0704a' },
             { icon: 'analytics-outline', value: `${progress.weeklyStats.accuracy}%`, label: 'Accuracy', color: '#f59e0b' },
           ].map((stat, idx) => (
             <View key={idx} className="flex-1 items-center">

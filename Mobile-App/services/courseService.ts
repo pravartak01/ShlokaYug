@@ -83,9 +83,17 @@ const courseService = {
     return response.data;
   },
 
-  // Get user's enrolled courses
+  // Get user's enrolled courses (with cache-busting to always get fresh data)
   getEnrolledCourses: async () => {
-    const response = await apiClient.get('/enrollments/my-courses');
+    const response = await apiClient.get('/enrollments/my-courses', {
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      },
+      params: {
+        _t: Date.now(), // Cache-busting parameter
+      },
+    });
     return response.data;
   },
 

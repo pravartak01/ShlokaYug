@@ -54,8 +54,8 @@ export default function LiveEvents() {
           <Text className="text-gray-900 text-lg font-bold">Live & Upcoming</Text>
         </View>
         <TouchableOpacity className="flex-row items-center">
-          <Text className="text-[#855332] text-sm font-semibold mr-1">All Sessions</Text>
-          <Ionicons name="chevron-forward" size={14} color="#855332" />
+          <Text className="text-[#D4A017] text-sm font-semibold mr-1">All Sessions</Text>
+          <Ionicons name="chevron-forward" size={14} color="#D4A017" />
         </TouchableOpacity>
       </View>
 
@@ -126,8 +126,8 @@ export default function LiveEvents() {
               }}
             >
               <View className="flex-row items-center justify-between mb-3">
-                <View className="bg-[#F5EDE8] px-2.5 py-1 rounded-full">
-                  <Text className="text-[#855332] text-xs font-bold">{session.startsIn}</Text>
+                <View className="bg-[#FEF3E8] px-2.5 py-1 rounded-full">
+                  <Text className="text-[#DD7A1F] text-xs font-bold">{session.startsIn}</Text>
                 </View>
                 <Ionicons name="notifications-outline" size={18} color="#9ca3af" />
               </View>

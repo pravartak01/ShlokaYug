@@ -9,7 +9,6 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 interface ShlokaAnalysisModalProps {
@@ -250,11 +249,9 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
       <SafeAreaView className="flex-1 bg-ancient-50">
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           {/* Modal Header */}
-          <LinearGradient
-            colors={['#f97316', '#ea580c', '#c2410c']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+          <View 
             className="px-6 pt-4 pb-6"
+            style={{ backgroundColor: '#DD7A1F' }}
           >
             <View className="flex-row items-center justify-between mb-4">
               <Text className="text-white text-2xl font-bold">ShlokaYug Analyzer</Text>
@@ -268,7 +265,7 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
             <Text className="text-white/90 text-base">
               Enter a Sanskrit shloka to get detailed chandas analysis
             </Text>
-          </LinearGradient>
+          </View>
 
           {/* Input Section */}
           <View className="px-6 mt-6">
@@ -291,30 +288,15 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
             <TouchableOpacity
               onPress={() => analyzeShloka(inputShloka)}
               disabled={isAnalyzing || !inputShloka.trim()}
-              className={`mt-4 rounded-2xl ${
-                isAnalyzing || !inputShloka.trim() 
-                  ? 'bg-ancient-300' 
-                  : 'bg-saffron-500'
-              }`}
+              className={`mt-4 rounded-2xl p-4 flex-row items-center justify-center`}
+              style={{ backgroundColor: isAnalyzing || !inputShloka.trim() ? '#d4d4aa' : '#DD7A1F' }}
             >
-              <LinearGradient
-                colors={isAnalyzing || !inputShloka.trim() 
-                  ? ['#d4d4aa', '#d4d4aa'] 
-                  : ['#f97316', '#ea580c']
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="p-4 rounded-2xl"
-              >
-                <View className="flex-row items-center justify-center">
-                  {isAnalyzing && (
-                    <Ionicons name="refresh" size={20} color="white" className="mr-2" />
-                  )}
-                  <Text className="text-white font-semibold text-lg">
-                    {isAnalyzing ? 'Analyzing...' : 'Analyze Shloka'}
-                  </Text>
-                </View>
-              </LinearGradient>
+              {isAnalyzing && (
+                <Ionicons name="refresh" size={20} color="white" style={{ marginRight: 8 }} />
+              )}
+              <Text className="text-white font-semibold text-lg">
+                {isAnalyzing ? 'Analyzing...' : 'Analyze Shloka'}
+              </Text>
             </TouchableOpacity>
 
             {/* Demo Examples Section */}
@@ -338,7 +320,7 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
                 >
                   <View className="flex-row items-start">
                     <View className="flex-1">
-                      <Text className="text-saffron-600 font-semibold text-base mb-1">
+                      <Text className="text-[#D4A017] font-semibold text-base mb-1">
                         {demo.title}
                       </Text>
                       <Text className="text-ancient-600 text-sm mb-2 leading-5">
@@ -348,7 +330,7 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
                         {demo.text}
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color="#f97316" className="ml-2 mt-1" />
+                    <Ionicons name="chevron-forward" size={20} color="#D4A017" className="ml-2 mt-1" />
                   </View>
                 </TouchableOpacity>
               ))}
@@ -363,8 +345,8 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
               {/* Chandas Information */}
               <View className="bg-white p-6 rounded-2xl shadow-sm border border-ancient-200 mb-4">
                 <View className="flex-row items-center mb-4">
-                  <Ionicons name="musical-note" size={24} color="#f97316" />
-                  <Text className="text-saffron-600 text-lg font-bold ml-2">
+                  <Ionicons name="musical-note" size={24} color="#B87333" />
+                  <Text className="text-[#B87333] text-lg font-bold ml-2">
                     Chandas Pattern
                   </Text>
                 </View>
@@ -384,8 +366,8 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
               {/* Syllable Count */}
               <View className="bg-white p-6 rounded-2xl shadow-sm border border-ancient-200 mb-4">
                 <View className="flex-row items-center mb-4">
-                  <Ionicons name="list" size={24} color="#f97316" />
-                  <Text className="text-saffron-600 text-lg font-bold ml-2">
+                  <Ionicons name="list" size={24} color="#D4A017" />
+                  <Text className="text-[#D4A017] text-lg font-bold ml-2">
                     Syllable Analysis
                   </Text>
                 </View>
@@ -408,7 +390,7 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
                 <View className="border-t border-ancient-200 pt-3 mt-3">
                   <View className="flex-row justify-between">
                     <Text className="text-ancient-800 font-bold">Total:</Text>
-                    <Text className="text-saffron-600 font-bold text-lg">{analysisResult.syllableCount.total} syllables</Text>
+                    <Text className="text-[#D4A017] font-bold text-lg">{analysisResult.syllableCount.total} syllables</Text>
                   </View>
                 </View>
               </View>
@@ -416,8 +398,8 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
               {/* Metrics */}
               <View className="bg-white p-6 rounded-2xl shadow-sm border border-ancient-200 mb-4">
                 <View className="flex-row items-center mb-4">
-                  <Ionicons name="speedometer" size={24} color="#f97316" />
-                  <Text className="text-saffron-600 text-lg font-bold ml-2">
+                  <Ionicons name="speedometer" size={24} color="#DD7A1F" />
+                  <Text className="text-[#DD7A1F] text-lg font-bold ml-2">
                     Quality Metrics
                   </Text>
                 </View>
@@ -444,8 +426,8 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
               {/* Meaning Analysis */}
               <View className="bg-white p-6 rounded-2xl shadow-sm border border-ancient-200 mb-4">
                 <View className="flex-row items-center mb-4">
-                  <Ionicons name="book" size={24} color="#f97316" />
-                  <Text className="text-saffron-600 text-lg font-bold ml-2">
+                  <Ionicons name="book" size={24} color="#B87333" />
+                  <Text className="text-[#B87333] text-lg font-bold ml-2">
                     Meaning & Context
                   </Text>
                 </View>
@@ -466,14 +448,14 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
               {/* Recommendations */}
               <View className="bg-white p-6 rounded-2xl shadow-sm border border-ancient-200">
                 <View className="flex-row items-center mb-4">
-                  <Ionicons name="bulb" size={24} color="#f97316" />
-                  <Text className="text-saffron-600 text-lg font-bold ml-2">
+                  <Ionicons name="bulb" size={24} color="#D4A017" />
+                  <Text className="text-[#D4A017] text-lg font-bold ml-2">
                     Learning Tips
                   </Text>
                 </View>
                 {analysisResult.recommendations.map((tip: string, index: number) => (
                   <View key={index} className="flex-row items-start mb-3">
-                    <View className="w-2 h-2 bg-saffron-500 rounded-full mt-2 mr-3" />
+                    <View className="w-2 h-2 bg-[#B87333] rounded-full mt-2 mr-3" />
                     <Text className="text-ancient-600 leading-6 flex-1">{tip}</Text>
                   </View>
                 ))}

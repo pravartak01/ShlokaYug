@@ -7,6 +7,9 @@ import GuruDashboard from './pages/dashboard/GuruDashboard';
 import MyCourses from './pages/courses/MyCourses';
 import CreateCourse from './pages/courses/CreateCourse';
 import EditCourse from './pages/courses/EditCourse';
+import CourseManagement from './pages/courses/CourseManagement';
+import CoursePreview from './pages/courses/CoursePreview';
+import StudentsPage from './pages/students/StudentsPage';
 import './styles/vintage.css';
 
 // Protected Route wrapper
@@ -64,6 +67,23 @@ const App = () => {
           <Route path="/courses/:id/edit" element={
             <ProtectedRoute>
               <EditCourse />
+            </ProtectedRoute>
+          } />
+          <Route path="/courses/:id/manage" element={
+            <ProtectedRoute>
+              <CourseManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/courses/:id/preview" element={
+            <ProtectedRoute>
+              <CoursePreview />
+            </ProtectedRoute>
+          } />
+          
+          {/* Students Route */}
+          <Route path="/students" element={
+            <ProtectedRoute>
+              <StudentsPage />
             </ProtectedRoute>
           } />
           

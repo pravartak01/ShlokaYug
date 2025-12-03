@@ -55,7 +55,7 @@ const triggerAutoEnrollment = async (paymentTransaction) => {
         grantedAt: new Date()
       },
       analytics: {
-        enrollmentSource: 'payment'
+        enrollmentSource: 'mobile_app'
       }
     });
 
@@ -227,9 +227,13 @@ const verifyPaymentSignature = async (req, res) => {
       courseId // Extract courseId from request
     } = req.body;
 
+    // Get userId from authenticated request
+    const userId = req.user?.id;
+    
     console.log('🔐 Verifying payment for course:', courseId);
     console.log('🔐 Order ID:', razorpay_order_id);
     console.log('🔐 Payment ID:', razorpay_payment_id);
+    console.log('🔐 User ID:', userId);
 
     // Generate expected signature
     const expectedSignature = crypto
@@ -248,6 +252,11 @@ const verifyPaymentSignature = async (req, res) => {
         }
       });
     }
+
+    console.log('✅ Payment signature verified successfully');
+
+    // Track if enrollment was created
+    let enrollmentCreated = false;
 
     // Update transaction status on successful verification
     if (global.testTransactions && global.testTransactions.has(razorpay_order_id)) {
@@ -281,6 +290,7 @@ const verifyPaymentSignature = async (req, res) => {
           
           // Trigger auto-enrollment after successful payment
           await triggerAutoEnrollment(paymentTransaction);
+          enrollmentCreated = true;
         } else {
           // Find by transactionId for PaymentTransactionSimple
           paymentTransaction = await PaymentTransaction.findOne({
@@ -314,6 +324,7 @@ const verifyPaymentSignature = async (req, res) => {
             try {
               await triggerAutoEnrollment(paymentTransaction);
               console.log('✅ Auto-enrollment triggered for transaction:', paymentTransaction.transactionId);
+              enrollmentCreated = true;
             } catch (enrollmentError) {
               console.warn('❌ Auto-enrollment failed:', enrollmentError.message);
               console.error('❌ Stack:', enrollmentError.stack);
@@ -329,13 +340,66 @@ const verifyPaymentSignature = async (req, res) => {
       }
     }
 
+    // FALLBACK: If enrollment wasn't created but we have userId and courseId, create it directly
+    if (!enrollmentCreated && userId && courseId) {
+      console.log('🔄 Creating fallback enrollment for user:', userId, 'course:', courseId);
+      try {
+        const Enrollment = require('../models/Enrollment');
+        const Course = require('../models/Course');
+        
+        // Check if enrollment already exists
+        const existingEnrollment = await Enrollment.findOne({ userId, courseId });
+        if (existingEnrollment) {
+          console.log('✅ Enrollment already exists:', existingEnrollment._id);
+          enrollmentCreated = true;
+        } else {
+          // Get course details
+          const course = await Course.findById(courseId);
+          if (course) {
+            const newEnrollment = new Enrollment({
+              userId: userId,
+              courseId: courseId,
+              guruId: course.instructor?.userId || course.instructor,
+              enrollmentType: 'one_time_purchase',
+              payment: {
+                paymentId: razorpay_payment_id,
+                razorpayOrderId: razorpay_order_id,
+                razorpayPaymentId: razorpay_payment_id,
+                razorpaySignature: razorpay_signature,
+                amount: course.pricing?.oneTime?.amount || 0,
+                currency: 'INR',
+                status: 'completed',
+                paidAt: new Date()
+              },
+              access: {
+                status: 'active',
+                grantedAt: new Date()
+              },
+              analytics: {
+                enrollmentSource: 'mobile_app'
+              }
+            });
+            
+            await newEnrollment.save();
+            console.log('✅ Fallback enrollment created successfully:', newEnrollment._id);
+            enrollmentCreated = true;
+          } else {
+            console.error('❌ Course not found for fallback enrollment:', courseId);
+          }
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback enrollment creation failed:', fallbackError.message);
+      }
+    }
+
     res.status(200).json({
       success: true,
       message: 'Payment signature verified successfully',
       data: {
         verified: true,
         orderId: razorpay_order_id,
-        paymentId: razorpay_payment_id
+        paymentId: razorpay_payment_id,
+        enrollmentCreated: enrollmentCreated
       }
     });
 

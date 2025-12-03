@@ -19,7 +19,7 @@ export default function ShlokaCard({ shloka, onPress, compact = false }: ShlokaC
       case 'advanced':
         return '#ef4444';
       case 'expert':
-        return '#8b5cf6';
+        return '#a0704a';
       default:
         return '#6b7280';
     }

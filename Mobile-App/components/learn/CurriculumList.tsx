@@ -115,9 +115,8 @@ export default function CurriculumList({
                             <TouchableOpacity
                               key={lectureIndex}
                               onPress={() => onSelectLecture(unitIndex, lessonIndex, lectureIndex)}
-                              className={`p-3 rounded-lg mb-2 flex-row items-center ${
-                                current ? 'bg-orange-600' : 'bg-gray-700'
-                              }`}
+                              className={`p-3 rounded-lg mb-2 flex-row items-center ${!current && 'bg-gray-700'}`}
+                              style={current ? { backgroundColor: '#DD7A1F' } : undefined}
                             >
                               {/* Completion Icon */}
                               <View className="mr-3">

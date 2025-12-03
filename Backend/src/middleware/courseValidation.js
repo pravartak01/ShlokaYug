@@ -9,127 +9,39 @@ const { body, param, query } = require('express-validator');
 // COURSE CREATION & UPDATE VALIDATIONS
 // ============================================================================
 
+// Simplified validation - minimal checks for development
 const createCourseValidation = [
   body('title')
     .trim()
     .notEmpty()
-    .withMessage('Course title is required')
-    .isLength({ min: 10, max: 200 })
-    .withMessage('Title must be between 10 and 200 characters'),
+    .withMessage('Course title is required'),
 
   body('description')
     .trim()
     .notEmpty()
-    .withMessage('Course description is required')
-    .isLength({ min: 50, max: 5000 })
-    .withMessage('Description must be between 50 and 5000 characters'),
-
-  body('shortDescription')
-    .optional()
-    .trim()
-    .isLength({ max: 300 })
-    .withMessage('Short description cannot exceed 300 characters'),
+    .withMessage('Course description is required'),
 
   body('category')
     .notEmpty()
-    .withMessage('Category is required')
-    .isIn([
-      'vedic_chanting',
-      'sanskrit_language',
-      'philosophy',
-      'rituals_ceremonies',
-      'yoga_meditation',
-      'ayurveda',
-      'music_arts',
-      'scriptures',
-      'other',
-    ])
-    .withMessage('Invalid category'),
-
-  body('subCategory')
-    .optional()
-    .isLength({ max: 100 })
-    .withMessage('Sub-category cannot exceed 100 characters'),
+    .withMessage('Category is required'),
 
   body('level')
     .notEmpty()
-    .withMessage('Course level is required')
-    .isIn(['beginner', 'intermediate', 'advanced', 'expert'])
-    .withMessage('Invalid level'),
+    .withMessage('Course level is required'),
 
   body('language')
     .notEmpty()
-    .withMessage('Language is required')
-    .isIn(['hindi', 'english', 'sanskrit', 'mixed'])
-    .withMessage('Invalid language'),
+    .withMessage('Language is required'),
 
-  body('duration.hours')
-    .optional()
-    .isInt({ min: 0, max: 1000 })
-    .withMessage('Duration hours must be between 0 and 1000'),
-
-  body('duration.minutes')
-    .optional()
-    .isInt({ min: 0, max: 59 })
-    .withMessage('Duration minutes must be between 0 and 59'),
-
-  body('pricing.type')
-    .notEmpty()
-    .withMessage('Pricing type is required')
-    .isIn(['free', 'one_time', 'subscription'])
-    .withMessage('Invalid pricing type'),
-
-  body('pricing.amount')
-    .if(body('pricing.type').not().equals('free'))
-    .notEmpty()
-    .withMessage('Amount is required for paid courses')
-    .isFloat({ min: 1, max: 100000 })
-    .withMessage('Amount must be between ₹1 and ₹100,000'),
-
-  body('pricing.currency').optional().isIn(['INR', 'USD']).withMessage('Invalid currency'),
-
-  body('pricing.subscriptionPeriod')
-    .if(body('pricing.type').equals('subscription'))
-    .notEmpty()
-    .withMessage('Subscription period is required for subscription courses')
-    .isIn(['monthly', 'quarterly', 'yearly'])
-    .withMessage('Invalid subscription period'),
-
-  body('tags').optional().isArray({ max: 10 }).withMessage('Maximum 10 tags allowed'),
-
-  body('tags.*')
-    .optional()
-    .trim()
-    .isLength({ min: 2, max: 30 })
-    .withMessage('Each tag must be between 2 and 30 characters'),
-
-  body('learningObjectives')
-    .optional()
-    .isArray({ max: 20 })
-    .withMessage('Maximum 20 learning objectives allowed'),
-
-  body('learningObjectives.*')
-    .optional()
-    .trim()
-    .isLength({ min: 10, max: 500 })
-    .withMessage('Each learning objective must be between 10 and 500 characters'),
-
-  body('prerequisites')
-    .optional()
-    .isArray({ max: 10 })
-    .withMessage('Maximum 10 prerequisites allowed'),
-
-  body('prerequisites.*')
-    .optional()
-    .trim()
-    .isLength({ min: 5, max: 200 })
-    .withMessage('Each prerequisite must be between 5 and 200 characters'),
-
-  body('targetAudience')
-    .optional()
-    .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Target audience description cannot exceed 1000 characters'),
+  // All other fields are optional with no strict validation
+  body('shortDescription').optional(),
+  body('subCategory').optional(),
+  body('duration').optional(),
+  body('pricing').optional(),
+  body('tags').optional(),
+  body('learningObjectives').optional(),
+  body('prerequisites').optional(),
+  body('targetAudience').optional(),
 ];
 
 const updateCourseValidation = [

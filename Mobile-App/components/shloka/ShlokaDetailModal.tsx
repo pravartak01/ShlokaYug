@@ -82,7 +82,7 @@ export default function ShlokaDetailModal({
       case 'beginner': return '#22c55e';
       case 'intermediate': return '#f59e0b';
       case 'advanced': return '#ef4444';
-      case 'expert': return '#8b5cf6';
+      case 'expert': return '#a0704a';
       default: return '#6b7280';
     }
   };

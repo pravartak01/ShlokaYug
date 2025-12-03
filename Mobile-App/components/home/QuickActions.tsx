@@ -65,13 +65,14 @@ const quickActionsData: QuickAction[] = [
 
 const CARD_WIDTH = 120; // Uniform card width
 
+// Brighter color scheme with Gold/Saffron/Copper highlights and vintage brown theme
 const actionStyles: { [key: string]: { bg: string; iconBg: string; icon: string; border: string } } = {
-  heal: { bg: 'bg-[#F5EDE8]', iconBg: 'bg-[#855332]', icon: '#ffffff', border: 'border-[#E8D9CF]' },
-  analyze: { bg: 'bg-slate-50', iconBg: 'bg-slate-800', icon: '#ffffff', border: 'border-slate-100' },
-  karaoke: { bg: 'bg-purple-50', iconBg: 'bg-purple-500', icon: '#ffffff', border: 'border-purple-100' },
-  speech: { bg: 'bg-blue-50', iconBg: 'bg-blue-500', icon: '#ffffff', border: 'border-blue-100' },
-  'ai-tools': { bg: 'bg-emerald-50', iconBg: 'bg-emerald-500', icon: '#ffffff', border: 'border-emerald-100' },
-  games: { bg: 'bg-orange-50', iconBg: 'bg-orange-500', icon: '#ffffff', border: 'border-orange-100' },
+  heal: { bg: 'bg-[#FEF3E8]', iconBg: 'bg-[#DD7A1F]', icon: '#ffffff', border: 'border-[#FCDFC2]' }, // Saffron - key feature
+  analyze: { bg: 'bg-[#F3E4C8]', iconBg: 'bg-[#4A2E1C]', icon: '#ffffff', border: 'border-[#E5D1AF]' }, // Vintage brown
+  karaoke: { bg: 'bg-[#F9F0E6]', iconBg: 'bg-[#B87333]', icon: '#ffffff', border: 'border-[#E8D5C4]' }, // Copper
+  speech: { bg: 'bg-[#FDF8E8]', iconBg: 'bg-[#D4A017]', icon: '#ffffff', border: 'border-[#F0E4C0]' }, // Gold
+  'ai-tools': { bg: 'bg-emerald-50', iconBg: 'bg-emerald-500', icon: '#ffffff', border: 'border-emerald-100' }, // Keep green for AI
+  games: { bg: 'bg-red-50', iconBg: 'bg-red-500', icon: '#ffffff', border: 'border-red-100' }, // Bright red for games
 };
 
 // Animated card component for subtle entrance animation
@@ -129,7 +130,7 @@ const AnimatedCard = ({ action, index, onPress }: { action: QuickAction; index: 
                 action.badge === 'AI' ? 'bg-blue-500' : 'bg-emerald-500'
               }`}
             >
-              <Text className="text-white text-[8px] font-bold">
+              <Text className="text-white text-[8px] font-poppins-bold">
                 {action.badge}
               </Text>
             </View>
@@ -142,7 +143,7 @@ const AnimatedCard = ({ action, index, onPress }: { action: QuickAction; index: 
           
           {/* Title */}
           <Text 
-            className="font-semibold text-xs text-gray-900 mb-0.5" 
+            className="font-poppins-semibold text-xs text-gray-900 mb-0.5" 
             numberOfLines={2}
           >
             {action.title}
@@ -150,7 +151,7 @@ const AnimatedCard = ({ action, index, onPress }: { action: QuickAction; index: 
           
           {/* Subtitle */}
           <Text 
-            className="text-[10px] text-gray-500" 
+            className="text-[10px] text-gray-500 font-poppins" 
             numberOfLines={1}
           >
             {action.subtitle}
@@ -179,12 +180,12 @@ export default function QuickActions({ onAnalyze, onHeal, onKaraoke, onSpeech, o
       {/* Section Header */}
       <View className="px-5 mb-4 flex-row items-center justify-between">
         <View>
-          <Text className="text-gray-900 text-lg font-bold">Quick Actions</Text>
-          <Text className="text-gray-500 text-sm mt-0.5">Explore our core features</Text>
+          <Text className="text-gray-900 text-lg font-playfair-bold">Quick Actions</Text>
+          <Text className="text-gray-500 text-sm mt-0.5 font-poppins">Explore our core features</Text>
         </View>
         <View className="flex-row items-center bg-gray-50 px-3 py-1.5 rounded-full">
           <Ionicons name="grid-outline" size={12} color="#6b7280" />
-          <Text className="text-gray-600 text-xs font-medium ml-1.5">{quickActionsData.length} tools</Text>
+          <Text className="text-gray-600 text-xs font-poppins-medium ml-1.5">{quickActionsData.length} tools</Text>
         </View>
       </View>
 

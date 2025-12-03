@@ -453,4 +453,370 @@ router.patch('/update-password',
   guruAuthController.updatePassword
 );
 
+/**
+ * @swagger
+ * /api/v1/guru/dashboard-stats:
+ *   get:
+ *     summary: Get guru dashboard statistics
+ *     tags: [Guru Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard stats retrieved successfully
+ */
+router.get('/dashboard-stats', guruAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const Course = require('../models/Course');
+    const Enrollment = require('../models/Enrollment');
+    
+    // Get all courses by this guru (excluding deleted)
+    const courses = await Course.find({ 
+      'instructor.userId': userId,
+      isDeleted: { $ne: true }
+    });
+    const courseIds = courses.map(c => c._id);
+    
+    // Get all enrollments for these courses
+    const enrollments = await Enrollment.find({ courseId: { $in: courseIds } })
+      .populate('userId', 'profile email')
+      .populate('courseId', 'title thumbnail');
+    
+    // Calculate stats
+    const totalCourses = courses.length;
+    const publishedCourses = courses.filter(c => c.isPublished).length;
+    const totalStudents = enrollments.length;
+    const uniqueStudents = [...new Set(enrollments.map(e => e.userId?._id?.toString()))].length;
+    const activeStudents = enrollments.filter(e => e.access?.status === 'active').length;
+    const completedStudents = enrollments.filter(e => e.progress?.isCompleted).length;
+    
+    // Revenue calculations
+    const totalRevenue = enrollments.reduce((acc, e) => {
+      if (e.payment?.status === 'completed') {
+        return acc + (e.payment.amount || 0);
+      }
+      return acc;
+    }, 0);
+    
+    // This month's revenue
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    
+    const thisMonthRevenue = enrollments.reduce((acc, e) => {
+      if (e.payment?.status === 'completed' && new Date(e.payment.paidAt) >= startOfMonth) {
+        return acc + (e.payment.amount || 0);
+      }
+      return acc;
+    }, 0);
+    
+    // This month's enrollments
+    const thisMonthEnrollments = enrollments.filter(e => new Date(e.createdAt) >= startOfMonth).length;
+    
+    // Average completion rate
+    const avgCompletionRate = enrollments.length > 0
+      ? Math.round(enrollments.reduce((acc, e) => acc + (e.progress?.completionPercentage || 0), 0) / enrollments.length)
+      : 0;
+    
+    // Average rating across all courses
+    const avgRating = courses.length > 0
+      ? courses.reduce((acc, c) => acc + (c.analytics?.ratings?.average || 0), 0) / courses.length
+      : 0;
+    
+    const totalRatings = courses.reduce((acc, c) => acc + (c.analytics?.ratings?.count || 0), 0);
+    
+    // Recent enrollments (last 10)
+    const recentEnrollments = enrollments
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10)
+      .map(e => ({
+        _id: e._id,
+        student: {
+          name: `${e.userId?.profile?.firstName || ''} ${e.userId?.profile?.lastName || ''}`.trim() || 'Unknown',
+          email: e.userId?.email,
+          avatar: e.userId?.profile?.firstName?.[0] || 'S'
+        },
+        course: {
+          _id: e.courseId?._id,
+          title: e.courseId?.title || 'Unknown Course'
+        },
+        enrolledAt: e.createdAt,
+        payment: {
+          amount: e.payment?.amount || 0,
+          status: e.payment?.status
+        },
+        progress: e.progress?.completionPercentage || 0
+      }));
+    
+    // Course performance
+    const coursePerformance = courses.map(course => {
+      const courseEnrollments = enrollments.filter(e => e.courseId?._id?.toString() === course._id.toString());
+      return {
+        _id: course._id,
+        title: course.title,
+        thumbnail: course.thumbnail,
+        isPublished: course.isPublished,
+        enrollmentCount: courseEnrollments.length,
+        revenue: courseEnrollments.reduce((acc, e) => acc + (e.payment?.amount || 0), 0),
+        avgProgress: courseEnrollments.length > 0
+          ? Math.round(courseEnrollments.reduce((acc, e) => acc + (e.progress?.completionPercentage || 0), 0) / courseEnrollments.length)
+          : 0,
+        rating: course.analytics?.ratings?.average || 0,
+        completedCount: courseEnrollments.filter(e => e.progress?.isCompleted).length
+      };
+    }).sort((a, b) => b.enrollmentCount - a.enrollmentCount);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        overview: {
+          totalCourses,
+          publishedCourses,
+          draftCourses: totalCourses - publishedCourses,
+          totalStudents,
+          uniqueStudents,
+          activeStudents,
+          completedStudents,
+          totalRevenue,
+          thisMonthRevenue,
+          thisMonthEnrollments,
+          avgCompletionRate,
+          avgRating: parseFloat(avgRating.toFixed(1)),
+          totalRatings,
+          platformFee: totalRevenue * 0.2,
+          netEarnings: totalRevenue * 0.8
+        },
+        recentEnrollments,
+        coursePerformance
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get dashboard stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching dashboard stats',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/v1/guru/students:
+ *   get:
+ *     summary: Get all students enrolled in guru's courses
+ *     tags: [Guru Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Students retrieved successfully
+ */
+router.get('/students', guruAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { page = 1, limit = 20, search, courseId, status, progress } = req.query;
+    
+    const Course = require('../models/Course');
+    const Enrollment = require('../models/Enrollment');
+    
+    // Get all course IDs by this guru
+    const courses = await Course.find({ 'instructor.userId': userId }).select('_id title');
+    const courseIds = courses.map(c => c._id);
+    
+    // Build filter
+    const filter = { courseId: { $in: courseIds } };
+    if (courseId) filter.courseId = courseId;
+    if (status) filter['access.status'] = status;
+    
+    // Get enrollments with pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    let enrollmentsQuery = Enrollment.find(filter)
+      .populate('userId', 'profile email username createdAt')
+      .populate('courseId', 'title thumbnail')
+      .sort({ createdAt: -1 });
+    
+    const totalCount = await Enrollment.countDocuments(filter);
+    const enrollments = await enrollmentsQuery.skip(skip).limit(parseInt(limit));
+    
+    // Format students data
+    const students = enrollments.map(e => ({
+      _id: e._id,
+      enrollmentId: e._id,
+      student: {
+        _id: e.userId?._id,
+        name: `${e.userId?.profile?.firstName || ''} ${e.userId?.profile?.lastName || ''}`.trim() || 'Unknown',
+        email: e.userId?.email,
+        username: e.userId?.username,
+        avatar: e.userId?.profile?.firstName?.[0] || 'S',
+        joinedAt: e.userId?.createdAt
+      },
+      course: {
+        _id: e.courseId?._id,
+        title: e.courseId?.title,
+        thumbnail: e.courseId?.thumbnail
+      },
+      enrollment: {
+        type: e.enrollmentType,
+        status: e.access?.status,
+        enrolledAt: e.createdAt,
+        lastAccess: e.access?.lastAccessedAt || e.analytics?.lastActivityDate
+      },
+      payment: {
+        amount: e.payment?.amount || 0,
+        status: e.payment?.status,
+        paidAt: e.payment?.paidAt
+      },
+      progress: {
+        percentage: e.progress?.completionPercentage || 0,
+        lecturesCompleted: e.progress?.lecturesCompleted?.length || 0,
+        isCompleted: e.progress?.isCompleted || false,
+        completedAt: e.progress?.completedAt,
+        totalWatchTime: e.progress?.totalWatchTime || 0
+      }
+    }));
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        students,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalCount / parseInt(limit)),
+          totalStudents: totalCount,
+          hasMore: skip + enrollments.length < totalCount
+        },
+        courses: courses.map(c => ({ _id: c._id, title: c.title }))
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get students error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching students',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/v1/guru/revenue:
+ *   get:
+ *     summary: Get guru revenue analytics
+ *     tags: [Guru Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Revenue data retrieved successfully
+ */
+router.get('/revenue', guruAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { period = 'month' } = req.query;
+    
+    const Course = require('../models/Course');
+    const Enrollment = require('../models/Enrollment');
+    
+    // Get all course IDs by this guru
+    const courses = await Course.find({ 'instructor.userId': userId }).select('_id title');
+    const courseIds = courses.map(c => c._id);
+    
+    // Get completed enrollments
+    const enrollments = await Enrollment.find({
+      courseId: { $in: courseIds },
+      'payment.status': 'completed'
+    }).populate('courseId', 'title');
+    
+    // Calculate period start date
+    const now = new Date();
+    let startDate;
+    switch (period) {
+      case 'week':
+        startDate = new Date(now.setDate(now.getDate() - 7));
+        break;
+      case 'month':
+        startDate = new Date(now.setMonth(now.getMonth() - 1));
+        break;
+      case 'year':
+        startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+        break;
+      case 'all':
+      default:
+        startDate = new Date(0);
+    }
+    
+    // Filter by period
+    const periodEnrollments = enrollments.filter(e => 
+      new Date(e.payment?.paidAt || e.createdAt) >= startDate
+    );
+    
+    // Group by day/week/month depending on period
+    const revenueByTime = {};
+    periodEnrollments.forEach(e => {
+      const date = new Date(e.payment?.paidAt || e.createdAt);
+      let key;
+      if (period === 'week') {
+        key = date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' });
+      } else if (period === 'month') {
+        key = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      } else {
+        key = date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+      }
+      revenueByTime[key] = (revenueByTime[key] || 0) + (e.payment?.amount || 0);
+    });
+    
+    // Revenue by course
+    const revenueByCourse = {};
+    periodEnrollments.forEach(e => {
+      const courseTitle = e.courseId?.title || 'Unknown';
+      revenueByCourse[courseTitle] = (revenueByCourse[courseTitle] || 0) + (e.payment?.amount || 0);
+    });
+    
+    // Revenue by type
+    const revenueByType = {
+      one_time_purchase: 0,
+      monthly_subscription: 0,
+      yearly_subscription: 0
+    };
+    periodEnrollments.forEach(e => {
+      const type = e.enrollmentType || 'one_time_purchase';
+      revenueByType[type] = (revenueByType[type] || 0) + (e.payment?.amount || 0);
+    });
+    
+    const totalRevenue = periodEnrollments.reduce((acc, e) => acc + (e.payment?.amount || 0), 0);
+    const totalTransactions = periodEnrollments.length;
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        period,
+        summary: {
+          totalRevenue,
+          totalTransactions,
+          averageOrderValue: totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0,
+          platformFee: totalRevenue * 0.2,
+          netEarnings: totalRevenue * 0.8
+        },
+        revenueByTime: Object.entries(revenueByTime).map(([date, amount]) => ({ date, amount })),
+        revenueByCourse: Object.entries(revenueByCourse).map(([course, amount]) => ({ course, amount })),
+        revenueByType
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get revenue error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching revenue data',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = router;

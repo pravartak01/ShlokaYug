@@ -19,6 +19,7 @@ import VideosPage from './pages/VideosPage';
 import VideoPlayerPage from './pages/VideoPlayerPage';
 import VideoUploadPage from './pages/VideoUploadPage';
 import CommunityPage from './pages/CommunityPage';
+import Practice from './pages/Practice';
 import {
   LoginPage,
   RegisterPage,
@@ -137,6 +138,16 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <VideoPlayerPage />
+              </ProtectedRoute>
+            }
+          />
+          
+                    {/* Practice Route - Protected */}
+          <Route
+            path="/practice"
+            element={
+              <ProtectedRoute>
+                <Practice />
               </ProtectedRoute>
             }
           />

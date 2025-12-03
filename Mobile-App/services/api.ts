@@ -11,6 +11,32 @@ const BACKEND_URL = __DEV__
   ? 'http://10.245.97.46:5000/api/v1'  // Development - Using your machine's IP
   : 'https://api.shlokayug.com/api/v1'; // Production
 
+// Base URL without /api/v1 for static files
+const STATIC_URL = __DEV__
+  ? 'http://10.245.97.46:5000'  // Development
+  : 'https://api.shlokayug.com'; // Production
+
+/**
+ * Get full URL for uploaded files (thumbnails, images, etc.)
+ * Handles both relative paths (/uploads/...) and full URLs
+ */
+export const getFullImageUrl = (path?: string | null): string | null => {
+  if (!path) return null;
+  
+  // If it's already a full URL (http/https), return as is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  // If it's a relative path starting with /, prepend the static URL
+  if (path.startsWith('/')) {
+    return `${STATIC_URL}${path}`;
+  }
+  
+  // Otherwise, assume it's relative and add both base and path
+  return `${STATIC_URL}/${path}`;
+};
+
 // Storage keys
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: '@shlokayug:accessToken',

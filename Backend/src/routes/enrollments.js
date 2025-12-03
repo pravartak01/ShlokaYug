@@ -4,7 +4,6 @@ const router = express.Router();
 // Add debugging middleware
 router.use((req, res, next) => {
   console.log(`📋 Enrollment Route: ${req.method} ${req.path}`);
-  console.log('📋 Headers:', JSON.stringify(req.headers, null, 2));
   next();
 });
 
@@ -41,6 +40,77 @@ const {
   markLectureComplete,
   getCourseProgress
 } = require('../controllers/enrollmentController');
+
+// @desc    Get enrollments for a specific course (for instructors)
+// @route   GET /api/enrollments/course/:courseId
+// @access  Private (Guru/Admin)
+router.get('/course/:courseId',
+  auth,
+  checkRole(['guru', 'admin']),
+  async (req, res) => {
+    try {
+      const { courseId } = req.params;
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      const Enrollment = require('../models/Enrollment');
+      const Course = require('../models/Course');
+      
+      // Verify the course belongs to this instructor (unless admin)
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found'
+        });
+      }
+      
+      if (userRole === 'guru' && course.instructor?.userId?.toString() !== userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Not authorized to view enrollments for this course'
+        });
+      }
+      
+      // Get all enrollments for this course with user details
+      const enrollments = await Enrollment.find({ courseId })
+        .populate('userId', 'email profile username')
+        .sort({ createdAt: -1 });
+      
+      // Calculate summary stats
+      const stats = {
+        totalEnrollments: enrollments.length,
+        activeEnrollments: enrollments.filter(e => e.access?.status === 'active').length,
+        completedEnrollments: enrollments.filter(e => e.progress?.isCompleted).length,
+        totalRevenue: enrollments.reduce((acc, e) => acc + (e.payment?.amount || 0), 0),
+        averageProgress: enrollments.length > 0 
+          ? Math.round(enrollments.reduce((acc, e) => acc + (e.progress?.completionPercentage || 0), 0) / enrollments.length)
+          : 0
+      };
+      
+      res.status(200).json({
+        success: true,
+        message: 'Course enrollments retrieved successfully',
+        data: {
+          enrollments,
+          stats,
+          course: {
+            _id: course._id,
+            title: course.title
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.error('Get course enrollments error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching course enrollments',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+);
 
 // @desc    Auto-enroll user after successful payment (integration endpoint)
 // @route   POST /api/enrollments/auto-enroll

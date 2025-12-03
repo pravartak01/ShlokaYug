@@ -301,8 +301,8 @@ export default function Settings() {
             />
             <SettingsItem
               icon="phone-portrait-outline"
-              iconColor="#8b5cf6"
-              iconBgColor="#f5f3ff"
+              iconColor="#a0704a"
+              iconBgColor="#faf5f0"
               title="Vibration"
               subtitle="Haptic feedback"
               type="toggle"
@@ -318,8 +318,8 @@ export default function Settings() {
           <SettingsSection title="Appearance">
             <SettingsItem
               icon="moon-outline"
-              iconColor="#6366f1"
-              iconBgColor="#eef2ff"
+              iconColor="#4A2E1C"
+              iconBgColor="#f4e6d7"
               title="Dark Mode"
               subtitle="Coming soon"
               type="toggle"
@@ -394,8 +394,8 @@ export default function Settings() {
           <SettingsSection title="Support">
             <SettingsItem
               icon="help-circle-outline"
-              iconColor="#6366f1"
-              iconBgColor="#eef2ff"
+              iconColor="#4A2E1C"
+              iconBgColor="#f4e6d7"
               title="Help & FAQ"
               subtitle="Get answers to common questions"
               type="navigation"

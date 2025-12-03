@@ -64,7 +64,7 @@ export default function AnalyticsScreen() {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#7c3aed" />
+          <ActivityIndicator size="large" color="#B87333" />
           <Text className="text-gray-600 mt-3">Loading analytics...</Text>
         </View>
       </SafeAreaView>
@@ -80,7 +80,7 @@ export default function AnalyticsScreen() {
         </TouchableOpacity>
         <Text className="text-gray-900 text-lg font-bold">Channel Analytics</Text>
         <TouchableOpacity onPress={loadAnalytics}>
-          <Ionicons name="refresh" size={24} color="#7c3aed" />
+          <Ionicons name="refresh" size={24} color="#B87333" />
         </TouchableOpacity>
       </View>
 
@@ -92,7 +92,7 @@ export default function AnalyticsScreen() {
               key={range}
               onPress={() => setTimeRange(range)}
               className={`flex-1 py-2 rounded-full mx-1 ${
-                timeRange === range ? 'bg-purple-500' : 'bg-gray-100'
+                timeRange === range ? 'bg-[#DD7A1F]' : 'bg-gray-100'
               }`}
             >
               <Text
@@ -108,7 +108,7 @@ export default function AnalyticsScreen() {
 
         {/* Key Metrics */}
         <LinearGradient
-          colors={['#7c3aed', '#6d28d9']}
+          colors={['#B87333', '#4A2E1C']}
           className="p-6"
         >
           <Text className="text-white text-2xl font-bold mb-4">Channel Performance</Text>
@@ -180,7 +180,7 @@ export default function AnalyticsScreen() {
                   <View className="w-full items-center">
                     <Text className="text-xs text-gray-600 mb-1">{heights[index]}</Text>
                     <View 
-                      className="w-full bg-purple-500 rounded-t-lg"
+                      className="w-full bg-[#DD7A1F] rounded-t-lg"
                       style={{ height: `${height}%` }}
                     />
                   </View>
@@ -196,10 +196,10 @@ export default function AnalyticsScreen() {
           <Text className="text-gray-900 text-lg font-bold mb-4">Engagement Breakdown</Text>
           <View className="space-y-3">
             {[
-              { label: 'Likes', value: 3420, color: 'bg-orange-500', max: 4000 },
+              { label: 'Likes', value: 3420, color: 'bg-[#DD7A1F]', max: 4000 },
               { label: 'Comments', value: 890, color: 'bg-blue-500', max: 4000 },
               { label: 'Shares', value: 450, color: 'bg-green-500', max: 4000 },
-              { label: 'Saves', value: 680, color: 'bg-purple-500', max: 4000 },
+              { label: 'Saves', value: 680, color: 'bg-[#B87333]', max: 4000 },
             ].map((item) => (
               <View key={item.label} className="mb-3">
                 <View className="flex-row justify-between items-center mb-2">
@@ -237,8 +237,8 @@ export default function AnalyticsScreen() {
               </View>
               <View className="items-end">
                 <View className="flex-row items-center">
-                  <Ionicons name="heart" size={16} color="#f97316" />
-                  <Text className="text-orange-600 font-semibold ml-1">
+                  <Ionicons name="heart" size={16} color="#DD7A1F" />
+                  <Text className="text-[#DD7A1F] font-semibold ml-1">
                     {formatNumber(420 - index * 50)}
                   </Text>
                 </View>
@@ -262,7 +262,7 @@ export default function AnalyticsScreen() {
                 <View className="flex-row items-center flex-1 mx-4">
                   <View className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <View
-                      className="h-full bg-purple-500 rounded-full"
+                      className="h-full bg-[#B87333] rounded-full"
                       style={{ width: `${90 - index * 15}%` }}
                     />
                   </View>
@@ -275,10 +275,10 @@ export default function AnalyticsScreen() {
           <View>
             <Text className="text-gray-700 font-semibold mb-2">Device Usage</Text>
             <View className="flex-row gap-3">
-              <View className="flex-1 bg-purple-50 p-3 rounded-xl">
-                <Ionicons name="phone-portrait" size={24} color="#7c3aed" />
+              <View className="flex-1 bg-[#FEF3E8] p-3 rounded-xl">
+                <Ionicons name="phone-portrait" size={24} color="#B87333" />
                 <Text className="text-gray-600 text-sm mt-2">Mobile</Text>
-                <Text className="text-purple-700 font-bold text-xl">68%</Text>
+                <Text className="text-[#B87333] font-bold text-xl">68%</Text>
               </View>
               <View className="flex-1 bg-blue-50 p-3 rounded-xl">
                 <Ionicons name="desktop" size={24} color="#3b82f6" />

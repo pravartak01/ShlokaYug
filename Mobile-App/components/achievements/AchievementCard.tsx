@@ -29,7 +29,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   streak: { bg: '#fef3c7', text: '#f59e0b' },
   social: { bg: '#fdf2f8', text: '#ec4899' },
   explorer: { bg: '#ecfdf5', text: '#10b981' },
-  mastery: { bg: '#f5f3ff', text: '#8b5cf6' },
+  mastery: { bg: '#faf5f0', text: '#a0704a' },
 };
 
 export default function AchievementCard({
@@ -150,7 +150,7 @@ export default function AchievementCard({
             </LinearGradient>
           )}
           {rarity === 'epic' && (
-            <View style={[styles.rarityBadge, { backgroundColor: '#8b5cf6' }]}>
+            <View style={[styles.rarityBadge, { backgroundColor: '#a0704a' }]}>
               <Ionicons name="diamond" size={10} color="#ffffff" />
             </View>
           )}

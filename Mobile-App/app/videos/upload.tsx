@@ -146,11 +146,11 @@ export default function UploadVideoScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <LinearGradient
-          colors={['#7c3aed', '#6d28d9']}
+          colors={['#a0704a', '#4A2E1C']}
           className="flex-1 items-center justify-center px-8"
         >
           <View className="bg-white rounded-3xl p-8 w-full items-center">
-            <Ionicons name="cloud-upload" size={64} color="#7c3aed" />
+            <Ionicons name="cloud-upload" size={64} color="#a0704a" />
             <Text className="text-gray-900 text-2xl font-bold mt-4">Uploading Video</Text>
             <Text className="text-gray-600 text-center mt-2 mb-6">
               Please wait while we upload your video to the cloud
@@ -159,11 +159,11 @@ export default function UploadVideoScreen() {
             {/* Progress Bar */}
             <View className="w-full bg-gray-200 rounded-full h-3 overflow-hidden mb-3">
               <View
-                className="bg-purple-500 h-full rounded-full"
+                className="bg-[#DD7A1F] h-full rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               />
             </View>
-            <Text className="text-purple-600 font-bold text-lg">{uploadProgress}%</Text>
+            <Text className="text-[#DD7A1F] font-bold text-lg">{uploadProgress}%</Text>
             
             <Text className="text-gray-500 text-sm mt-4 text-center">
               This may take a few minutes depending on video size
@@ -197,10 +197,10 @@ export default function UploadVideoScreen() {
 
       {/* Step Indicator */}
       <View className="bg-white px-4 py-3 flex-row items-center">
-        <View className={`flex-1 h-1 rounded ${step >= 1 ? 'bg-purple-500' : 'bg-gray-200'}`} />
-        <View className={`flex-1 h-1 rounded ml-2 ${step >= 2 ? 'bg-purple-500' : 'bg-gray-200'}`} />
-        <View className={`flex-1 h-1 rounded ml-2 ${step >= 3 ? 'bg-purple-500' : 'bg-gray-200'}`} />
-        <View className={`flex-1 h-1 rounded ml-2 ${step >= 4 ? 'bg-purple-500' : 'bg-gray-200'}`} />
+        <View className={`flex-1 h-1 rounded ${step >= 1 ? 'bg-[#DD7A1F]' : 'bg-gray-200'}`} />
+        <View className={`flex-1 h-1 rounded ml-2 ${step >= 2 ? 'bg-[#DD7A1F]' : 'bg-gray-200'}`} />
+        <View className={`flex-1 h-1 rounded ml-2 ${step >= 3 ? 'bg-[#DD7A1F]' : 'bg-gray-200'}`} />
+        <View className={`flex-1 h-1 rounded ml-2 ${step >= 4 ? 'bg-[#DD7A1F]' : 'bg-gray-200'}`} />
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -216,14 +216,14 @@ export default function UploadVideoScreen() {
               onPress={() => setVideoType('video')}
               className={`p-6 rounded-2xl mb-4 border-2 ${
                 videoType === 'video'
-                  ? 'bg-purple-50 border-purple-500'
+                  ? 'bg-[#FEF3E8] border-[#B87333]'
                   : 'bg-white border-gray-200'
               }`}
             >
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
                   <View className={`w-12 h-12 rounded-full items-center justify-center ${
-                    videoType === 'video' ? 'bg-purple-500' : 'bg-gray-200'
+                    videoType === 'video' ? 'bg-[#B87333]' : 'bg-gray-200'
                   }`}>
                     <Ionicons
                       name="videocam"
@@ -233,7 +233,7 @@ export default function UploadVideoScreen() {
                   </View>
                   <View className="ml-4 flex-1">
                     <Text className={`font-bold text-lg ${
-                      videoType === 'video' ? 'text-purple-900' : 'text-gray-900'
+                      videoType === 'video' ? 'text-[#4A2E1C]' : 'text-gray-900'
                     }`}>
                       Regular Video
                     </Text>
@@ -243,7 +243,7 @@ export default function UploadVideoScreen() {
                   </View>
                 </View>
                 {videoType === 'video' && (
-                  <Ionicons name="checkmark-circle" size={24} color="#7c3aed" />
+                  <Ionicons name="checkmark-circle" size={24} color="#B87333" />
                 )}
               </View>
             </TouchableOpacity>
@@ -252,14 +252,14 @@ export default function UploadVideoScreen() {
               onPress={() => setVideoType('short')}
               className={`p-6 rounded-2xl border-2 ${
                 videoType === 'short'
-                  ? 'bg-orange-50 border-orange-500'
+                  ? 'bg-[#FEF3E8] border-[#DD7A1F]'
                   : 'bg-white border-gray-200'
               }`}
             >
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
                   <View className={`w-12 h-12 rounded-full items-center justify-center ${
-                    videoType === 'short' ? 'bg-orange-500' : 'bg-gray-200'
+                    videoType === 'short' ? 'bg-[#DD7A1F]' : 'bg-gray-200'
                   }`}>
                     <Ionicons
                       name="flash"
@@ -269,7 +269,7 @@ export default function UploadVideoScreen() {
                   </View>
                   <View className="ml-4 flex-1">
                     <Text className={`font-bold text-lg ${
-                      videoType === 'short' ? 'text-orange-900' : 'text-gray-900'
+                      videoType === 'short' ? 'text-[#4A2E1C]' : 'text-gray-900'
                     }`}>
                       Short Video
                     </Text>
@@ -279,7 +279,7 @@ export default function UploadVideoScreen() {
                   </View>
                 </View>
                 {videoType === 'short' && (
-                  <Ionicons name="checkmark-circle" size={24} color="#f97316" />
+                  <Ionicons name="checkmark-circle" size={24} color="#DD7A1F" />
                 )}
               </View>
             </TouchableOpacity>
@@ -290,7 +290,7 @@ export default function UploadVideoScreen() {
               className="mt-8 rounded-xl py-4 shadow-lg"
             >
               <LinearGradient
-                colors={videoType === 'video' ? ['#7c3aed', '#6d28d9'] : ['#f97316', '#ea580c']}
+                colors={videoType === 'video' ? ['#B87333', '#4A2E1C'] : ['#DD7A1F', '#B87333']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 className="rounded-xl py-4 flex-row items-center justify-center"
@@ -315,12 +315,12 @@ export default function UploadVideoScreen() {
             {!videoFile ? (
               <TouchableOpacity
                 onPress={pickVideo}
-                className="border-2 border-dashed border-purple-300 bg-purple-50 rounded-2xl py-16 items-center justify-center"
+                className="border-2 border-dashed border-[#B87333] bg-[#FEF3E8] rounded-2xl py-16 items-center justify-center"
               >
-                <View className="w-20 h-20 bg-purple-500 rounded-full items-center justify-center mb-4">
+                <View className="w-20 h-20 bg-[#DD7A1F] rounded-full items-center justify-center mb-4">
                   <Ionicons name="cloud-upload" size={40} color="white" />
                 </View>
-                <Text className="text-purple-700 font-bold text-lg mb-2">
+                <Text className="text-[#4A2E1C] font-bold text-lg mb-2">
                   Select Video File
                 </Text>
                 <Text className="text-gray-600 text-sm text-center px-8">
@@ -333,10 +333,10 @@ export default function UploadVideoScreen() {
             ) : (
               <>
                 {/* Selected Video Preview */}
-                <View className="bg-white border-2 border-purple-500 rounded-xl p-4 mb-4">
+                <View className="bg-white border-2 border-[#B87333] rounded-xl p-4 mb-4">
                   <View className="flex-row items-center">
-                    <View className="w-16 h-16 bg-purple-100 rounded-xl items-center justify-center mr-4">
-                      <Ionicons name="videocam" size={32} color="#7c3aed" />
+                    <View className="w-16 h-16 bg-[#FEF3E8] rounded-xl items-center justify-center mr-4">
+                      <Ionicons name="videocam" size={32} color="#B87333" />
                     </View>
                     <View className="flex-1">
                       <Text className="text-gray-900 font-semibold" numberOfLines={1}>
@@ -372,7 +372,7 @@ export default function UploadVideoScreen() {
                   className="rounded-xl shadow-lg"
                 >
                   <LinearGradient
-                    colors={['#7c3aed', '#6d28d9']}
+                    colors={['#B87333', '#4A2E1C']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     className="rounded-xl py-4 flex-row items-center justify-center"
@@ -426,7 +426,7 @@ export default function UploadVideoScreen() {
                   key={cat}
                   onPress={() => setCategory(cat)}
                   className={`mr-2 px-4 py-2 rounded-full ${
-                    category === cat ? 'bg-purple-500' : 'bg-gray-200'
+                    category === cat ? 'bg-[#DD7A1F]' : 'bg-gray-200'
                   }`}
                 >
                   <Text
@@ -452,17 +452,17 @@ export default function UploadVideoScreen() {
               />
               <TouchableOpacity
                 onPress={addTag}
-                className="bg-purple-500 rounded-xl px-4 py-3"
+                className="bg-[#DD7A1F] rounded-xl px-4 py-3"
               >
                 <Text className="text-white font-semibold">Add</Text>
               </TouchableOpacity>
             </View>
             <View className="flex-row flex-wrap mb-4">
               {tags.map((tag, index) => (
-                <View key={index} className="bg-purple-100 rounded-full px-3 py-1 mr-2 mb-2 flex-row items-center">
-                  <Text className="text-purple-700 font-semibold mr-1">{tag}</Text>
+                <View key={index} className="bg-[#FEF3E8] rounded-full px-3 py-1 mr-2 mb-2 flex-row items-center">
+                  <Text className="text-[#B87333] font-semibold mr-1">{tag}</Text>
                   <TouchableOpacity onPress={() => setTags(tags.filter((_, i) => i !== index))}>
-                    <Ionicons name="close-circle" size={16} color="#7c3aed" />
+                    <Ionicons name="close-circle" size={16} color="#B87333" />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -482,17 +482,17 @@ export default function UploadVideoScreen() {
                   />
                   <TouchableOpacity
                     onPress={addHashtag}
-                    className="bg-orange-500 rounded-xl px-4 py-3"
+                    className="bg-[#DD7A1F] rounded-xl px-4 py-3"
                   >
                     <Text className="text-white font-semibold">Add</Text>
                   </TouchableOpacity>
                 </View>
                 <View className="flex-row flex-wrap mb-4">
                   {hashtags.map((tag, index) => (
-                    <View key={index} className="bg-orange-100 rounded-full px-3 py-1 mr-2 mb-2 flex-row items-center">
-                      <Text className="text-orange-700 font-semibold mr-1">#{tag}</Text>
+                    <View key={index} className="bg-[#FEF3E8] rounded-full px-3 py-1 mr-2 mb-2 flex-row items-center">
+                      <Text className="text-[#DD7A1F] font-semibold mr-1">#{tag}</Text>
                       <TouchableOpacity onPress={() => setHashtags(hashtags.filter((_, i) => i !== index))}>
-                        <Ionicons name="close-circle" size={16} color="#f97316" />
+                        <Ionicons name="close-circle" size={16} color="#DD7A1F" />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -506,7 +506,7 @@ export default function UploadVideoScreen() {
               className={`rounded-xl py-4 mt-4 shadow-lg ${!title.trim() ? 'opacity-50' : ''}`}
             >
               <LinearGradient
-                colors={['#7c3aed', '#6d28d9']}
+                colors={['#B87333', '#4A2E1C']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 className="rounded-xl py-4 flex-row items-center justify-center"
@@ -533,20 +533,20 @@ export default function UploadVideoScreen() {
                 onPress={() => setLanguage(lang.code)}
                 className={`p-4 rounded-xl mb-3 border ${
                   language === lang.code
-                    ? 'bg-purple-50 border-purple-500'
+                    ? 'bg-[#FEF3E8] border-[#B87333]'
                     : 'bg-white border-gray-200'
                 }`}
               >
                 <View className="flex-row items-center justify-between">
                   <Text
                     className={`font-semibold ${
-                      language === lang.code ? 'text-purple-700' : 'text-gray-900'
+                      language === lang.code ? 'text-[#B87333]' : 'text-gray-900'
                     }`}
                   >
                     {lang.name}
                   </Text>
                   {language === lang.code && (
-                    <Ionicons name="checkmark-circle" size={24} color="#7c3aed" />
+                    <Ionicons name="checkmark-circle" size={24} color="#B87333" />
                   )}
                 </View>
               </TouchableOpacity>

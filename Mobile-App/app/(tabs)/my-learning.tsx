@@ -1,5 +1,5 @@
 /**
- * My Learning Tab - Modern Indigo Theme
+ * My Learning Tab - Modern Sandalwood Theme
  * Displays enrolled courses with progress tracking and smooth animations
  */
 
@@ -19,8 +19,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import courseService from '../../services/courseService';
+import { getFullImageUrl } from '../../services/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Theme colors - Vintage Brown with Gold/Saffron/Copper highlights
+const PRIMARY_BROWN = '#4A2E1C';    // Vintage brown for theme
+const COPPER = '#B87333';           // Copper for warmth
+const GOLD = '#D4A017';             // Gold for highlights
+const SAFFRON = '#DD7A1F';          // Saffron for actions
+const SAND = '#F3E4C8';             // Sand/Beige for backgrounds
 
 // Animated Filter Chip Component
 const FilterChip = ({ 
@@ -49,12 +57,11 @@ const FilterChip = ({
   return (
     <TouchableOpacity onPress={handlePress} activeOpacity={0.8}>
       <Animated.View
-        className={`px-4 py-2.5 rounded-xl flex-row items-center mr-2 ${
-          active ? 'bg-indigo-500' : 'bg-white border border-gray-200'
-        }`}
+        className={`px-4 py-2.5 rounded-xl flex-row items-center mr-2 ${!active && 'bg-white border border-gray-200'}`}
         style={{ 
           transform: [{ scale: scaleAnim }],
-          shadowColor: active ? '#6366f1' : '#000',
+          backgroundColor: active ? COPPER : undefined,
+          shadowColor: active ? COPPER : '#000',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: active ? 0.2 : 0.05,
           shadowRadius: 4,
@@ -70,8 +77,8 @@ const FilterChip = ({
           {label}
         </Text>
         {count !== undefined && count > 0 && (
-          <View className={`ml-1.5 px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20' : 'bg-indigo-100'}`}>
-            <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-indigo-600'}`}>{count}</Text>
+          <View className={`ml-1.5 px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20' : 'bg-[#F9F0E6]'}`}>
+            <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-[#B87333]'}`}>{count}</Text>
           </View>
         )}
       </Animated.View>
@@ -143,19 +150,19 @@ const AnimatedCourseCard = ({
     }
     if (progress > 0) {
       return { 
-        bg: 'bg-indigo-500', 
+        bg: 'bg-[#DD7A1F]', 
         icon: 'play-circle', 
         label: `${Math.round(progress)}%`, 
-        color: '#6366f1',
+        color: SAFFRON,
         buttonText: 'Continue Learning',
         buttonIcon: 'play'
       };
     }
     return { 
-      bg: 'bg-amber-500', 
+      bg: 'bg-[#D4A017]', 
       icon: 'rocket', 
       label: 'New', 
-      color: '#f59e0b',
+      color: GOLD,
       buttonText: 'Start Your Journey',
       buttonIcon: 'arrow-forward'
     };
@@ -177,7 +184,7 @@ const AnimatedCourseCard = ({
         activeOpacity={1}
         className="bg-white rounded-3xl overflow-hidden mb-4"
         style={{
-          shadowColor: '#6366f1',
+          shadowColor: PRIMARY_BROWN,
           shadowOffset: { width: 0, height: 6 },
           shadowOpacity: 0.12,
           shadowRadius: 16,
@@ -186,16 +193,16 @@ const AnimatedCourseCard = ({
       >
         {/* Course Thumbnail */}
         <View className="relative">
-          {course.thumbnail || course.metadata?.thumbnail ? (
+          {getFullImageUrl(course.thumbnail || course.metadata?.thumbnail) ? (
             <Image 
-              source={{ uri: course.thumbnail || course.metadata?.thumbnail }} 
+              source={{ uri: getFullImageUrl(course.thumbnail || course.metadata?.thumbnail)! }} 
               className="w-full h-48" 
               resizeMode="cover" 
             />
           ) : (
-            <View className="w-full h-48 bg-indigo-100 items-center justify-center">
-              <View className="w-20 h-20 bg-indigo-200 rounded-full items-center justify-center">
-                <Ionicons name="book" size={40} color="#6366f1" />
+            <View className="w-full h-48 bg-[#F3E4C8] items-center justify-center">
+              <View className="w-20 h-20 bg-[#E5D1AF] rounded-full items-center justify-center">
+                <Ionicons name="book" size={40} color={PRIMARY_BROWN} />
               </View>
             </View>
           )}
@@ -237,8 +244,8 @@ const AnimatedCourseCard = ({
           <View className="flex-row items-center flex-wrap mb-4">
             {/* Instructor */}
             <View className="flex-row items-center mr-4 mb-1">
-              <View className="w-6 h-6 bg-indigo-100 rounded-full items-center justify-center">
-                <Ionicons name="person" size={12} color="#6366f1" />
+              <View className="w-6 h-6 bg-[#F9F0E6] rounded-full items-center justify-center">
+                <Ionicons name="person" size={12} color={COPPER} />
               </View>
               <Text className="text-gray-600 text-sm ml-1.5">
                 {course.instructor?.name || course.basic?.instructor || 'Instructor'}
@@ -247,8 +254,8 @@ const AnimatedCourseCard = ({
 
             {/* Lessons */}
             <View className="flex-row items-center mb-1">
-              <View className="w-6 h-6 bg-amber-100 rounded-full items-center justify-center">
-                <Ionicons name="videocam" size={12} color="#f59e0b" />
+              <View className="w-6 h-6 bg-[#FDF8E8] rounded-full items-center justify-center">
+                <Ionicons name="videocam" size={12} color={GOLD} />
               </View>
               <Text className="text-gray-600 text-sm ml-1.5">
                 {course.lessonsCount || course.stats?.lessonsCount || '12'} Lessons
@@ -411,15 +418,15 @@ export default function MyLearningScreen() {
           icon="book" 
           label="Total Courses" 
           value={enrolledCourses.length}
-          color="#6366f1"
-          bgColor="#eef2ff"
+          color={PRIMARY_BROWN}
+          bgColor={SAND}
         />
         <StatsCard 
           icon="play-circle" 
           label="In Progress" 
           value={inProgressCount}
-          color="#f59e0b"
-          bgColor="#fef3c7"
+          color={SAFFRON}
+          bgColor="#FEF3E8"
         />
         <StatsCard 
           icon="trophy" 
@@ -433,9 +440,10 @@ export default function MyLearningScreen() {
       {/* Motivation Banner */}
       {enrolledCourses.length > 0 && (
         <View 
-          className="bg-indigo-500 rounded-2xl p-4 mb-4 flex-row items-center"
+          className="rounded-2xl p-4 mb-4 flex-row items-center"
           style={{
-            shadowColor: '#6366f1',
+            backgroundColor: SAFFRON,
+            shadowColor: SAFFRON,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
             shadowRadius: 8,
@@ -488,8 +496,8 @@ export default function MyLearningScreen() {
 
   const renderEmptyState = () => (
     <View className="flex-1 items-center justify-center py-16 px-6">
-      <View className="w-24 h-24 bg-indigo-100 rounded-full items-center justify-center mb-4">
-        <Ionicons name="school" size={40} color="#6366f1" />
+      <View className="w-24 h-24 bg-[#F3E4C8] rounded-full items-center justify-center mb-4">
+        <Ionicons name="school" size={40} color={PRIMARY_BROWN} />
       </View>
       <Text className="text-gray-800 text-xl font-bold text-center mb-2">
         Start Your Learning Adventure
@@ -499,9 +507,10 @@ export default function MyLearningScreen() {
       </Text>
       <TouchableOpacity
         onPress={() => router.push('/learn')}
-        className="bg-indigo-500 px-6 py-3.5 rounded-xl flex-row items-center"
+        className="px-6 py-3.5 rounded-xl flex-row items-center"
         style={{
-          shadowColor: '#6366f1',
+          backgroundColor: SAFFRON,
+          shadowColor: SAFFRON,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 8,
@@ -519,8 +528,8 @@ export default function MyLearningScreen() {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
         <View className="flex-1 items-center justify-center">
-          <View className="w-16 h-16 bg-indigo-100 rounded-full items-center justify-center mb-4">
-            <ActivityIndicator size="large" color="#6366f1" />
+          <View className="w-16 h-16 bg-[#F3E4C8] rounded-full items-center justify-center mb-4">
+            <ActivityIndicator size="large" color={PRIMARY_BROWN} />
           </View>
           <Text className="text-gray-700 font-medium">Loading your courses...</Text>
           <Text className="text-gray-400 text-sm mt-1">Preparing your learning dashboard</Text>
@@ -550,8 +559,8 @@ export default function MyLearningScreen() {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh} 
-            tintColor="#6366f1"
-            colors={['#6366f1']}
+            tintColor={PRIMARY_BROWN}
+            colors={[PRIMARY_BROWN]}
           />
         }
         showsVerticalScrollIndicator={false}

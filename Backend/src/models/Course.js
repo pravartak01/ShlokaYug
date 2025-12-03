@@ -22,6 +22,12 @@ const courseSchema = new mongoose.Schema(
       maxlength: [500, 'Short description cannot exceed 500 characters'],
     },
 
+    // Course thumbnail
+    thumbnail: {
+      type: String,
+      trim: true,
+    },
+
     // Instructor information
     instructor: {
       userId: {
@@ -265,6 +271,13 @@ const courseSchema = new mongoose.Schema(
       },
     },
 
+    // Pricing type (free, one_time, subscription)
+    pricingType: {
+      type: String,
+      enum: ['free', 'one_time', 'subscription'],
+      default: 'free',
+    },
+
     // Course metadata
     metadata: {
       category: [
@@ -350,6 +363,22 @@ const courseSchema = new mongoose.Schema(
         type: Date,
         default: Date.now,
       },
+    },
+
+    // Soft delete fields
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
     },
   },
   {

@@ -254,7 +254,7 @@ const DashboardPage: React.FC = () => {
                     { icon: <HomeIcon />, label: 'Dashboard', path: '/dashboard' },
                     { icon: <BookIcon />, label: 'Learn', path: '/learn' },
                     { icon: <VideoIcon />, label: 'Videos', path: '/videos' },
-                    { icon: <MusicIcon />, label: 'Practice' },
+                    { icon: <MusicIcon />, label: 'Practice', path: '/practice' },
                     { icon: <UsersIcon />, label: 'Community', path: '/community' },
                     { icon: <SparklesIcon />, label: 'AI Tools' },
                     { icon: <ChartIcon />, label: 'Progress' },
@@ -338,9 +338,9 @@ const DashboardPage: React.FC = () => {
                   {[
                     { icon: <HomeIcon />, label: 'Home', active: true, path: '/dashboard' },
                     { icon: <BookIcon />, label: 'Learn', path: '/learn' },
-                    { icon: <VideoIcon />, label: 'Videos' },
-                    { icon: <MusicIcon />, label: 'Practice' },
-                    { icon: <UsersIcon />, label: 'Community' },
+                    { icon: <VideoIcon />, label: 'Videos', path: '/videos' },
+                    { icon: <MusicIcon />, label: 'Practice', path: '/practice' },
+                    { icon: <UsersIcon />, label: 'Community', path: '/community' },
                   ].map((item) => (
                     item.path ? (
                       <Link

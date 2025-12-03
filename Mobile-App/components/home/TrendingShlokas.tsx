@@ -25,7 +25,7 @@ const trendingShlokas: TrendingShloka[] = [
     plays: 15420,
     likes: 2340,
     icon: 'sunny',
-    iconBg: 'bg-amber-500',
+    iconBg: 'bg-[#D4A017]', // Gold for Gayatri
     iconColor: '#ffffff',
     difficulty: 'intermediate',
     tags: ['Morning', 'Energy', 'Sacred']
@@ -38,7 +38,7 @@ const trendingShlokas: TrendingShloka[] = [
     plays: 12890,
     likes: 1987,
     icon: 'shield-checkmark',
-    iconBg: 'bg-purple-500',
+    iconBg: 'bg-[#B87333]', // Copper for healing power
     iconColor: '#ffffff',
     difficulty: 'advanced',
     tags: ['Healing', 'Devotional', 'Power']
@@ -51,7 +51,7 @@ const trendingShlokas: TrendingShloka[] = [
     plays: 11245,
     likes: 1765,
     icon: 'infinite',
-    iconBg: 'bg-[#855332]',
+    iconBg: 'bg-[#4A2E1C]',
     iconColor: '#ffffff',
     difficulty: 'beginner',
     tags: ['Peace', 'Meditation', 'Calm']
@@ -77,7 +77,7 @@ const trendingShlokas: TrendingShloka[] = [
     plays: 8765,
     likes: 1432,
     icon: 'flash',
-    iconBg: 'bg-orange-500',
+    iconBg: 'bg-[#DD7A1F]', // Saffron for power
     iconColor: '#ffffff',
     difficulty: 'intermediate',
     tags: ['Power', 'Devotional', 'Energy']
@@ -115,7 +115,7 @@ const TrendingCard = ({ shloka, index }: { shloka: TrendingShloka; index: number
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'beginner': return { bg: 'bg-green-50', text: 'text-green-700' };
-      case 'intermediate': return { bg: 'bg-[#F5EDE8]', text: 'text-[#855332]' };
+      case 'intermediate': return { bg: 'bg-[#F9F0E6]', text: 'text-[#B87333]' };
       case 'advanced': return { bg: 'bg-red-50', text: 'text-red-700' };
       default: return { bg: 'bg-gray-50', text: 'text-gray-700' };
     }
@@ -171,9 +171,9 @@ const TrendingCard = ({ shloka, index }: { shloka: TrendingShloka; index: number
 
             {/* Badges Row */}
             <View className="flex-row items-center mb-3">
-              <View className="bg-[#F5EDE8] px-2.5 py-1 rounded-full flex-row items-center mr-2">
-                <Ionicons name="musical-note" size={10} color="#855332" />
-                <Text className="text-[#855332] text-xs font-medium ml-1">
+              <View className="bg-[#F9F0E6] px-2.5 py-1 rounded-full flex-row items-center mr-2">
+                <Ionicons name="musical-note" size={10} color="#B87333" />
+                <Text className="text-[#B87333] text-xs font-medium ml-1">
                   {shloka.chandas}
                 </Text>
               </View>
@@ -206,7 +206,7 @@ const TrendingCard = ({ shloka, index }: { shloka: TrendingShloka; index: number
                 </View>
               </View>
               
-              <TouchableOpacity className="bg-[#855332] w-10 h-10 rounded-full items-center justify-center">
+              <TouchableOpacity className="bg-[#D4A017] w-10 h-10 rounded-full items-center justify-center">
                 <Ionicons name="play" size={18} color="white" />
               </TouchableOpacity>
             </View>

@@ -46,8 +46,8 @@ export default function StatsGrid({ stats }: StatsGridProps) {
       <View className="flex-row items-center justify-between mb-4 px-1">
         <Text className="text-gray-900 text-lg font-bold">Your Progress</Text>
         <TouchableOpacity className="flex-row items-center">
-          <Text className="text-[#855332] text-sm font-semibold mr-1">Details</Text>
-          <Ionicons name="chevron-forward" size={16} color="#855332" />
+          <Text className="text-[#4A2E1C] text-sm font-semibold mr-1">Details</Text>
+          <Ionicons name="chevron-forward" size={16} color="#4A2E1C" />
         </TouchableOpacity>
       </View>
 
@@ -58,7 +58,7 @@ export default function StatsGrid({ stats }: StatsGridProps) {
           value={stats.shlokasCompleted} 
           label="Shlokas" 
           bgColor="bg-[#F5EDE8]"
-          iconColor="#855332"
+          iconColor="#4A2E1C"
         />
         <StatCard 
           icon="trophy" 

@@ -102,22 +102,22 @@ const validateRefund = [
 
 // @desc    Create Razorpay order for payment
 // @route   POST /api/payments/create-order
-// @access  Private (Student only) - DISABLED FOR DEVELOPMENT
+// @access  Private (Student only)
 router.post(
   '/create-order',
-  // auth,  // DISABLED FOR DEVELOPMENT
-  // checkRole(['student']),  // DISABLED FOR DEVELOPMENT
+  auth,  // Re-enabled - needed for proper user enrollment
+  // checkRole(['student']),  // Disabled to allow any logged-in user
   ...validateCreateOrder,
   createPaymentOrder
 );
 
 // @desc    Verify Razorpay payment signature
 // @route   POST /api/payments/verify
-// @access  Private (Student only) - DISABLED FOR DEVELOPMENT
+// @access  Private (Student only)
 router.post(
   '/verify',
-  // auth,  // DISABLED FOR DEVELOPMENT
-  // checkRole(['student']),  // DISABLED FOR DEVELOPMENT
+  auth,  // Re-enabled - needed for proper user enrollment
+  // checkRole(['student']),  // Disabled to allow any logged-in user
   ...validateVerifyPayment,
   verifyPaymentSignature
 );

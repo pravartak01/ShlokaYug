@@ -26,8 +26,8 @@ const RARITY_COLORS: Record<BadgeRarity, { primary: readonly [string, string, ..
     glow: 'rgba(59, 130, 246, 0.4)',
   },
   epic: {
-    primary: ['#8b5cf6', '#a78bfa'] as const,
-    glow: 'rgba(139, 92, 246, 0.4)',
+    primary: ['#a0704a', '#c08552'] as const,
+    glow: 'rgba(160, 112, 74, 0.4)',
   },
   legendary: {
     primary: ['#f59e0b', '#fbbf24', '#f97316'] as const,

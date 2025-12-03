@@ -21,7 +21,7 @@ const aiTools: AITool[] = [
     icon: 'sparkles',
     isPremium: true,
     isNew: true,
-    bgColor: 'bg-purple-500',
+    bgColor: 'bg-[#B87333]', // Copper for premium feature
     iconColor: '#ffffff'
   },
   {
@@ -30,7 +30,7 @@ const aiTools: AITool[] = [
     description: 'Create Sanskrit taglines',
     icon: 'bulb',
     isPremium: true,
-    bgColor: 'bg-blue-500',
+    bgColor: 'bg-[#D4A017]', // Gold for creative tools
     iconColor: '#ffffff'
   },
   {
@@ -48,7 +48,7 @@ const aiTools: AITool[] = [
     description: 'Detect chandas patterns',
     icon: 'analytics',
     isPremium: true,
-    bgColor: 'bg-[#855332]',
+    bgColor: 'bg-[#4A2E1C]',
     iconColor: '#ffffff'
   }
 ];
@@ -59,7 +59,7 @@ export default function FeaturedAITools() {
       {/* Section Header */}
       <View className="px-5 mb-4">
         <View className="flex-row items-center mb-1">
-          <Ionicons name="sparkles" size={18} color="#855332" />
+          <Ionicons name="sparkles" size={18} color="#D4A017" />
           <Text className="text-gray-900 text-lg font-bold ml-2">AI-Powered Tools</Text>
         </View>
         <Text className="text-gray-500 text-sm">Enhance your learning experience</Text>
@@ -127,15 +127,15 @@ export default function FeaturedAITools() {
       </ScrollView>
 
       {/* Upgrade Banner */}
-      <View className="mx-5 mt-4 bg-[#F5EDE8] rounded-xl p-4 flex-row items-center border border-[#E8D9CF]">
-        <View className="bg-[#855332] w-10 h-10 rounded-xl items-center justify-center mr-3">
+      <View className="mx-5 mt-4 bg-[#FEF3E8] rounded-xl p-4 flex-row items-center border border-[#FCDFC2]">
+        <View className="bg-[#DD7A1F] w-10 h-10 rounded-xl items-center justify-center mr-3">
           <Ionicons name="diamond" size={18} color="white" />
         </View>
         <View className="flex-1">
           <Text className="text-gray-900 font-semibold text-sm">Unlock All AI Tools</Text>
           <Text className="text-gray-500 text-xs">Get premium for full access</Text>
         </View>
-        <TouchableOpacity className="bg-[#855332] px-4 py-2 rounded-xl">
+        <TouchableOpacity className="bg-[#DD7A1F] px-4 py-2 rounded-xl">
           <Text className="text-white text-xs font-bold">Upgrade</Text>
         </TouchableOpacity>
       </View>

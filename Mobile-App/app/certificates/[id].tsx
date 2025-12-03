@@ -219,7 +219,7 @@ export default function CertificateScreen() {
             </View>
 
             <View className="flex-row items-center">
-              <View className="bg-purple-500 rounded-full p-2 mr-3">
+              <View className="bg-sandalwood-600 rounded-full p-2 mr-3">
                 <Ionicons name="star" size={20} color="white" />
               </View>
               <View className="flex-1">

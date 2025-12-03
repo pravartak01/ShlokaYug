@@ -122,7 +122,7 @@ const AnimatedMenuItem = ({
       case 'AI':
         return { bg: '#dbeafe', text: '#2563eb' };
       case 'USP':
-        return { bg: '#e0e7ff', text: '#6366f1' };
+        return { bg: '#f4e6d7', text: '#4A2E1C' };
       default:
         return { bg: '#f3f4f6', text: '#6b7280' };
     }
@@ -156,13 +156,13 @@ const AnimatedMenuItem = ({
             width: 42,
             height: 42,
             borderRadius: 12,
-            backgroundColor: '#eef2ff',
+            backgroundColor: '#f4e6d7',
             alignItems: 'center',
             justifyContent: 'center',
             marginRight: 14,
           }}
         >
-          <Ionicons name={item.icon} size={20} color="#6366f1" />
+          <Ionicons name={item.icon} size={20} color="#4A2E1C" />
         </View>
         
         {/* Text Content */}
@@ -331,11 +331,11 @@ export default function SideDrawer({
         >
           <View style={{ flex: 1, backgroundColor: '#FAFAFA', borderTopRightRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' }}>
             
-            {/* Modern Header with Indigo Theme */}
-            <View style={{ backgroundColor: '#1e1b4b', paddingTop: 56, paddingBottom: 28, paddingHorizontal: 24 }}>
+            {/* Modern Header with Sandalwood Theme */}
+            <View style={{ backgroundColor: '#3d2b04', paddingTop: 56, paddingBottom: 28, paddingHorizontal: 24 }}>
               {/* Decorative element */}
-              <View style={{ position: 'absolute', top: 0, right: 0, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(99,102,241,0.2)', transform: [{ translateX: 40 }, { translateY: -40 }] }} />
-              <View style={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(99,102,241,0.15)' }} />
+              <View style={{ position: 'absolute', top: 0, right: 0, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(133,83,50,0.3)', transform: [{ translateX: 40 }, { translateY: -40 }] }} />
+              <View style={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(133,83,50,0.2)' }} />
               
               {/* Close Button */}
               <TouchableOpacity
@@ -367,7 +367,7 @@ export default function SideDrawer({
                       height: 64,
                       borderRadius: 32,
                       borderWidth: 3,
-                      borderColor: '#6366f1',
+                      borderColor: '#a0704a',
                       padding: 2,
                     }}
                   >
@@ -375,12 +375,12 @@ export default function SideDrawer({
                       style={{
                         flex: 1,
                         borderRadius: 28,
-                        backgroundColor: '#312e81',
+                        backgroundColor: '#5c4106',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
                     >
-                      <Text style={{ color: '#a5b4fc', fontSize: 24, fontWeight: '700' }}>
+                      <Text style={{ color: '#e8ccae', fontSize: 24, fontWeight: '700' }}>
                         {getInitials()}
                       </Text>
                     </View>
@@ -432,10 +432,10 @@ export default function SideDrawer({
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ fontSize: 16, fontWeight: '700', color: '#1a1a1a' }}>Shloka</Text>
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#6366f1' }}>Yug</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#4A2E1C' }}>Yug</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f3f4f6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                  <Ionicons name="shield-checkmark" size={12} color="#6366f1" />
+                  <Ionicons name="shield-checkmark" size={12} color="#4A2E1C" />
                   <Text
                     style={{
                       fontSize: 10,

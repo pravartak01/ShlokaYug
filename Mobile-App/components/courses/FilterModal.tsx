@@ -1,5 +1,5 @@
 /**
- * FilterModal Component - Modern Indigo Theme
+ * FilterModal Component - Vintage Brown with Gold/Saffron/Copper Theme
  * Modal for course filtering options with smooth animations
  */
 
@@ -15,6 +15,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { CourseFilters } from '../../services/courseService';
+
+// Theme colors - Vintage Brown with Gold/Saffron/Copper highlights
+const PRIMARY_BROWN = '#4A2E1C';    // Vintage brown for theme
+const COPPER = '#B87333';           // Copper for warmth
+const GOLD = '#D4A017';             // Gold for highlights
+const SAFFRON = '#DD7A1F';          // Saffron for actions
+const SAND = '#F3E4C8';             // Sand/Beige for backgrounds
 
 interface FilterModalProps {
   visible: boolean;
@@ -36,7 +43,7 @@ const CATEGORIES = [
 
 const DIFFICULTIES = [
   { id: 'beginner', label: 'Beginner', color: '#10b981', bg: '#d1fae5', icon: 'leaf' },
-  { id: 'intermediate', label: 'Intermediate', color: '#f59e0b', bg: '#fef3c7', icon: 'trending-up' },
+  { id: 'intermediate', label: 'Intermediate', color: '#DD7A1F', bg: '#FEF3E8', icon: 'trending-up' },
   { id: 'advanced', label: 'Advanced', color: '#ef4444', bg: '#fee2e2', icon: 'flash' },
 ];
 
@@ -79,12 +86,11 @@ const FilterChip = ({
   return (
     <TouchableOpacity onPress={handlePress} activeOpacity={0.8}>
       <Animated.View
-        className={`mr-2 mb-2 px-4 py-2.5 rounded-xl flex-row items-center ${
-          selected ? 'bg-indigo-500' : 'bg-white border border-gray-200'
-        }`}
+        className={`mr-2 mb-2 px-4 py-2.5 rounded-xl flex-row items-center ${!selected && 'bg-white border border-gray-200'}`}
         style={{ 
           transform: [{ scale: scaleAnim }],
-          shadowColor: selected ? '#6366f1' : '#000',
+          backgroundColor: selected ? COPPER : undefined,
+          shadowColor: selected ? COPPER : '#000',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: selected ? 0.2 : 0.05,
           shadowRadius: 4,
@@ -188,13 +194,13 @@ export default function FilterModal({
           }}
         >
           <View className="flex-row items-center">
-            <View className="w-10 h-10 bg-indigo-100 rounded-xl items-center justify-center mr-3">
-              <Ionicons name="options" size={20} color="#6366f1" />
+            <View className="w-10 h-10 bg-[#F3E4C8] rounded-xl items-center justify-center mr-3">
+              <Ionicons name="options" size={20} color={PRIMARY_BROWN} />
             </View>
             <View>
               <Text className="text-gray-900 text-xl font-bold">Filters</Text>
               {getActiveCount() > 0 && (
-                <Text className="text-indigo-500 text-sm">{getActiveCount()} filters active</Text>
+                <Text className="text-[#B87333] text-sm">{getActiveCount()} filters active</Text>
               )}
             </View>
           </View>
@@ -211,7 +217,7 @@ export default function FilterModal({
           {/* Categories */}
           <View className="mb-6">
             <View className="flex-row items-center mb-3">
-              <Ionicons name="apps" size={18} color="#6366f1" />
+              <Ionicons name="apps" size={18} color={COPPER} />
               <Text className="text-gray-900 font-bold text-lg ml-2">Categories</Text>
             </View>
             <View className="flex-row flex-wrap">
@@ -230,7 +236,7 @@ export default function FilterModal({
           {/* Difficulty */}
           <View className="mb-6">
             <View className="flex-row items-center mb-3">
-              <Ionicons name="speedometer" size={18} color="#6366f1" />
+              <Ionicons name="speedometer" size={18} color={GOLD} />
               <Text className="text-gray-900 font-bold text-lg ml-2">Difficulty Level</Text>
             </View>
             <View className="flex-row">
@@ -272,7 +278,7 @@ export default function FilterModal({
           {/* Price Type */}
           <View className="mb-6">
             <View className="flex-row items-center mb-3">
-              <Ionicons name="pricetag" size={18} color="#6366f1" />
+              <Ionicons name="pricetag" size={18} color={SAFFRON} />
               <Text className="text-gray-900 font-bold text-lg ml-2">Price</Text>
             </View>
             {PRICE_TYPES.map(priceType => (
@@ -284,14 +290,13 @@ export default function FilterModal({
                 <View
                   className={`mb-2 p-4 rounded-2xl flex-row items-center border-2 ${
                     localFilters.priceType === priceType.id
-                      ? 'bg-indigo-50 border-indigo-500'
+                      ? 'bg-[#FDF8E8] border-[#D4A017]'
                       : 'bg-white border-gray-200'
                   }`}
                 >
                   <View 
-                    className={`w-10 h-10 rounded-xl items-center justify-center ${
-                      localFilters.priceType === priceType.id ? 'bg-indigo-500' : 'bg-gray-100'
-                    }`}
+                    className={`w-10 h-10 rounded-xl items-center justify-center`}
+                    style={{ backgroundColor: localFilters.priceType === priceType.id ? GOLD : '#f3f4f6' }}
                   >
                     <Ionicons 
                       name={priceType.icon as any} 
@@ -302,7 +307,7 @@ export default function FilterModal({
                   <View className="flex-1 ml-3">
                     <Text
                       className={`text-base font-semibold ${
-                        localFilters.priceType === priceType.id ? 'text-indigo-600' : 'text-gray-800'
+                        localFilters.priceType === priceType.id ? 'text-[#B87333]' : 'text-gray-800'
                       }`}
                     >
                       {priceType.label}
@@ -310,7 +315,7 @@ export default function FilterModal({
                     <Text className="text-gray-500 text-xs">{priceType.desc}</Text>
                   </View>
                   {localFilters.priceType === priceType.id && (
-                    <Ionicons name="checkmark-circle" size={24} color="#6366f1" />
+                    <Ionicons name="checkmark-circle" size={24} color={GOLD} />
                   )}
                 </View>
               </TouchableOpacity>
@@ -320,7 +325,7 @@ export default function FilterModal({
           {/* Sort By */}
           <View className="mb-6">
             <View className="flex-row items-center mb-3">
-              <Ionicons name="swap-vertical" size={18} color="#6366f1" />
+              <Ionicons name="swap-vertical" size={18} color={PRIMARY_BROWN} />
               <Text className="text-gray-900 font-bold text-lg ml-2">Sort By</Text>
             </View>
             <View className="flex-row flex-wrap">
@@ -332,13 +337,10 @@ export default function FilterModal({
                   className="mr-2 mb-2"
                 >
                   <View
-                    className={`px-4 py-3 rounded-xl flex-row items-center ${
-                      localFilters.sort === sortOption.id
-                        ? 'bg-indigo-500'
-                        : 'bg-white border border-gray-200'
-                    }`}
+                    className={`px-4 py-3 rounded-xl flex-row items-center ${!( localFilters.sort === sortOption.id) && 'bg-white border border-gray-200'}`}
                     style={{
-                      shadowColor: localFilters.sort === sortOption.id ? '#6366f1' : '#000',
+                      backgroundColor: localFilters.sort === sortOption.id ? COPPER : undefined,
+                      shadowColor: localFilters.sort === sortOption.id ? COPPER : '#000',
                       shadowOffset: { width: 0, height: 2 },
                       shadowOpacity: localFilters.sort === sortOption.id ? 0.2 : 0.05,
                       shadowRadius: 4,
@@ -389,10 +391,11 @@ export default function FilterModal({
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleApply}
-              className="flex-1 bg-indigo-500 py-4 rounded-2xl flex-row items-center justify-center"
+              className="flex-1 py-4 rounded-2xl flex-row items-center justify-center"
               activeOpacity={0.8}
               style={{
-                shadowColor: '#6366f1',
+                backgroundColor: SAFFRON,
+                shadowColor: SAFFRON,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,

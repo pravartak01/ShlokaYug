@@ -14,13 +14,13 @@ interface Category {
 
 const categories: Category[] = [
   { id: 'peace', name: 'Peace', icon: 'leaf', count: 45, bgColor: 'bg-green-500', iconColor: '#ffffff', popular: true },
-  { id: 'power', name: 'Power', icon: 'flash', count: 38, bgColor: 'bg-yellow-500', iconColor: '#ffffff' },
+  { id: 'power', name: 'Power', icon: 'flash', count: 38, bgColor: 'bg-[#D4A017]', iconColor: '#ffffff' },
   { id: 'study', name: 'Study', icon: 'book', count: 52, bgColor: 'bg-blue-500', iconColor: '#ffffff' },
   { id: 'devotion', name: 'Devotion', icon: 'heart', count: 67, bgColor: 'bg-red-400', iconColor: '#ffffff', popular: true },
   { id: 'festivals', name: 'Festivals', icon: 'gift', count: 29, bgColor: 'bg-pink-500', iconColor: '#ffffff' },
   { id: 'kids', name: 'Kids', icon: 'happy', count: 34, bgColor: 'bg-cyan-500', iconColor: '#ffffff' },
-  { id: 'classic-chandas', name: 'Chandas', icon: 'musical-notes', count: 89, bgColor: 'bg-purple-500', iconColor: '#ffffff', popular: true },
-  { id: 'vishnu', name: 'Vishnu', icon: 'infinite', count: 1000, bgColor: 'bg-[#855332]', iconColor: '#ffffff' },
+  { id: 'classic-chandas', name: 'Chandas', icon: 'musical-notes', count: 89, bgColor: 'bg-[#B87333]', iconColor: '#ffffff', popular: true },
+  { id: 'vishnu', name: 'Vishnu', icon: 'infinite', count: 1000, bgColor: 'bg-[#4A2E1C]', iconColor: '#ffffff' },
 ];
 
 // Animated category card
@@ -101,8 +101,8 @@ export default function ExploreCategories() {
           <Text className="text-gray-500 text-sm">Discover shlokas by theme</Text>
         </View>
         <TouchableOpacity className="flex-row items-center">
-          <Text className="text-[#855332] text-sm font-semibold mr-1">See All</Text>
-          <Ionicons name="chevron-forward" size={14} color="#855332" />
+          <Text className="text-[#D4A017] text-sm font-semibold mr-1">See All</Text>
+          <Ionicons name="chevron-forward" size={14} color="#D4A017" />
         </TouchableOpacity>
       </View>
 
@@ -121,7 +121,7 @@ export default function ExploreCategories() {
       <View className="px-5 mt-4">
         <View className="bg-gray-50 rounded-xl p-4">
           <View className="flex-row items-center mb-3">
-            <Ionicons name="bookmark" size={16} color="#855332" />
+            <Ionicons name="bookmark" size={16} color="#B87333" />
             <Text className="text-gray-900 font-semibold text-sm ml-2">Quick Collections</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>

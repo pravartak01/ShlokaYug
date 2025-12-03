@@ -1,5 +1,5 @@
 /**
- * CourseCard Component - Modern Indigo Theme
+ * CourseCard Component - Vintage Brown with Gold/Saffron/Copper Theme
  * Reusable card component for displaying course information with animations
  */
 
@@ -7,6 +7,14 @@ import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, Image, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Course } from '../../services/courseService';
+import { getFullImageUrl } from '../../services/api';
+
+// Theme colors - Vintage Brown with Gold/Saffron/Copper highlights
+const PRIMARY_BROWN = '#4A2E1C';    // Vintage brown for theme
+const COPPER = '#B87333';           // Copper for warmth
+const GOLD = '#D4A017';             // Gold for highlights
+const SAFFRON = '#DD7A1F';          // Saffron for actions
+const SAND = '#F3E4C8';             // Sand/Beige for backgrounds
 
 interface CourseCardProps {
   course: Course;
@@ -37,11 +45,11 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
       case 'beginner': 
         return { color: '#10b981', bg: '#d1fae5', label: 'Beginner', icon: 'leaf' };
       case 'intermediate': 
-        return { color: '#f59e0b', bg: '#fef3c7', label: 'Intermediate', icon: 'trending-up' };
+        return { color: SAFFRON, bg: '#FEF3E8', label: 'Intermediate', icon: 'trending-up' };
       case 'advanced': 
         return { color: '#ef4444', bg: '#fee2e2', label: 'Advanced', icon: 'flash' };
       default: 
-        return { color: '#6b7280', bg: '#f3f4f6', label: 'All Levels', icon: 'school' };
+        return { color: COPPER, bg: SAND, label: 'All Levels', icon: 'school' };
     }
   };
 
@@ -66,6 +74,9 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
   const enrollments = course.stats?.enrollments || 0;
   const totalLessons = course.structure?.totalLessons || 0;
   const priceInfo = formatPrice();
+  
+  // Get full thumbnail URL
+  const thumbnailUrl = getFullImageUrl(course.thumbnail);
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -76,7 +87,7 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
         activeOpacity={1}
         className="bg-white rounded-3xl mb-4 overflow-hidden"
         style={{
-          shadowColor: '#6366f1',
+          shadowColor: PRIMARY_BROWN,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.1,
           shadowRadius: 12,
@@ -85,16 +96,16 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
       >
         {/* Thumbnail */}
         <View className="relative">
-          {course.thumbnail ? (
+          {thumbnailUrl ? (
             <Image
-              source={{ uri: course.thumbnail }}
-              className="w-full h-44"
+              source={{ uri: thumbnailUrl }}
+              className="w-full h-56"
               resizeMode="cover"
             />
           ) : (
-            <View className="w-full h-44 bg-indigo-100 items-center justify-center">
-              <View className="w-16 h-16 bg-indigo-200 rounded-full items-center justify-center">
-                <Ionicons name="book" size={32} color="#6366f1" />
+            <View className="w-full h-56 bg-[#F3E4C8] items-center justify-center">
+              <View className="w-20 h-20 bg-[#E5D1AF] rounded-full items-center justify-center">
+                <Ionicons name="book" size={40} color={PRIMARY_BROWN} />
               </View>
             </View>
           )}
@@ -109,15 +120,14 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
           {course.isEnrolled && (
             <View className="absolute top-3 left-3 bg-emerald-500 px-3 py-1.5 rounded-full flex-row items-center">
               <Ionicons name="checkmark-circle" size={14} color="#ffffff" />
-              <Text className="text-white text-xs font-bold ml-1">Enrolled</Text>
+              <Text className="text-white text-xs font-bold ml-1">Already Enrolled</Text>
             </View>
           )}
 
           {/* Price Badge */}
           <View 
-            className={`absolute top-3 right-3 px-3 py-1.5 rounded-full ${
-              priceInfo.isFree ? 'bg-emerald-500' : 'bg-indigo-500'
-            }`}
+            className="absolute top-3 right-3 px-3 py-1.5 rounded-full"
+            style={{ backgroundColor: priceInfo.isFree ? '#10b981' : SAFFRON }}
           >
             <Text className="text-white text-sm font-bold">
               {priceInfo.text}
@@ -153,8 +163,8 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
 
           {/* Instructor */}
           <View className="flex-row items-center mb-3">
-            <View className="w-7 h-7 bg-indigo-100 rounded-full items-center justify-center">
-              <Ionicons name="person" size={14} color="#6366f1" />
+            <View className="w-7 h-7 bg-[#F9F0E6] rounded-full items-center justify-center">
+              <Ionicons name="person" size={14} color={COPPER} />
             </View>
             <Text className="text-gray-600 text-sm ml-2 font-medium" numberOfLines={1}>
               {course.instructor.name}
@@ -183,8 +193,8 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
 
             {/* Enrollments */}
             <View className="flex-row items-center">
-              <View className="w-6 h-6 bg-amber-100 rounded-full items-center justify-center">
-                <Ionicons name="people" size={12} color="#f59e0b" />
+              <View className="w-6 h-6 bg-[#FDF8E8] rounded-full items-center justify-center">
+                <Ionicons name="people" size={12} color={GOLD} />
               </View>
               <Text className="text-gray-600 text-sm ml-1.5 font-medium">
                 {enrollments > 1000 ? `${(enrollments/1000).toFixed(1)}K` : enrollments}+ learners
@@ -195,12 +205,17 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
           {/* Enroll Button */}
           <TouchableOpacity
             onPress={() => onPress(course)}
-            className="mt-4 py-3.5 rounded-2xl items-center flex-row justify-center bg-indigo-500"
+            className="mt-4 py-3.5 rounded-2xl items-center flex-row justify-center"
+            style={{ backgroundColor: course.isEnrolled ? '#10b981' : SAFFRON }}
             activeOpacity={0.8}
           >
-            <Ionicons name="play-circle" size={18} color="#ffffff" />
+            <Ionicons 
+              name={course.isEnrolled ? 'book' : 'play-circle'} 
+              size={18} 
+              color="#ffffff" 
+            />
             <Text className="text-white font-bold ml-2">
-              {course.isEnrolled ? 'Continue Learning' : 'View Course'}
+              {course.isEnrolled ? 'Study Now' : 'View Course'}
             </Text>
           </TouchableOpacity>
         </View>

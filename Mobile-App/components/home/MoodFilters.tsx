@@ -29,9 +29,9 @@ const moodData: MoodItem[] = [
     id: 'anger',
     label: 'Anger Control',
     icon: 'water-outline',
-    color: '#f97316',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
+    color: '#DD7A1F', // Saffron for transformative energy
+    bgColor: 'bg-[#FEF3E8]',
+    borderColor: 'border-[#FCDFC2]',
     description: 'Cool your mind',
     shlokaCount: 15
   },
@@ -49,9 +49,9 @@ const moodData: MoodItem[] = [
     id: 'depression',
     label: 'Uplift Mood',
     icon: 'sunny-outline',
-    color: '#eab308',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
+    color: '#D4A017', // Bright Gold for uplifting
+    bgColor: 'bg-[#FDF8E8]',
+    borderColor: 'border-[#F0E4C0]',
     description: 'Bring back joy',
     shlokaCount: 19
   },
@@ -69,9 +69,9 @@ const moodData: MoodItem[] = [
     id: 'sleep',
     label: 'Better Sleep',
     icon: 'moon-outline',
-    color: '#8b5cf6',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
+    color: '#B87333', // Copper for sleep warmth
+    bgColor: 'bg-[#F9F0E6]',
+    borderColor: 'border-[#E8D5C4]',
     description: 'Peaceful rest',
     shlokaCount: 12
   },
@@ -149,12 +149,12 @@ const MoodCard = ({ mood, isSelected, onPress, index }: {
         <View 
           className={`rounded-2xl p-4 border-2 ${
             isSelected 
-              ? 'border-[#855332] bg-[#F5EDE8]' 
+              ? 'border-[#4A2E1C] bg-[#F5EDE8]' 
               : `${mood.bgColor} ${mood.borderColor}`
           }`}
           style={{ 
             width: 120,
-            shadowColor: isSelected ? '#855332' : '#000',
+            shadowColor: isSelected ? '#4A2E1C' : '#000',
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: isSelected ? 0.2 : 0.05,
             shadowRadius: 12,
@@ -170,7 +170,7 @@ const MoodCard = ({ mood, isSelected, onPress, index }: {
               <Ionicons name={mood.icon} size={22} color={mood.color} />
             </View>
             {isSelected && (
-              <View className="bg-[#855332] w-5 h-5 rounded-full items-center justify-center">
+              <View className="bg-[#4A2E1C] w-5 h-5 rounded-full items-center justify-center">
                 <Ionicons name="checkmark" size={12} color="white" />
               </View>
             )}
@@ -190,7 +190,7 @@ const MoodCard = ({ mood, isSelected, onPress, index }: {
           </Text>
           
           {/* Count Badge */}
-          <View className={`self-start px-2 py-0.5 rounded-full ${isSelected ? 'bg-[#855332]' : 'bg-gray-100'}`}>
+          <View className={`self-start px-2 py-0.5 rounded-full ${isSelected ? 'bg-[#4A2E1C]' : 'bg-gray-100'}`}>
             <Text className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-gray-600'}`}>
               {mood.shlokaCount} shlokas
             </Text>
@@ -216,7 +216,7 @@ export default function MoodFilters() {
       <View className="px-5 mb-4">
         <View className="flex-row items-center justify-between mb-1">
           <View className="flex-row items-center">
-            <View className="bg-[#855332] px-2.5 py-1 rounded-lg mr-2 flex-row items-center">
+            <View className="bg-[#DD7A1F] px-2.5 py-1 rounded-lg mr-2 flex-row items-center">
               <Ionicons name="heart-circle" size={12} color="white" />
               <Text className="text-white text-xs font-bold ml-1">USP</Text>
             </View>
@@ -226,8 +226,8 @@ export default function MoodFilters() {
             onPress={handleStartListening}
             className="flex-row items-center"
           >
-            <Text className="text-[#855332] text-sm font-semibold mr-1">View All</Text>
-            <Ionicons name="chevron-forward" size={16} color="#855332" />
+            <Text className="text-[#4A2E1C] text-sm font-semibold mr-1">View All</Text>
+            <Ionicons name="chevron-forward" size={16} color="#4A2E1C" />
           </TouchableOpacity>
         </View>
         <Text className="text-gray-500 text-sm">
@@ -255,7 +255,7 @@ export default function MoodFilters() {
 
       {/* Selected Mood Preview */}
       {selectedMoodData && (
-        <View className="mx-5 bg-[#F5EDE8] rounded-2xl p-4 border border-[#E8D9CF]">
+        <View className="mx-5 bg-[#F3E4C8] rounded-2xl p-4 border border-[#E5D1AF]">
           <View className="flex-row items-center mb-3">
             <View 
               className="w-12 h-12 rounded-xl items-center justify-center mr-3"
@@ -281,11 +281,11 @@ export default function MoodFilters() {
                 className="bg-white rounded-xl p-2 mr-2 flex-1 border border-gray-100"
               >
                 <View className="flex-row items-center mb-1">
-                  <Ionicons name="musical-note" size={10} color="#855332" />
+                  <Ionicons name="musical-note" size={10} color="#4A2E1C" />
                   <Text className="text-gray-400 text-xs ml-1">0:{30 + idx * 15}</Text>
                 </View>
                 <View className="h-1 bg-gray-100 rounded-full">
-                  <View className={`h-full bg-[#9A6B4D] rounded-full`} style={{ width: `${30 + idx * 25}%` }} />
+                  <View className={`h-full bg-[#B87333] rounded-full`} style={{ width: `${30 + idx * 25}%` }} />
                 </View>
               </View>
             ))}
@@ -294,7 +294,7 @@ export default function MoodFilters() {
           {/* Action Buttons */}
           <View className="flex-row">
             <TouchableOpacity 
-              className="bg-[#855332] flex-1 py-3 rounded-xl flex-row items-center justify-center mr-2"
+              className="bg-[#4A2E1C] flex-1 py-3 rounded-xl flex-row items-center justify-center mr-2"
               activeOpacity={0.8}
               onPress={handleStartListening}
             >
@@ -306,7 +306,7 @@ export default function MoodFilters() {
               activeOpacity={0.8}
               onPress={handleStartListening}
             >
-              <Ionicons name="list" size={18} color="#855332" />
+              <Ionicons name="list" size={18} color="#4A2E1C" />
             </TouchableOpacity>
           </View>
         </View>

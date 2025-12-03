@@ -7,6 +7,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
+const path = require('path');
 require('dotenv').config();
 
 // Import route modules
@@ -59,12 +60,13 @@ app.use(
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com'],
+        imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com', 'http://localhost:*'],
         scriptSrc: ["'self'"],
         mediaSrc: ["'self'", 'https://res.cloudinary.com'],
         connectSrc: ["'self'", 'https://api.gemini.google.com'],
       },
     },
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin access to resources (thumbnails, etc.)
   })
 );
 
@@ -155,6 +157,13 @@ app.get('/health', (req, res) => {
     version: process.env.npm_package_version || '1.0.0',
   });
 });
+
+// Serve static uploads with CORS headers for cross-origin access
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+}, express.static(path.join(__dirname, '../uploads')));
 
 // API Routes
 const API_VERSION = process.env.API_VERSION || 'v1';

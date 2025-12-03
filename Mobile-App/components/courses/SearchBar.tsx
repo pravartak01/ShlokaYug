@@ -1,11 +1,16 @@
 /**
- * SearchBar Component - Modern Indigo Theme
+ * SearchBar Component - Vintage Brown with Gold/Saffron/Copper Theme
  * Reusable search bar with clear button and smooth animations
  */
 
 import React, { useRef, useState } from 'react';
 import { View, TextInput, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+// Theme colors - Vintage Brown with Gold/Saffron/Copper highlights
+const PRIMARY_BROWN = '#4A2E1C';    // Vintage brown for theme
+const COPPER = '#B87333';           // Copper for warmth
+const GOLD = '#D4A017';             // Gold for highlights
 
 interface SearchBarProps {
   value: string;
@@ -51,7 +56,7 @@ export default function SearchBar({
 
   const borderColor = borderAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#e5e7eb', '#6366f1'],
+    outputRange: ['#e5e7eb', COPPER],
   });
 
   const shadowOpacity = borderAnim.interpolate({
@@ -65,7 +70,7 @@ export default function SearchBar({
       style={{
         borderWidth: 1.5,
         borderColor,
-        shadowColor: '#6366f1',
+        shadowColor: COPPER,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity,
         shadowRadius: 8,

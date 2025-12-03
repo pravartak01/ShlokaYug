@@ -42,7 +42,7 @@ export const moodCategories: MoodCategory[] = [
         meaning: 'We pray for inner strength and emotional protection. May fear and suffering be replaced with peace and stability.',
         source: 'Rigveda 7.59.12',
         benefit: 'Emotional resilience & grounding',
-        audioFile: '../../ShlokaAudios/mahamrityunjay_mantra.mp3',
+        audioFile: '../../ShlokaAudios/mahamrityunjay mantra.mp3',
         duration: '5:30',
       },
       {

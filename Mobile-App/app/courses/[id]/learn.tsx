@@ -174,7 +174,7 @@ export default function CourseLearnScreen() {
     return (
       <SafeAreaView className="flex-1 bg-gray-900">
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#f97316" />
+          <ActivityIndicator size="large" color="#DD7A1F" />
           <Text className="text-white mt-4">Loading course...</Text>
         </View>
       </SafeAreaView>
@@ -275,7 +275,8 @@ export default function CourseLearnScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                className="bg-orange-500 px-6 py-3 rounded-lg"
+                className="px-6 py-3 rounded-lg"
+                style={{ backgroundColor: '#DD7A1F' }}
                 onPress={handleLectureComplete}
               >
                 <Text className="text-white font-semibold">Mark Complete & Next</Text>

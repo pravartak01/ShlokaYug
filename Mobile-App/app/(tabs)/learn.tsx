@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,22 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import CourseCard from '../../components/courses/CourseCard';
 import SearchBar from '../../components/courses/SearchBar';
 import FilterModal from '../../components/courses/FilterModal';
 import courseService, { Course, CourseFilters } from '../../services/courseService';
+import { getFullImageUrl } from '../../services/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Theme colors - Vintage Brown with Gold/Saffron/Copper highlights
+const PRIMARY_BROWN = '#4A2E1C';    // Vintage brown for theme
+const COPPER = '#B87333';           // Copper for warmth
+const GOLD = '#D4A017';             // Gold for highlights
+const SAFFRON = '#DD7A1F';          // Saffron for actions
+const SAND = '#F3E4C8';             // Sand/Beige for backgrounds
 
 type TabType = 'browse' | 'my-learning';
 
@@ -37,9 +45,8 @@ const AnimatedTabButton = ({
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8} className="flex-1">
       <View
-        className={`py-3 px-4 rounded-xl flex-row items-center justify-center ${
-          active ? 'bg-indigo-500' : 'bg-gray-100'
-        }`}
+        className={`py-3 px-4 rounded-xl flex-row items-center justify-center`}
+        style={{ backgroundColor: active ? SAFFRON : '#f3f4f6' }}
       >
         <Ionicons 
           name={active ? icon : `${icon}-outline` as any} 
@@ -81,10 +88,11 @@ const FilterChip = ({
   return (
     <TouchableOpacity onPress={handlePress} activeOpacity={0.8}>
       <Animated.View
-        className={`px-4 py-2 rounded-full flex-row items-center mr-2 ${
-          active ? 'bg-indigo-500' : 'bg-gray-100 border border-gray-200'
-        }`}
-        style={{ transform: [{ scale: scaleAnim }] }}
+        className={`px-4 py-2 rounded-full flex-row items-center mr-2 ${!active && 'bg-gray-100 border border-gray-200'}`}
+        style={{ 
+          transform: [{ scale: scaleAnim }],
+          backgroundColor: active ? COPPER : undefined
+        }}
       >
         {icon && (
           <Ionicons 
@@ -153,6 +161,9 @@ const EnrolledCourseCard = ({
   const course = item.courseId || item.course;
   if (!course || !course._id) return null;
 
+  // Get thumbnail URL - check both course.thumbnail and course.metadata.thumbnail
+  const thumbnailUrl = getFullImageUrl(course.thumbnail || course.metadata?.thumbnail);
+
   const calculateProgress = () => {
     if (!item.progress || !item.progress.sectionsProgress) return 0;
     const completedLectures = item.progress.sectionsProgress.reduce(
@@ -174,9 +185,9 @@ const EnrolledCourseCard = ({
       case 'completed':
         return { bg: 'bg-emerald-500', icon: 'checkmark-circle', label: 'Completed', color: '#10b981' };
       case 'in-progress':
-        return { bg: 'bg-indigo-500', icon: 'play-circle', label: 'Continue', color: '#6366f1' };
+        return { bg: 'bg-[#DD7A1F]', icon: 'play-circle', label: 'Continue', color: SAFFRON };
       default:
-        return { bg: 'bg-gray-500', icon: 'rocket', label: 'Start Now', color: '#6b7280' };
+        return { bg: 'bg-[#D4A017]', icon: 'rocket', label: 'Start Now', color: GOLD };
     }
   };
 
@@ -196,7 +207,7 @@ const EnrolledCourseCard = ({
         activeOpacity={1}
         className="bg-white rounded-3xl overflow-hidden mb-4 mx-4"
         style={{
-          shadowColor: '#6366f1',
+          shadowColor: PRIMARY_BROWN,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.1,
           shadowRadius: 12,
@@ -205,16 +216,16 @@ const EnrolledCourseCard = ({
       >
         {/* Course Thumbnail */}
         <View className="relative">
-          {course.metadata?.thumbnail ? (
+          {thumbnailUrl ? (
             <Image
-              source={{ uri: course.metadata.thumbnail }}
-              className="w-full h-44"
+              source={{ uri: thumbnailUrl }}
+              className="w-full h-56"
               resizeMode="cover"
             />
           ) : (
-            <View className="w-full h-44 bg-indigo-100 items-center justify-center">
-              <View className="w-20 h-20 bg-indigo-200 rounded-full items-center justify-center">
-                <Ionicons name="book" size={40} color="#6366f1" />
+            <View className="w-full h-56 bg-[#F3E4C8] items-center justify-center">
+              <View className="w-20 h-20 bg-[#E5D1AF] rounded-full items-center justify-center">
+                <Ionicons name="book" size={40} color={PRIMARY_BROWN} />
               </View>
             </View>
           )}
@@ -259,8 +270,8 @@ const EnrolledCourseCard = ({
           <View className="flex-row items-center flex-wrap mb-3">
             {/* Instructor */}
             <View className="flex-row items-center mr-4 mb-1">
-              <View className="w-6 h-6 bg-indigo-100 rounded-full items-center justify-center">
-                <Ionicons name="person" size={12} color="#6366f1" />
+              <View className="w-6 h-6 bg-[#F9F0E6] rounded-full items-center justify-center">
+                <Ionicons name="person" size={12} color={COPPER} />
               </View>
               <Text className="text-gray-600 text-sm ml-1.5">
                 {course.basic?.instructor || course.instructor?.name || 'Instructor'}
@@ -269,8 +280,8 @@ const EnrolledCourseCard = ({
 
             {/* Duration */}
             <View className="flex-row items-center mb-1">
-              <View className="w-6 h-6 bg-amber-100 rounded-full items-center justify-center">
-                <Ionicons name="time" size={12} color="#f59e0b" />
+              <View className="w-6 h-6 bg-[#FDF8E8] rounded-full items-center justify-center">
+                <Ionicons name="time" size={12} color={GOLD} />
               </View>
               <Text className="text-gray-600 text-sm ml-1.5">
                 {course.metadata?.duration || '10+ Hours'}
@@ -341,12 +352,28 @@ export default function LearnScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Reload enrolled courses when screen comes into focus (e.g., after payment)
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🔄 Screen focused - reloading enrolled courses...');
+      loadEnrolledCourses();
+    }, [])
+  );
+
+  // Also reload when switching to My Learning tab
+  useEffect(() => {
+    if (activeTab === 'my-learning') {
+      console.log('🔄 Switched to My Learning tab - reloading...');
+      loadEnrolledCourses();
+    }
+  }, [activeTab]);
+
   useEffect(() => {
     if (activeTab === 'browse') {
       applyFiltersAndSearch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, activeFilters, courses, activeTab]);
+  }, [searchQuery, activeFilters, courses, enrolledCourses, activeTab]);
 
   const loadCourses = async () => {
     try {
@@ -363,15 +390,35 @@ export default function LearnScreen() {
 
   const loadEnrolledCourses = async () => {
     try {
+      console.log('🎓 Loading enrolled courses...');
       const response = await courseService.getEnrolledCourses();
-      const enrollments = response.data?.enrollments || [];
+      console.log('🎓 Enrolled courses raw response:', JSON.stringify(response, null, 2));
+      
+      // Response structure: { success: true, data: { enrollments: [...] } }
+      // courseService returns response.data, so we get: { success, data: { enrollments } }
+      const enrollments = response?.data?.enrollments || response?.enrollments || [];
+      console.log('🎓 Enrollments extracted:', enrollments.length, 'enrollments');
+      
+      if (enrollments.length === 0) {
+        console.log('🎓 No enrollments found in response. Response keys:', Object.keys(response || {}));
+      }
+      
       const validEnrollments = enrollments.filter((enrollment: any) => {
         const course = enrollment.courseId || enrollment.course;
-        return course && course._id;
+        const isValid = course && course._id;
+        console.log('🎓 Enrollment validation:', { 
+          enrollmentId: enrollment._id,
+          courseId: course?._id,
+          courseTitle: course?.title,
+          isValid 
+        });
+        return isValid;
       });
+      
+      console.log('🎓 Valid enrollments count:', validEnrollments.length);
       setEnrolledCourses(validEnrollments);
     } catch (error) {
-      console.error('Error loading enrolled courses:', error);
+      console.error('❌ Error loading enrolled courses:', error);
     }
   };
 
@@ -386,7 +433,19 @@ export default function LearnScreen() {
   };
 
   const applyFiltersAndSearch = () => {
-    let filtered = [...courses];
+    // Create a set of enrolled course IDs for quick lookup
+    const enrolledCourseIds = new Set(
+      enrolledCourses.map((enrollment: any) => {
+        const course = enrollment.courseId || enrollment.course;
+        return course?._id || course;
+      }).filter(Boolean)
+    );
+
+    // Map courses with enrollment status
+    let filtered = courses.map(course => ({
+      ...course,
+      isEnrolled: enrolledCourseIds.has(course._id)
+    }));
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -463,8 +522,8 @@ export default function LearnScreen() {
 
   const renderEmptyState = () => (
     <View className="flex-1 items-center justify-center py-16 px-6">
-      <View className="w-24 h-24 bg-indigo-100 rounded-full items-center justify-center mb-4">
-        <Ionicons name="search" size={40} color="#6366f1" />
+      <View className="w-24 h-24 bg-[#F3E4C8] rounded-full items-center justify-center mb-4">
+        <Ionicons name="search" size={40} color={PRIMARY_BROWN} />
       </View>
       <Text className="text-gray-800 text-xl font-bold text-center mb-2">
         No Courses Found
@@ -477,8 +536,8 @@ export default function LearnScreen() {
 
   const renderMyLearningEmpty = () => (
     <View className="flex-1 items-center justify-center py-16 px-6">
-      <View className="w-24 h-24 bg-indigo-100 rounded-full items-center justify-center mb-4">
-        <Ionicons name="school" size={40} color="#6366f1" />
+      <View className="w-24 h-24 bg-[#F3E4C8] rounded-full items-center justify-center mb-4">
+        <Ionicons name="school" size={40} color={PRIMARY_BROWN} />
       </View>
       <Text className="text-gray-800 text-xl font-bold text-center mb-2">
         Start Your Learning Journey
@@ -488,7 +547,8 @@ export default function LearnScreen() {
       </Text>
       <TouchableOpacity
         onPress={() => setActiveTab('browse')}
-        className="bg-indigo-500 px-6 py-3 rounded-xl flex-row items-center"
+        style={{ backgroundColor: SAFFRON }}
+        className="px-6 py-3 rounded-xl flex-row items-center"
         activeOpacity={0.8}
       >
         <Ionicons name="compass" size={18} color="#ffffff" />
@@ -513,10 +573,10 @@ export default function LearnScreen() {
         </View>
         <View className="flex-row items-center">
           <TouchableOpacity 
-            className="w-11 h-11 bg-indigo-50 rounded-xl items-center justify-center"
+            className="w-11 h-11 bg-[#FDF8E8] rounded-xl items-center justify-center"
             activeOpacity={0.7}
           >
-            <Ionicons name="bookmark" size={20} color="#6366f1" />
+            <Ionicons name="bookmark" size={20} color={GOLD} />
           </TouchableOpacity>
         </View>
       </View>
@@ -540,24 +600,24 @@ export default function LearnScreen() {
       {activeTab === 'browse' ? (
         <>
           {/* Stats Row */}
-          <View className="flex-row items-center justify-between bg-indigo-50 rounded-2xl p-4 mb-4">
+          <View className="flex-row items-center justify-between bg-[#F3E4C8] rounded-2xl p-4 mb-4">
             <View className="flex-row items-center">
-              <View className="w-10 h-10 bg-indigo-500 rounded-xl items-center justify-center">
+              <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: SAFFRON }}>
                 <Ionicons name="library" size={20} color="#ffffff" />
               </View>
               <View className="ml-3">
-                <Text className="text-indigo-900 text-lg font-bold">{filteredCourses.length}</Text>
-                <Text className="text-indigo-600 text-xs">Courses Available</Text>
+                <Text className="text-[#4A2E1C] text-lg font-bold">{filteredCourses.length}</Text>
+                <Text className="text-[#8A5E44] text-xs">Courses Available</Text>
               </View>
             </View>
-            <View className="h-10 w-px bg-indigo-200" />
+            <View className="h-10 w-px bg-[#E5D1AF]" />
             <View className="flex-row items-center">
               <View className="w-10 h-10 bg-emerald-500 rounded-xl items-center justify-center">
                 <Ionicons name="people" size={20} color="#ffffff" />
               </View>
               <View className="ml-3">
-                <Text className="text-indigo-900 text-lg font-bold">1.2K+</Text>
-                <Text className="text-indigo-600 text-xs">Active Learners</Text>
+                <Text className="text-[#4A2E1C] text-lg font-bold">1.2K+</Text>
+                <Text className="text-[#8A5E44] text-xs">Active Learners</Text>
               </View>
             </View>
           </View>
@@ -578,13 +638,13 @@ export default function LearnScreen() {
           <View className="flex-row items-center justify-between mb-2">
             <TouchableOpacity
               onPress={() => setShowFilters(true)}
-              className="flex-row items-center bg-indigo-50 px-4 py-2.5 rounded-xl border border-indigo-100"
+              className="flex-row items-center bg-[#F9F0E6] px-4 py-2.5 rounded-xl border border-[#E8D5C4]"
               activeOpacity={0.7}
             >
-              <Ionicons name="options" size={18} color="#6366f1" />
-              <Text className="text-indigo-600 font-semibold ml-2">Filters</Text>
+              <Ionicons name="options" size={18} color={COPPER} />
+              <Text className="text-[#8A5626] font-semibold ml-2">Filters</Text>
               {getActiveFilterCount() > 0 && (
-                <View className="bg-indigo-500 rounded-full w-5 h-5 items-center justify-center ml-2">
+                <View className="rounded-full w-5 h-5 items-center justify-center ml-2" style={{ backgroundColor: COPPER }}>
                   <Text className="text-white text-xs font-bold">{getActiveFilterCount()}</Text>
                 </View>
               )}
@@ -601,16 +661,16 @@ export default function LearnScreen() {
       ) : (
         <>
           {/* My Learning Header */}
-          <View className="bg-indigo-50 rounded-2xl p-4 mb-4">
+          <View className="bg-[#F3E4C8] rounded-2xl p-4 mb-4">
             <View className="flex-row items-center">
-              <View className="w-12 h-12 bg-indigo-500 rounded-xl items-center justify-center">
+              <View className="w-12 h-12 rounded-xl items-center justify-center" style={{ backgroundColor: GOLD }}>
                 <Ionicons name="trophy" size={24} color="#ffffff" />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-indigo-900 text-lg font-bold">
+                <Text className="text-[#4A2E1C] text-lg font-bold">
                   {filteredEnrolledCourses.length} Course{filteredEnrolledCourses.length !== 1 ? 's' : ''} Enrolled
                 </Text>
-                <Text className="text-indigo-600 text-sm">Keep up the great work!</Text>
+                <Text className="text-[#8A5E44] text-sm">Keep up the great work!</Text>
               </View>
             </View>
           </View>
@@ -645,8 +705,8 @@ export default function LearnScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center">
-          <View className="w-16 h-16 bg-indigo-100 rounded-full items-center justify-center mb-4">
-            <ActivityIndicator size="large" color="#6366f1" />
+          <View className="w-16 h-16 bg-[#F3E4C8] rounded-full items-center justify-center mb-4">
+            <ActivityIndicator size="large" color={PRIMARY_BROWN} />
           </View>
           <Text className="text-gray-600 font-medium">Loading courses...</Text>
           <Text className="text-gray-400 text-sm mt-1">Preparing your learning experience</Text>
@@ -675,7 +735,11 @@ export default function LearnScreen() {
             <EnrolledCourseCard
               item={item}
               index={index}
-              onPress={() => router.push(`/courses/${(item.courseId || item.course)?._id}`)}
+              onPress={() => {
+                const courseId = (item.courseId || item.course)?._id;
+                console.log('🎓 Navigating to course learn:', courseId);
+                router.push(`/courses/${courseId}/learn`);
+              }}
             />
           )
         }
@@ -688,8 +752,8 @@ export default function LearnScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#6366f1"
-            colors={['#6366f1']}
+            tintColor={PRIMARY_BROWN}
+            colors={[PRIMARY_BROWN]}
           />
         }
         showsVerticalScrollIndicator={false}

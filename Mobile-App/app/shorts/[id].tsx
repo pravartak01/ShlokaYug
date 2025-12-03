@@ -203,7 +203,7 @@ export default function ShortsViewerScreen() {
           <View className="px-4">
             {/* Creator Info */}
             <View className="flex-row items-center mb-3">
-              <View className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 items-center justify-center mr-3">
+              <View className="w-10 h-10 rounded-full bg-[#DD7A1F] items-center justify-center mr-3">
                 <Text className="text-white font-bold">
                   {item.creator.displayName[0].toUpperCase()}
                 </Text>
@@ -219,7 +219,7 @@ export default function ShortsViewerScreen() {
                       s._id === item._id ? { ...s, isSubscribed: true } : s
                     ));
                   }}
-                  className="ml-3 bg-orange-500 px-4 py-1 rounded-full"
+                  className="ml-3 bg-[#DD7A1F] px-4 py-1 rounded-full"
                 >
                   <Text className="text-white font-bold text-sm">Follow</Text>
                 </TouchableOpacity>
@@ -261,7 +261,7 @@ export default function ShortsViewerScreen() {
             onPress={() => handleLike(item)}
             className="items-center"
           >
-            <View className={`p-2 rounded-full ${item.isLiked ? 'bg-orange-500' : 'bg-black/30'}`}>
+            <View className={`p-2 rounded-full ${item.isLiked ? 'bg-[#DD7A1F]' : 'bg-black/30'}`}>
               <Ionicons
                 name={item.isLiked ? 'heart' : 'heart-outline'}
                 size={32}
@@ -333,7 +333,7 @@ export default function ShortsViewerScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-black items-center justify-center">
-        <ActivityIndicator size="large" color="#f97316" />
+        <ActivityIndicator size="large" color="#DD7A1F" />
       </View>
     );
   }

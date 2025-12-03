@@ -149,7 +149,7 @@ export default function ProfileScreen() {
     switch (rarity) {
       case 'common': return '#6b7280';
       case 'rare': return '#3b82f6';
-      case 'epic': return '#8b5cf6';
+      case 'epic': return '#a0704a';
       case 'legendary': return '#f59e0b';
       default: return '#6b7280';
     }
