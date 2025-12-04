@@ -128,7 +128,7 @@ messageHistorySchema.statics.getUserHistory = function(userId, limit = 50, sessi
 // Static method to get recent conversations by session
 messageHistorySchema.statics.getRecentSessions = function(userId, limit = 10) {
   return this.aggregate([
-    { $match: { user_id: mongoose.Types.ObjectId(userId) } },
+    { $match: { user_id: new mongoose.Types.ObjectId(userId) } },
     {
       $group: {
         _id: '$conversation_metadata.session_id',
@@ -148,7 +148,7 @@ messageHistorySchema.statics.getChandasAnalyticsForUser = function(userId) {
   return this.aggregate([
     {
       $match: {
-        user_id: mongoose.Types.ObjectId(userId),
+        user_id: new mongoose.Types.ObjectId(userId),
         'conversation_metadata.message_type': 'analysis_result'
       }
     },
