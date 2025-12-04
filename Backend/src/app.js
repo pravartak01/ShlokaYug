@@ -26,6 +26,12 @@ const communityRoutes = require('./routes/community');
 const videoRoutes = require('./routes/videos');
 const shortsRoutes = require('./routes/shorts');
 
+// Message History Routes
+const messageRoutes = require('./routes/messages');
+
+// Admin Routes
+const adminRoutes = require('./routes/admin');
+
 // const userRoutes = require('./routes/userRoutes');
 // const shlokaRoutes = require('./routes/shlokaRoutes');
 // const chandasRoutes = require('./routes/chandasRoutes');
@@ -182,6 +188,12 @@ app.use(`/api/${API_VERSION}/community`, communityRoutes);
 // Video Routes
 app.use(`/api/${API_VERSION}/videos`, videoRoutes);
 app.use(`/api/${API_VERSION}/shorts`, shortsRoutes);
+
+// Message History Routes
+app.use(`/api/${API_VERSION}/messages`, messageRoutes);
+
+// Admin Routes
+app.use(`/api/${API_VERSION}/admin`, adminRoutes);
 
 // app.use(`/api/${API_VERSION}/users`, userRoutes);
 // app.use(`/api/${API_VERSION}/shlokas`, shlokaRoutes);

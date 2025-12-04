@@ -18,6 +18,9 @@ const adminController = require('../controllers/adminController');
 // Import challenge controller for admin challenge routes
 const challengeController = require('../controllers/challengeController');
 
+// Import message controller for admin message management
+const messageController = require('../controllers/messageController');
+
 // Import validators
 const {
   createChallengeValidation,
@@ -360,6 +363,131 @@ router.post('/challenges/:id/activate',
  */
 router.get('/challenges/analytics',
   challengeController.getChallengeAnalytics
+);
+
+// =====================================
+// MESSAGE HISTORY MANAGEMENT ROUTES
+// =====================================
+
+/**
+ * @route   GET /api/v1/admin/messages/overview
+ * @desc    Get platform-wide message history overview and statistics
+ * @access  Private (Admin only)
+ */
+router.get('/messages/overview', async (req, res) => {
+  try {
+    const MessageHistory = require('../models/MessageHistory');
+    
+    // Get basic statistics
+    const totalMessages = await MessageHistory.countDocuments();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    const todayMessages = await MessageHistory.countDocuments({
+      'conversation_metadata.timestamp': { $gte: todayStart }
+    });
+    
+    const analysisMessages = await MessageHistory.countDocuments({
+      'conversation_metadata.message_type': 'analysis_result'
+    });
+    
+    // Get most analyzed chandas
+    const chandasStats = await MessageHistory.aggregate([
+      {
+        $match: {
+          'conversation_metadata.message_type': 'analysis_result',
+          'conversation_metadata.analysis_data.chandas_name': { $exists: true }
+        }
+      },
+      {
+        $group: {
+          _id: '$conversation_metadata.analysis_data.chandas_name',
+          count: { $sum: 1 },
+          avgConfidence: { $avg: '$conversation_metadata.analysis_data.confidence_score' }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Message history overview retrieved successfully',
+      data: {
+        totalMessages,
+        todayMessages,
+        analysisMessages,
+        topChandas: chandasStats,
+        messageTypes: {
+          user_input: await MessageHistory.countDocuments({ 'conversation_metadata.message_type': 'user_input' }),
+          bot_response: await MessageHistory.countDocuments({ 'conversation_metadata.message_type': 'bot_response' }),
+          analysis_result: analysisMessages
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve message overview',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+/**
+ * @route   GET /api/v1/admin/messages/users/:userId/history
+ * @desc    Get message history for a specific user (admin view)
+ * @access  Private (Admin only)
+ */
+router.get('/messages/users/:userId/history',
+  [
+    param('userId')
+      .isMongoId()
+      .withMessage('Invalid user ID format'),
+    query('limit')
+      .optional()
+      .isInt({ min: 1, max: 200 })
+      .withMessage('Limit must be between 1 and 200'),
+    query('session_id')
+      .optional()
+      .isString()
+      .withMessage('Session ID must be a string')
+  ],
+  validateRequest,
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { limit = 50, session_id } = req.query;
+      
+      const MessageHistory = require('../models/MessageHistory');
+      
+      const query = { user_id: userId };
+      if (session_id) {
+        query['conversation_metadata.session_id'] = session_id;
+      }
+      
+      const messages = await MessageHistory.find(query)
+        .sort({ 'conversation_metadata.timestamp': -1 })
+        .limit(parseInt(limit))
+        .populate('user_id', 'username profile.firstName profile.lastName email');
+        
+      res.status(200).json({
+        success: true,
+        message: 'User message history retrieved successfully',
+        data: {
+          userId,
+          messages,
+          totalMessages: messages.length
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve user message history',
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      });
+    }
+  }
 );
 
 // =====================================
