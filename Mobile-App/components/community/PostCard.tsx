@@ -1,6 +1,6 @@
 /**
- * PostCard Component - Displays a single community post
- * Twitter-like post card with engagement actions
+ * PostCard Component - Clean Light Design
+ * Professional card matching Learn tab aesthetics
  */
 
 import React, { useState, memo } from 'react';
@@ -10,10 +10,32 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  StyleSheet,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { CommunityPost } from '../../services/communityService';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Light Theme Colors - Matching Learn Tab
+const COLORS = {
+  saffron: '#DD7A1F',
+  copper: '#B87333',
+  gold: '#D4A017',
+  white: '#FFFFFF',
+  background: '#F9FAFB',
+  gray50: '#F9FAFB',
+  gray100: '#F3F4F6',
+  gray200: '#E5E7EB',
+  gray300: '#D1D5DB',
+  gray400: '#9CA3AF',
+  gray500: '#6B7280',
+  gray600: '#4B5563',
+  gray700: '#374151',
+  gray800: '#1F2937',
+};
 
 interface PostCardProps {
   post: CommunityPost;
@@ -68,7 +90,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
     if (diffDays > 0) return `${diffDays}d`;
     if (diffHours > 0) return `${diffHours}h`;
     if (diffMins > 0) return `${diffMins}m`;
-    return 'now';
+    return 'just now';
   };
 
   const handleLike = () => {
@@ -79,14 +101,17 @@ const PostCard: React.FC<PostCardProps> = memo(({
 
   const handleRepost = () => {
     Alert.alert(
-      'Repost',
-      'How would you like to share this?',
+      'Share This Post',
+      'How would you like to share?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Repost', onPress: () => {
-          setIsRetweeted(true);
-          onRepost?.(post._id);
-        }},
+        { 
+          text: 'Repost', 
+          onPress: () => {
+            setIsRetweeted(true);
+            onRepost?.(post._id);
+          }
+        },
         { text: 'Quote', onPress: () => onRepost?.(post._id) },
       ]
     );
@@ -98,286 +123,434 @@ const PostCard: React.FC<PostCardProps> = memo(({
     }
   };
 
-  const renderHashtags = (text: string) => {
-    if (!text) return null;
-    
-    const parts = text.split(/(#[\w\u0900-\u097F]+)/g);
-    return parts.map((part, index) => {
-      if (part.startsWith('#')) {
-        return (
-          <Text
+  const handleHashtagClick = (hashtag: string) => {
+    onHashtagPress?.(hashtag);
+  };
+
+  const renderHashtags = () => {
+    const hashtags = post.content?.hashtags || [];
+    if (hashtags.length === 0) return null;
+
+    return (
+      <View style={styles.hashtagsContainer}>
+        {hashtags.slice(0, 3).map((tag, index) => (
+          <TouchableOpacity
             key={index}
-            className="text-orange-600 font-medium"
-            onPress={() => onHashtagPress?.(part.slice(1))}
+            onPress={() => handleHashtagClick(tag)}
+            style={styles.hashtagBadge}
           >
-            {part}
-          </Text>
-        );
-      }
-      return <Text key={index}>{part}</Text>;
-    });
+            <Text style={styles.hashtagText}>#{tag}</Text>
+          </TouchableOpacity>
+        ))}
+        {hashtags.length > 3 && (
+          <Text style={styles.moreHashtags}>+{hashtags.length - 3}</Text>
+        )}
+      </View>
+    );
   };
 
   const renderMedia = () => {
-    const media = post.content?.media;
-    if (!media) return null;
-
-    // Render images
-    if (media.images && media.images.length > 0) {
-      const imageCount = media.images.length;
-      return (
-        <View className="mt-3 rounded-2xl overflow-hidden">
-          {imageCount === 1 ? (
-            <Image
-              source={{ uri: media.images[0].url }}
-              className="w-full h-52 bg-gray-200"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="flex-row flex-wrap">
-              {media.images.slice(0, 4).map((img, idx) => (
-                <View 
-                  key={idx} 
-                  className={`${imageCount === 2 ? 'w-1/2' : 'w-1/2'} h-32 p-0.5`}
-                >
-                  <Image
-                    source={{ uri: img.url }}
-                    className="w-full h-full rounded-lg bg-gray-200"
-                    resizeMode="cover"
-                  />
-                  {idx === 3 && imageCount > 4 && (
-                    <View className="absolute inset-0 bg-black/50 rounded-lg items-center justify-center m-0.5">
-                      <Text className="text-white font-bold text-lg">+{imageCount - 4}</Text>
-                    </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-      );
-    }
-
-    // Render video thumbnail
-    if (media.video) {
-      return (
-        <TouchableOpacity 
-          className="mt-3 rounded-2xl overflow-hidden bg-gray-900"
-          onPress={() => router.push(`/videos/${media.video?._id}`)}
-        >
-          {media.video.thumbnail?.url ? (
-            <Image
-              source={{ uri: media.video.thumbnail.url }}
-              className="w-full h-44"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="w-full h-44 bg-gray-800 items-center justify-center">
-              <Ionicons name="videocam" size={40} color="#9ca3af" />
-            </View>
-          )}
-          <View className="absolute inset-0 items-center justify-center">
-            <View className="bg-black/60 rounded-full p-3">
-              <Ionicons name="play" size={28} color="white" />
-            </View>
-          </View>
-          {media.video.duration && (
-            <View className="absolute bottom-2 right-2 bg-black/70 px-2 py-0.5 rounded">
-              <Text className="text-white text-xs font-medium">
-                {Math.floor(media.video.duration / 60)}:{String(Math.floor(media.video.duration % 60)).padStart(2, '0')}
-              </Text>
-            </View>
-          )}
-          <View className="p-3 bg-gray-900">
-            <Text className="text-white font-medium" numberOfLines={1}>
-              {media.video.title}
-            </Text>
-            <Text className="text-gray-400 text-sm mt-1">
-              {formatNumber(media.video.views || 0)} views
-            </Text>
-          </View>
-        </TouchableOpacity>
-      );
-    }
-
-    return null;
-  };
-
-  // Render quoted/original post for retweets
-  const renderOriginalPost = () => {
-    if (!post.originalPost) return null;
-
-    const original = post.originalPost;
-    const originalAuthor = original.author || {};
-    const originalDisplayName = originalAuthor.displayName || 
-      (originalAuthor.firstName && originalAuthor.lastName 
-        ? `${originalAuthor.firstName} ${originalAuthor.lastName}` 
-        : originalAuthor.username || 'Unknown');
+    const images = post.content?.media?.images || [];
+    if (images.length === 0) return null;
 
     return (
-      <View className="mt-3 border border-gray-200 rounded-2xl p-3 bg-gray-50">
-        <View className="flex-row items-center">
-          {originalAuthor.avatar ? (
-            <Image
-              source={{ uri: originalAuthor.avatar }}
-              className="w-5 h-5 rounded-full bg-gray-300"
-            />
-          ) : (
-            <View className="w-5 h-5 rounded-full bg-orange-100 items-center justify-center">
-              <Text className="text-orange-600 text-xs font-bold">
-                {(originalDisplayName)[0]?.toUpperCase()}
-              </Text>
-            </View>
-          )}
-          <Text className="text-gray-900 font-semibold text-sm ml-2">
-            {originalDisplayName}
-          </Text>
-          <Text className="text-gray-500 text-sm ml-1">
-            @{originalAuthor.username}
-          </Text>
-        </View>
-        {original.content?.text && (
-          <Text className="text-gray-800 mt-2 text-sm" numberOfLines={3}>
-            {original.content.text}
-          </Text>
+      <View style={styles.mediaContainer}>
+        {images.length === 1 ? (
+          <Image 
+            source={{ uri: images[0].url }} 
+            style={styles.singleImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.multiImageGrid}>
+            {images.slice(0, 4).map((img, index) => (
+              <View 
+                key={index} 
+                style={[
+                  styles.gridImage,
+                  images.length === 2 && styles.gridImageTwo,
+                  images.length === 3 && index === 0 && styles.gridImageThreeMain,
+                ]}
+              >
+                <Image 
+                  source={{ uri: img.url }} 
+                  style={styles.gridImageFull}
+                  resizeMode="cover"
+                />
+                {index === 3 && images.length > 4 && (
+                  <View style={styles.moreImagesOverlay}>
+                    <Text style={styles.moreImagesText}>+{images.length - 4}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
         )}
       </View>
     );
   };
 
   return (
-    <View className="bg-white border-b border-gray-100">
-      {/* Retweet indicator */}
-      {post.postType === 'retweet' && (
-        <View className="flex-row items-center px-4 pt-3 pb-1">
-          <Ionicons name="repeat" size={14} color="#6b7280" />
-          <Text className="text-gray-500 text-xs ml-2 font-medium">
-            {displayName} reposted
+    <View style={styles.cardContainer}>
+      {/* Header - User Info */}
+      <TouchableOpacity 
+        style={styles.header}
+        onPress={handleUserPress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.avatarContainer}>
+          {author.avatar ? (
+            <Image source={{ uri: author.avatar }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarText}>
+                {displayName.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.userInfo}>
+          <View style={styles.nameRow}>
+            <Text style={styles.displayName} numberOfLines={1}>
+              {displayName}
+            </Text>
+            {author.isVerified && (
+              <Ionicons name="checkmark-circle" size={14} color={COLORS.saffron} style={styles.verifiedIcon} />
+            )}
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.username}>@{author.username}</Text>
+            <Text style={styles.separator}>•</Text>
+            <Text style={styles.timeAgo}>{formatTimeAgo(post.createdAt)}</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.moreButton}>
+          <Ionicons name="ellipsis-horizontal" size={20} color={COLORS.gray400} />
+        </TouchableOpacity>
+      </TouchableOpacity>
+
+      {/* Content */}
+      <View style={styles.content}>
+        {post.content?.text && (
+          <Text style={styles.contentText}>
+            {post.content.text}
           </Text>
+        )}
+
+        {renderHashtags()}
+        {renderMedia()}
+
+        {/* Location */}
+        {post.location?.name && (
+          <View style={styles.locationContainer}>
+            <Ionicons name="location-outline" size={14} color={COLORS.gray400} />
+            <Text style={styles.locationText}>{post.location.name}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Engagement Stats */}
+      {(post.metrics?.views > 0 || post.metrics?.likes > 0) && (
+        <View style={styles.statsRow}>
+          {post.metrics?.views > 0 && (
+            <View style={styles.statItem}>
+              <Ionicons name="eye-outline" size={14} color={COLORS.gray400} />
+              <Text style={styles.statText}>{formatNumber(post.metrics.views)} views</Text>
+            </View>
+          )}
+          {post.metrics?.likes > 0 && (
+            <View style={styles.statItem}>
+              <Ionicons name="heart" size={14} color={COLORS.saffron} />
+              <Text style={styles.statText}>{formatNumber(post.metrics.likes)} likes</Text>
+            </View>
+          )}
         </View>
       )}
 
-      <View className="flex-row px-4 py-3">
-        {/* Avatar */}
-        <TouchableOpacity onPress={handleUserPress}>
-          {author.avatar ? (
-            <Image
-              source={{ uri: author.avatar }}
-              className="w-12 h-12 rounded-full bg-gray-300"
-            />
-          ) : (
-            <View className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 items-center justify-center">
-              <Text className="text-white font-bold text-lg">
-                {displayName[0]?.toUpperCase() || '?'}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        {/* Content */}
-        <View className="flex-1 ml-3">
-          {/* Header */}
-          <View className="flex-row items-center flex-wrap">
-            <TouchableOpacity onPress={handleUserPress} className="flex-row items-center">
-              <Text className="text-gray-900 font-bold text-base">
-                {displayName}
-              </Text>
-              {author.isVerified && (
-                <Ionicons name="checkmark-circle" size={16} color="#f97316" className="ml-1" />
+      {/* Actions */}
+      {showActions && (
+        <View style={styles.actions}>
+          <View style={styles.actionsDivider} />
+          
+          <View style={styles.actionsRow}>
+            {/* Like */}
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={handleLike}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name={isLiked ? 'heart' : 'heart-outline'} 
+                size={20} 
+                color={isLiked ? '#EF4444' : COLORS.gray500}
+              />
+              {likesCount > 0 && (
+                <Text style={[styles.actionText, isLiked && styles.actionTextLiked]}>
+                  {formatNumber(likesCount)}
+                </Text>
               )}
             </TouchableOpacity>
-            <Text className="text-gray-500 text-sm ml-1">
-              @{author.username}
-            </Text>
-            <Text className="text-gray-400 text-sm ml-1">·</Text>
-            <Text className="text-gray-500 text-sm ml-1">
-              {formatTimeAgo(post.createdAt)}
-            </Text>
+
+            {/* Comment */}
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => onComment?.(post._id)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chatbubble-outline" size={20} color={COLORS.gray500} />
+              {post.metrics?.comments > 0 && (
+                <Text style={styles.actionText}>
+                  {formatNumber(post.metrics.comments)}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Repost */}
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={handleRepost}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name={isRetweeted ? 'repeat' : 'repeat-outline'} 
+                size={20} 
+                color={isRetweeted ? '#22C55E' : COLORS.gray500}
+              />
+              {post.metrics?.retweets > 0 && (
+                <Text style={[styles.actionText, isRetweeted && styles.actionTextRetweeted]}>
+                  {formatNumber(post.metrics.retweets)}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Share */}
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => onShare?.(post._id)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="share-outline" size={20} color={COLORS.gray500} />
+            </TouchableOpacity>
           </View>
-
-          {/* Quote text (for quote tweets) */}
-          {post.postType === 'quote' && post.quoteText && (
-            <Text className="text-gray-900 mt-2 text-base leading-5">
-              {renderHashtags(post.quoteText)}
-            </Text>
-          )}
-
-          {/* Post text */}
-          {post.content?.text && (
-            <Text className="text-gray-900 mt-1 text-base leading-5">
-              {renderHashtags(post.content.text)}
-            </Text>
-          )}
-
-          {/* Media */}
-          {renderMedia()}
-
-          {/* Original post for retweets/quotes */}
-          {renderOriginalPost()}
-
-          {/* Actions */}
-          {showActions && (
-            <View className="flex-row items-center justify-between mt-3 pr-8">
-              {/* Comment */}
-              <TouchableOpacity 
-                className="flex-row items-center"
-                onPress={() => onComment?.(post._id)}
-              >
-                <Ionicons name="chatbubble-outline" size={18} color="#6b7280" />
-                {(post.metrics?.comments || 0) > 0 && (
-                  <Text className="text-gray-500 text-sm ml-1.5">
-                    {formatNumber(post.metrics.comments)}
-                  </Text>
-                )}
-              </TouchableOpacity>
-
-              {/* Repost */}
-              <TouchableOpacity 
-                className="flex-row items-center"
-                onPress={handleRepost}
-              >
-                <Ionicons 
-                  name="repeat" 
-                  size={18} 
-                  color={isRetweeted ? '#22c55e' : '#6b7280'} 
-                />
-                {(post.metrics?.retweets || 0) > 0 && (
-                  <Text className={`text-sm ml-1.5 ${isRetweeted ? 'text-green-500' : 'text-gray-500'}`}>
-                    {formatNumber(post.metrics.retweets)}
-                  </Text>
-                )}
-              </TouchableOpacity>
-
-              {/* Like */}
-              <TouchableOpacity 
-                className="flex-row items-center"
-                onPress={handleLike}
-              >
-                <Ionicons 
-                  name={isLiked ? 'heart' : 'heart-outline'} 
-                  size={18} 
-                  color={isLiked ? '#ef4444' : '#6b7280'} 
-                />
-                {likesCount > 0 && (
-                  <Text className={`text-sm ml-1.5 ${isLiked ? 'text-red-500' : 'text-gray-500'}`}>
-                    {formatNumber(likesCount)}
-                  </Text>
-                )}
-              </TouchableOpacity>
-
-              {/* Share */}
-              <TouchableOpacity 
-                className="flex-row items-center"
-                onPress={() => onShare?.(post._id)}
-              >
-                <Ionicons name="share-outline" size={18} color="#6b7280" />
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
-      </View>
+      )}
     </View>
   );
+});
+
+const styles = StyleSheet.create({
+  cardContainer: {
+    backgroundColor: COLORS.white,
+    marginHorizontal: 12,
+    marginVertical: 6,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: COLORS.gray100,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  avatarContainer: {
+    marginRight: 12,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  avatarPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.saffron,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  displayName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.gray800,
+    maxWidth: SCREEN_WIDTH - 150,
+  },
+  verifiedIcon: {
+    marginLeft: 4,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  username: {
+    fontSize: 14,
+    color: COLORS.gray500,
+  },
+  separator: {
+    marginHorizontal: 6,
+    color: COLORS.gray300,
+    fontSize: 12,
+  },
+  timeAgo: {
+    fontSize: 13,
+    color: COLORS.gray400,
+  },
+  moreButton: {
+    padding: 4,
+  },
+  content: {
+    marginBottom: 8,
+  },
+  contentText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: COLORS.gray700,
+    marginBottom: 8,
+  },
+  hashtagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+    marginBottom: 8,
+    gap: 8,
+  },
+  hashtagBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: COLORS.gray100,
+    borderRadius: 12,
+  },
+  hashtagText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.saffron,
+  },
+  moreHashtags: {
+    fontSize: 13,
+    color: COLORS.gray400,
+    fontWeight: '500',
+    alignSelf: 'center',
+  },
+  mediaContainer: {
+    marginVertical: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  singleImage: {
+    width: '100%',
+    height: 280,
+    borderRadius: 12,
+  },
+  multiImageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  gridImage: {
+    width: (SCREEN_WIDTH - 60) / 2,
+    height: 160,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  gridImageTwo: {
+    width: (SCREEN_WIDTH - 60) / 2,
+    height: 200,
+  },
+  gridImageThreeMain: {
+    width: SCREEN_WIDTH - 48,
+    height: 200,
+  },
+  gridImageFull: {
+    width: '100%',
+    height: '100%',
+  },
+  moreImagesOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moreImagesText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 4,
+  },
+  locationText: {
+    fontSize: 13,
+    color: COLORS.gray500,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingTop: 4,
+    gap: 16,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statText: {
+    fontSize: 13,
+    color: COLORS.gray500,
+  },
+  actions: {
+    marginTop: 4,
+  },
+  actionsDivider: {
+    height: 1,
+    backgroundColor: COLORS.gray100,
+    marginBottom: 12,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  actionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.gray500,
+  },
+  actionTextLiked: {
+    color: '#EF4444',
+  },
+  actionTextRetweeted: {
+    color: '#22C55E',
+  },
 });
 
 PostCard.displayName = 'PostCard';

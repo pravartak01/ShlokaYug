@@ -81,7 +81,7 @@ const formFields: FormField[] = [
 
 export default function TaglineForm({ onSubmit, isLoading }: TaglineFormProps) {
   const [formData, setFormData] = useState<Partial<CompanyInfo>>({
-    tone: 'inspirational',
+    tone: 'professional',
   });
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [showIndustryPicker, setShowIndustryPicker] = useState(false);
@@ -298,7 +298,7 @@ export default function TaglineForm({ onSubmit, isLoading }: TaglineFormProps) {
 
           {/* Tone Selector */}
           <View style={{ marginBottom: 24 }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 12, marginLeft: 4 }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: '#4A2E1C', marginBottom: 12, marginLeft: 4 }}>
               Tagline Tone
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
@@ -312,17 +312,22 @@ export default function TaglineForm({ onSubmit, isLoading }: TaglineFormProps) {
                     paddingHorizontal: 14,
                     paddingVertical: 10,
                     borderRadius: 20,
-                    backgroundColor: formData.tone === tone.value ? '#ea580c' : '#ffffff',
+                    backgroundColor: formData.tone === tone.value ? '#B87333' : '#FFF8E7',
                     borderWidth: 1.5,
-                    borderColor: formData.tone === tone.value ? '#ea580c' : '#e5e7eb',
+                    borderColor: formData.tone === tone.value ? '#B87333' : '#D4A017',
                   }}
                 >
-                  <Text style={{ marginRight: 6 }}>{tone.icon}</Text>
+                  <Ionicons 
+                    name={tone.icon as any} 
+                    size={16} 
+                    color={formData.tone === tone.value ? '#ffffff' : '#4A2E1C'} 
+                    style={{ marginRight: 6 }} 
+                  />
                   <Text
                     style={{
                       fontSize: 13,
                       fontWeight: '600',
-                      color: formData.tone === tone.value ? '#ffffff' : '#374151',
+                      color: formData.tone === tone.value ? '#ffffff' : '#4A2E1C',
                     }}
                   >
                     {tone.label}

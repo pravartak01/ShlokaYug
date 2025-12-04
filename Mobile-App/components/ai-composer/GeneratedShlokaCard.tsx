@@ -11,6 +11,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GeneratedShloka } from '../../services/aiComposerService';
 
+// Vintage Theme Colors
+const COLORS = {
+  primaryBrown: '#4A2E1C',
+  copper: '#B87333',
+  gold: '#D4A017',
+  saffron: '#DD7A1F',
+  sand: '#F3E4C8',
+  cream: '#FFF8E7',
+  darkBrown: '#2D1810',
+  warmWhite: '#FFFDF7',
+  deepMaroon: '#5D1A0B',
+};
+
 interface GeneratedShlokaCardProps {
   shloka: GeneratedShloka;
   onNewShloka: () => void;
@@ -75,18 +88,20 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
             width: 64,
             height: 64,
             borderRadius: 32,
-            backgroundColor: '#dcfce7',
+            backgroundColor: COLORS.sand,
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: 12,
+            borderWidth: 2,
+            borderColor: COLORS.gold,
           }}
         >
-          <Ionicons name="checkmark-circle" size={36} color="#22c55e" />
+          <Ionicons name="checkmark-circle" size={36} color={COLORS.saffron} />
         </View>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#1f2937' }}>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: COLORS.primaryBrown }}>
           Shloka Generated!
         </Text>
-        <Text style={{ fontSize: 13, color: '#9ca3af', marginTop: 4 }}>
+        <Text style={{ fontSize: 13, color: COLORS.copper, marginTop: 4 }}>
           Your custom Sanskrit verse is ready
         </Text>
       </View>
@@ -94,17 +109,17 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
       {/* Main Shloka Card */}
       <View
         style={{
-          backgroundColor: '#fffbf5',
+          backgroundColor: COLORS.warmWhite,
           borderRadius: 20,
           overflow: 'hidden',
           borderWidth: 1,
-          borderColor: '#fde68a',
+          borderColor: COLORS.gold,
           marginBottom: 16,
         }}
       >
         {/* Decorative top bar */}
         <LinearGradient
-          colors={['#f97316', '#ea580c']}
+          colors={[COLORS.saffron, COLORS.copper]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{ height: 4 }}
@@ -117,7 +132,7 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
               style={{
                 fontSize: 20,
                 fontWeight: '600',
-                color: '#92400e',
+                color: COLORS.primaryBrown,
                 lineHeight: 32,
                 textAlign: 'center',
               }}
@@ -130,7 +145,7 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
           <View
             style={{
               height: 1,
-              backgroundColor: '#fde68a',
+              backgroundColor: COLORS.gold,
               marginVertical: 16,
             }}
           />
@@ -141,7 +156,7 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
               style={{
                 fontSize: 11,
                 fontWeight: '600',
-                color: '#9ca3af',
+                color: COLORS.copper,
                 letterSpacing: 1,
                 textTransform: 'uppercase',
                 marginBottom: 8,
@@ -152,7 +167,7 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
             <Text
               style={{
                 fontSize: 15,
-                color: '#b45309',
+                color: COLORS.copper,
                 fontStyle: 'italic',
                 lineHeight: 24,
                 textAlign: 'center',
@@ -168,7 +183,7 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
               style={{
                 fontSize: 11,
                 fontWeight: '600',
-                color: '#9ca3af',
+                color: COLORS.copper,
                 letterSpacing: 1,
                 textTransform: 'uppercase',
                 marginBottom: 8,
@@ -179,9 +194,10 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
             <Text
               style={{
                 fontSize: 14,
-                color: '#78716c',
+                color: COLORS.primaryBrown,
                 lineHeight: 22,
                 textAlign: 'center',
+                opacity: 0.85,
               }}
             >
               {shloka.meaning}
@@ -196,20 +212,20 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
             justifyContent: 'space-between',
             paddingHorizontal: 20,
             paddingVertical: 14,
-            backgroundColor: '#fef7ee',
+            backgroundColor: COLORS.sand,
             borderTopWidth: 1,
-            borderTopColor: '#fde68a',
+            borderTopColor: COLORS.gold,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="musical-notes-outline" size={14} color="#b45309" />
-            <Text style={{ fontSize: 12, color: '#b45309', marginLeft: 6, fontWeight: '500' }}>
+            <Ionicons name="musical-notes-outline" size={14} color={COLORS.copper} />
+            <Text style={{ fontSize: 12, color: COLORS.copper, marginLeft: 6, fontWeight: '500' }}>
               {shloka.meter} Meter
             </Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="pricetag-outline" size={14} color="#b45309" />
-            <Text style={{ fontSize: 12, color: '#b45309', marginLeft: 6, fontWeight: '500' }}>
+            <Ionicons name="pricetag-outline" size={14} color={COLORS.copper} />
+            <Text style={{ fontSize: 12, color: COLORS.copper, marginLeft: 6, fontWeight: '500' }}>
               {shloka.theme}
             </Text>
           </View>
@@ -220,19 +236,19 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
       {shloka.wordByWord && shloka.wordByWord.length > 0 && (
         <View
           style={{
-            backgroundColor: '#ffffff',
+            backgroundColor: COLORS.warmWhite,
             borderRadius: 16,
             padding: 16,
             marginBottom: 16,
             borderWidth: 1,
-            borderColor: '#f3f4f6',
+            borderColor: COLORS.gold,
           }}
         >
           <Text
             style={{
               fontSize: 11,
               fontWeight: '600',
-              color: '#9ca3af',
+              color: COLORS.copper,
               letterSpacing: 1,
               textTransform: 'uppercase',
               marginBottom: 12,
@@ -246,28 +262,28 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
                 <View
                   key={index}
                   style={{
-                    backgroundColor: '#fef7f0',
+                    backgroundColor: COLORS.sand,
                     borderRadius: 12,
                     padding: 12,
                     minWidth: 100,
                     alignItems: 'center',
                   }}
                 >
-                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#92400e' }}>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.primaryBrown }}>
                     {word.sanskrit}
                   </Text>
-                  <Text style={{ fontSize: 11, color: '#b45309', marginTop: 4, fontStyle: 'italic' }}>
+                  <Text style={{ fontSize: 11, color: COLORS.copper, marginTop: 4, fontStyle: 'italic' }}>
                     {word.transliteration}
                   </Text>
                   <View
                     style={{
                       height: 1,
                       width: '100%',
-                      backgroundColor: '#fde68a',
+                      backgroundColor: COLORS.gold,
                       marginVertical: 8,
                     }}
                   />
-                  <Text style={{ fontSize: 11, color: '#78716c', textAlign: 'center' }}>
+                  <Text style={{ fontSize: 11, color: COLORS.primaryBrown, textAlign: 'center', opacity: 0.8 }}>
                     {word.meaning}
                   </Text>
                 </View>
@@ -286,15 +302,15 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#ffffff',
+            backgroundColor: COLORS.warmWhite,
             borderRadius: 12,
             paddingVertical: 14,
             borderWidth: 1,
-            borderColor: '#e5e7eb',
+            borderColor: COLORS.copper,
           }}
         >
-          <Ionicons name="copy-outline" size={18} color="#6b7280" />
-          <Text style={{ marginLeft: 8, color: '#6b7280', fontWeight: '600' }}>Copy</Text>
+          <Ionicons name="copy-outline" size={18} color={COLORS.copper} />
+          <Text style={{ marginLeft: 8, color: COLORS.copper, fontWeight: '600' }}>Copy</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -304,15 +320,15 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#ffffff',
+            backgroundColor: COLORS.warmWhite,
             borderRadius: 12,
             paddingVertical: 14,
             borderWidth: 1,
-            borderColor: '#e5e7eb',
+            borderColor: COLORS.copper,
           }}
         >
-          <Ionicons name="share-outline" size={18} color="#6b7280" />
-          <Text style={{ marginLeft: 8, color: '#6b7280', fontWeight: '600' }}>Share</Text>
+          <Ionicons name="share-outline" size={18} color={COLORS.copper} />
+          <Text style={{ marginLeft: 8, color: COLORS.copper, fontWeight: '600' }}>Share</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -321,15 +337,15 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#ffffff',
+            backgroundColor: COLORS.warmWhite,
             borderRadius: 12,
             paddingVertical: 14,
             borderWidth: 1,
-            borderColor: '#e5e7eb',
+            borderColor: COLORS.copper,
           }}
         >
-          <Ionicons name="bookmark-outline" size={18} color="#6b7280" />
-          <Text style={{ marginLeft: 8, color: '#6b7280', fontWeight: '600' }}>Save</Text>
+          <Ionicons name="bookmark-outline" size={18} color={COLORS.copper} />
+          <Text style={{ marginLeft: 8, color: COLORS.copper, fontWeight: '600' }}>Save</Text>
         </TouchableOpacity>
       </View>
 
@@ -343,8 +359,8 @@ export default function GeneratedShlokaCard({ shloka, onNewShloka }: GeneratedSh
           paddingVertical: 16,
         }}
       >
-        <Ionicons name="refresh-outline" size={18} color="#f97316" />
-        <Text style={{ marginLeft: 8, color: '#f97316', fontWeight: '600' }}>
+        <Ionicons name="refresh-outline" size={18} color={COLORS.saffron} />
+        <Text style={{ marginLeft: 8, color: COLORS.saffron, fontWeight: '600' }}>
           Generate Another Shloka
         </Text>
       </TouchableOpacity>

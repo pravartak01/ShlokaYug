@@ -5,15 +5,32 @@
 
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-// Backend URL - Update this based on your environment
+// Your machine's local IP address - Update this when your IP changes
+const LOCAL_IP = '10.245.97.46';
+
+// For Android Emulator, use 10.0.2.2 to reach host's localhost
+// For physical devices, use LOCAL_IP
+const getDevIP = () => {
+  // Uncomment the line below if using Android Emulator
+  // if (Platform.OS === 'android') return '10.0.2.2';
+  return LOCAL_IP;
+};
+
+// Main Backend URL (Port 5000) - For user auth, videos, courses, etc.
 const BACKEND_URL = __DEV__ 
-  ? 'http://10.245.97.46:5000/api/v1'  // Development - Using your machine's IP
+  ? `http://${getDevIP()}:5000/api/v1`  // Development
   : 'https://api.shlokayug.com/api/v1'; // Production
+
+// AI Backend URL (Port 8000) - For chandas identification, AI features
+const AI_BACKEND_URL = __DEV__
+  ? `http://${getDevIP()}:8000/api/v1`  // Development
+  : 'https://ai.shlokayug.com/api/v1'; // Production
 
 // Base URL without /api/v1 for static files
 const STATIC_URL = __DEV__
-  ? 'http://10.245.97.46:5000'  // Development
+  ? `http://${getDevIP()}:5000`  // Development
   : 'https://api.shlokayug.com'; // Production
 
 /**
@@ -230,5 +247,75 @@ export const checkBackendHealth = async (): Promise<boolean> => {
   }
 };
 
-export { BACKEND_URL };
+/**
+ * Check if AI backend is reachable
+ */
+export const checkAIBackendHealth = async (): Promise<boolean> => {
+  try {
+    const response = await axios.get(`${AI_BACKEND_URL.replace('/api/v1', '')}/health`, {
+      timeout: 5000,
+    });
+    return response.status === 200;
+  } catch (error) {
+    console.error('AI Backend health check failed:', error);
+    return false;
+  }
+};
+
+/**
+ * Create axios instance for AI Backend with default configuration
+ */
+const aiApi: AxiosInstance = axios.create({
+  baseURL: AI_BACKEND_URL,
+  timeout: 60000, // 60 seconds - AI requests may take longer
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+/**
+ * AI API Request Interceptor
+ */
+aiApi.interceptors.request.use(
+  async (config: InternalAxiosRequestConfig) => {
+    if (__DEV__) {
+      console.log('🤖 AI API Request:', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        data: config.data,
+      });
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * AI API Response Interceptor
+ */
+aiApi.interceptors.response.use(
+  (response) => {
+    if (__DEV__) {
+      console.log('✅ AI API Response:', {
+        status: response.status,
+        url: response.config.url,
+      });
+    }
+    return response;
+  },
+  (error: AxiosError) => {
+    if (__DEV__) {
+      console.error('❌ AI API Error:', {
+        status: error.response?.status,
+        url: error.config?.url,
+        message: error.message,
+      });
+    }
+    return Promise.reject(error);
+  }
+);
+
+export { BACKEND_URL, AI_BACKEND_URL, aiApi };
 export default api;

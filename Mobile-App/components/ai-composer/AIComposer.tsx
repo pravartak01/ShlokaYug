@@ -9,41 +9,76 @@ import {
   Easing,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { generateShloka, GeneratedShloka, ShlokaGenerationRequest } from '../../services/aiComposerService';
+import axios from 'axios';
+import { GeneratedShloka } from '../../services/aiComposerService';
 import GeneratedShlokaCard from './GeneratedShlokaCard';
 
-type MoodType = 'devotional' | 'peaceful' | 'inspiring' | 'philosophical' | 'celebratory';
-type StyleType = 'vedic' | 'classical' | 'simple';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Mood options
-const MOODS: { id: MoodType; label: string; icon: string }[] = [
-  { id: 'peaceful', label: 'Peaceful', icon: '🕊️' },
-  { id: 'devotional', label: 'Devotional', icon: '🙏' },
-  { id: 'inspiring', label: 'Inspirational', icon: '✨' },
-  { id: 'philosophical', label: 'Contemplative', icon: '🧘' },
-  { id: 'celebratory', label: 'Joyful', icon: '🎉' },
+// Vintage Theme Colors
+const COLORS = {
+  primaryBrown: '#4A2E1C',
+  copper: '#B87333',
+  gold: '#D4A017',
+  saffron: '#DD7A1F',
+  sand: '#F3E4C8',
+  cream: '#FFF8E7',
+  darkBrown: '#2D1810',
+  warmWhite: '#FFFDF7',
+  deepMaroon: '#5D1A0B',
+};
+
+// API Configuration - Matches your backend (SvaramAI on port 8000)
+const LOCAL_IP = '10.245.97.46'; // Update this to match your machine's IP
+const getDevIP = () => LOCAL_IP;
+
+// SvaramAI Backend URL (Port 8000) - For shloka generation
+const API_BASE_URL = __DEV__
+  ? `http://${getDevIP()}:8000`  // Development - SvaramAI runs on port 8000
+  : 'https://ai.shlokayug.com'; // Production
+
+type MoodType = 'devotional' | 'peaceful' | 'philosophical' | 'heroic' | 'romantic';
+type StyleType = 'vedic' | 'classical' | 'modern' | 'puranic';
+
+// Mood options with icons instead of emojis
+const MOODS: { id: MoodType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'peaceful', label: 'Peaceful', icon: 'leaf-outline' },
+  { id: 'devotional', label: 'Devotional', icon: 'heart-outline' },
+  { id: 'philosophical', label: 'Philosophical', icon: 'bulb-outline' },
+  { id: 'heroic', label: 'Heroic', icon: 'shield-outline' },
+  { id: 'romantic', label: 'Romantic', icon: 'flower-outline' },
 ];
 
-// Style options
+// Style options - matching backend enum
 const STYLES: { id: StyleType; label: string; desc: string }[] = [
   { id: 'classical', label: 'Classical', desc: 'Traditional Sanskrit style' },
-  { id: 'simple', label: 'Simple', desc: 'Easy to understand' },
   { id: 'vedic', label: 'Vedic', desc: 'Ancient Vedic style' },
+  { id: 'puranic', label: 'Puranic', desc: 'Epic narrative style' },
+  { id: 'modern', label: 'Modern', desc: 'Contemporary Sanskrit' },
 ];
 
-// Deity/Theme presets
-const PRESETS = [
-  { id: 'ganesha', label: 'Ganesha', icon: '🕉️' },
-  { id: 'krishna', label: 'Krishna', icon: '🪈' },
-  { id: 'shiva', label: 'Shiva', icon: '🔱' },
-  { id: 'saraswati', label: 'Saraswati', icon: '📚' },
-  { id: 'nature', label: 'Nature', icon: '🌿' },
-  { id: 'wisdom', label: 'Wisdom', icon: '💡' },
+// Deity/Theme presets with icons instead of emojis
+const PRESETS: { id: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'ganesha', label: 'Ganesha', icon: 'flower-outline' },
+  { id: 'krishna', label: 'Krishna', icon: 'musical-note-outline' },
+  { id: 'shiva', label: 'Shiva', icon: 'water-outline' },
+  { id: 'saraswati', label: 'Saraswati', icon: 'book-outline' },
+  { id: 'nature', label: 'Nature', icon: 'leaf-outline' },
+  { id: 'wisdom', label: 'Wisdom', icon: 'school-outline' },
+];
+
+// Generation stages for animation
+const GENERATION_STAGES = [
+  { id: 1, label: 'Invoking Muse', description: 'Gathering divine inspiration...', icon: 'sparkles' as keyof typeof Ionicons.glyphMap },
+  { id: 2, label: 'Weaving Words', description: 'Composing Sanskrit verses...', icon: 'pencil' as keyof typeof Ionicons.glyphMap },
+  { id: 3, label: 'Applying Meter', description: 'Structuring with Chandas...', icon: 'musical-notes' as keyof typeof Ionicons.glyphMap },
+  { id: 4, label: 'Final Polish', description: 'Perfecting the composition...', icon: 'checkmark-done' as keyof typeof Ionicons.glyphMap },
 ];
 
 export default function AIComposer() {
@@ -54,16 +89,29 @@ export default function AIComposer() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedShloka, setGeneratedShloka] = useState<GeneratedShloka | null>(null);
   const [error, setError] = useState('');
+  const [currentStage, setCurrentStage] = useState(0);
 
   // Animation refs
   const spinAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const stageProgress = useRef(new Animated.Value(0)).current;
+  const particleAnims = useRef(
+    Array(8).fill(0).map(() => ({
+      x: new Animated.Value(0),
+      y: new Animated.Value(0),
+      opacity: new Animated.Value(0),
+      scale: new Animated.Value(0),
+    }))
+  ).current;
+  const scanLineAnim = useRef(new Animated.Value(0)).current;
+  const iconRotateAnim = useRef(new Animated.Value(0)).current;
 
-  // Spin animation for loading
+  // Animation control
   useEffect(() => {
     if (isGenerating) {
+      // Spin animation
       Animated.loop(
         Animated.timing(spinAnim, {
           toValue: 1,
@@ -73,41 +121,140 @@ export default function AIComposer() {
         })
       ).start();
 
+      // Pulse animation
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.1,
-            duration: 800,
+            toValue: 1.15,
+            duration: 700,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 800,
+            duration: 700,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
         ])
       ).start();
 
+      // Glow animation
       Animated.loop(
         Animated.sequence([
           Animated.timing(glowAnim, {
             toValue: 1,
-            duration: 1000,
+            duration: 800,
             useNativeDriver: true,
           }),
           Animated.timing(glowAnim, {
-            toValue: 0.3,
-            duration: 1000,
+            toValue: 0.4,
+            duration: 800,
             useNativeDriver: true,
           }),
         ])
       ).start();
+
+      // Scanning line animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scanLineAnim, {
+            toValue: 1,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(scanLineAnim, {
+            toValue: 0,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+      // Icon rotation
+      Animated.loop(
+        Animated.timing(iconRotateAnim, {
+          toValue: 1,
+          duration: 3000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ).start();
+
+      // Particle animations
+      particleAnims.forEach((anim, index) => {
+        const angle = (index / 8) * Math.PI * 2;
+        const delay = index * 150;
+        
+        Animated.loop(
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.parallel([
+              Animated.timing(anim.opacity, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.scale, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.x, {
+                toValue: Math.cos(angle) * 60,
+                duration: 1200,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.y, {
+                toValue: Math.sin(angle) * 60,
+                duration: 1200,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.parallel([
+              Animated.timing(anim.opacity, {
+                toValue: 0,
+                duration: 400,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.scale, {
+                toValue: 0,
+                duration: 400,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.parallel([
+              Animated.timing(anim.x, {
+                toValue: 0,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.y, {
+                toValue: 0,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+            ]),
+          ])
+        ).start();
+      });
+
     } else {
       spinAnim.setValue(0);
       pulseAnim.setValue(1);
       glowAnim.setValue(0);
+      scanLineAnim.setValue(0);
+      iconRotateAnim.setValue(0);
+      particleAnims.forEach(anim => {
+        anim.x.setValue(0);
+        anim.y.setValue(0);
+        anim.opacity.setValue(0);
+        anim.scale.setValue(0);
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGenerating]);
@@ -116,6 +263,63 @@ export default function AIComposer() {
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
+
+  const iconRotate = iconRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const scanLineY = scanLineAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 120],
+  });
+
+  // API call to generate shloka using SvaramAI backend with axios
+  const callGenerateAPI = async (): Promise<GeneratedShloka | null> => {
+    try {
+      console.log('Calling SvaramAI backend with axios...');
+      
+      const response = await axios.post(
+        `${API_BASE_URL}/api/v1/shloka/generate`,
+        {
+          theme: theme.trim(),
+          deity: deity.trim() || undefined,
+          mood: selectedMood,
+          style: selectedStyle,
+          meter: 'Anushtup',
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000, // 30s timeout for AI generation
+        }
+      );
+
+      console.log('SvaramAI response:', response.data);
+      
+      const data = response.data;
+      return {
+        id: Date.now().toString(),
+        sanskrit: data.shloka || '',
+        transliteration: data.pattern || '',
+        meaning: data.meaning || '',
+        wordByWord: [],
+        meter: data.meter || 'Anushtup',
+        theme: theme.trim(),
+        source: 'SvaramAI Generated',
+        timestamp: new Date(),
+      };
+    } catch (err: any) {
+      if (axios.isAxiosError(err)) {
+        const errorDetail = err.response?.data?.detail || err.message;
+        console.error('SvaramAI API error:', err.response?.status, errorDetail);
+        throw new Error(errorDetail || `Server error: ${err.response?.status}`);
+      }
+      console.error('SvaramAI API error:', err);
+      throw err;
+    }
+  };
 
   const handleGenerate = async () => {
     if (!theme.trim()) {
@@ -126,6 +330,7 @@ export default function AIComposer() {
     setError('');
     setIsGenerating(true);
     setGeneratedShloka(null);
+    setCurrentStage(0);
 
     // Fade out form
     Animated.timing(fadeAnim, {
@@ -134,30 +339,63 @@ export default function AIComposer() {
       useNativeDriver: true,
     }).start();
 
-    try {
-      const request: ShlokaGenerationRequest = {
-        theme: theme.trim(),
-        mood: selectedMood,
-        deity: deity.trim() || undefined,
-        style: selectedStyle,
-      };
+    // Start the API call
+    const apiPromise = callGenerateAPI();
 
-      const result = await generateShloka(request);
-      if (result.success) {
-        setGeneratedShloka(result.shloka);
-      } else {
-        setError(result.error.message);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate shloka');
-    } finally {
-      setIsGenerating(false);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+    // Progressive stage animation with minimum duration
+    const minStageDuration = 1200;
+    const totalMinDuration = minStageDuration * 4;
+    const startTime = Date.now();
+
+    // Stage progression
+    for (let i = 0; i < 4; i++) {
+      await new Promise<void>(resolve => {
+        setTimeout(() => {
+          setCurrentStage(i + 1);
+          Animated.timing(stageProgress, {
+            toValue: (i + 1) / 4,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: false,
+          }).start();
+          resolve();
+        }, i * minStageDuration);
+      });
     }
+
+    // Wait for API and minimum duration
+    let result: GeneratedShloka | null = null;
+    let apiError: string | null = null;
+    
+    try {
+      const [apiResult] = await Promise.all([
+        apiPromise,
+        new Promise(resolve => {
+          const elapsed = Date.now() - startTime;
+          const remaining = Math.max(0, totalMinDuration - elapsed);
+          setTimeout(resolve, remaining);
+        }),
+      ]);
+      result = apiResult;
+    } catch (err) {
+      apiError = err instanceof Error ? err.message : 'Failed to generate shloka';
+    }
+
+    setIsGenerating(false);
+    setCurrentStage(0);
+    stageProgress.setValue(0);
+
+    if (result) {
+      setGeneratedShloka(result);
+    } else {
+      setError(apiError || 'Failed to generate shloka. Please check if the server is running.');
+    }
+
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handleNewShloka = () => {
@@ -171,11 +409,196 @@ export default function AIComposer() {
     }
   };
 
+  // Render generation animation
+  const renderGenerationAnimation = () => {
+    const currentStageData = GENERATION_STAGES[currentStage - 1] || GENERATION_STAGES[0];
+    
+    return (
+      <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+        {/* Main animated circle */}
+        <Animated.View
+          style={{
+            transform: [{ scale: pulseAnim }],
+          }}
+        >
+          <View
+            style={{
+              width: 140,
+              height: 140,
+              borderRadius: 70,
+              backgroundColor: COLORS.cream,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 3,
+              borderColor: COLORS.gold,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Scan line effect */}
+            <Animated.View
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                height: 3,
+                backgroundColor: COLORS.saffron,
+                opacity: 0.6,
+                transform: [{ translateY: scanLineY }],
+              }}
+            />
+            
+            {/* Rotating icon */}
+            <Animated.View style={{ transform: [{ rotate: iconRotate }] }}>
+              <Ionicons 
+                name={currentStageData.icon} 
+                size={50} 
+                color={COLORS.primaryBrown} 
+              />
+            </Animated.View>
+          </View>
+
+          {/* Particles */}
+          {particleAnims.map((anim, index) => (
+            <Animated.View
+              key={index}
+              style={{
+                position: 'absolute',
+                width: 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor: index % 2 === 0 ? COLORS.gold : COLORS.saffron,
+                opacity: anim.opacity,
+                transform: [
+                  { translateX: anim.x },
+                  { translateY: anim.y },
+                  { scale: anim.scale },
+                ],
+              }}
+            />
+          ))}
+
+          {/* Outer rotating ring */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              width: 160,
+              height: 160,
+              borderRadius: 80,
+              borderWidth: 2,
+              borderColor: COLORS.copper,
+              borderStyle: 'dashed',
+              transform: [{ rotate: spin }],
+            }}
+          />
+        </Animated.View>
+
+        {/* Stage indicator */}
+        <View style={{ marginTop: 30, alignItems: 'center' }}>
+          <Animated.Text
+            style={{
+              fontSize: 18,
+              fontWeight: '700',
+              color: COLORS.primaryBrown,
+              opacity: glowAnim,
+            }}
+          >
+            {currentStageData.label}
+          </Animated.Text>
+          <Text style={{ 
+            fontSize: 14, 
+            color: COLORS.copper, 
+            marginTop: 6,
+            textAlign: 'center',
+          }}>
+            {currentStageData.description}
+          </Text>
+        </View>
+
+        {/* Progress stages */}
+        <View style={{ 
+          flexDirection: 'row', 
+          marginTop: 30, 
+          gap: 12,
+        }}>
+          {GENERATION_STAGES.map((stage, index) => (
+            <View
+              key={stage.id}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: index < currentStage ? COLORS.gold : COLORS.sand,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 2,
+                borderColor: index < currentStage ? COLORS.saffron : COLORS.copper,
+              }}
+            >
+              {index < currentStage ? (
+                <Ionicons name="checkmark" size={20} color={COLORS.primaryBrown} />
+              ) : index === currentStage - 1 ? (
+                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                  <Ionicons name="sync" size={18} color={COLORS.primaryBrown} />
+                </Animated.View>
+              ) : (
+                <Ionicons name={stage.icon} size={18} color={COLORS.copper} />
+              )}
+            </View>
+          ))}
+        </View>
+
+        {/* Stage labels */}
+        <View style={{ 
+          flexDirection: 'row', 
+          marginTop: 8, 
+          gap: 12,
+        }}>
+          {GENERATION_STAGES.map((stage, index) => (
+            <Text
+              key={stage.id}
+              style={{
+                width: 40,
+                fontSize: 8,
+                textAlign: 'center',
+                color: index < currentStage ? COLORS.primaryBrown : COLORS.copper,
+                fontWeight: index < currentStage ? '600' : '400',
+              }}
+            >
+              {index + 1}
+            </Text>
+          ))}
+        </View>
+
+        {/* Progress bar */}
+        <View style={{ 
+          width: SCREEN_WIDTH - 80, 
+          height: 6, 
+          backgroundColor: COLORS.sand, 
+          borderRadius: 3, 
+          marginTop: 20,
+          overflow: 'hidden',
+        }}>
+          <Animated.View
+            style={{
+              width: stageProgress.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%'],
+              }),
+              height: '100%',
+              backgroundColor: COLORS.gold,
+              borderRadius: 3,
+            }}
+          />
+        </View>
+      </View>
+    );
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fafafa' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.cream }}>
       {/* Header */}
       <LinearGradient
-        colors={['#1e293b', '#0f172a']}
+        colors={[COLORS.primaryBrown, COLORS.darkBrown]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20 }}
@@ -192,17 +615,17 @@ export default function AIComposer() {
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="arrow-back" size={22} color="#ffffff" />
+            <Ionicons name="arrow-back" size={22} color={COLORS.cream} />
           </TouchableOpacity>
 
           <View style={{ alignItems: 'center', flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="sparkles" size={20} color="#fbbf24" />
-              <Text style={{ fontSize: 20, fontWeight: '700', color: '#ffffff', marginLeft: 8 }}>
+              <Ionicons name="sparkles" size={20} color={COLORS.gold} />
+              <Text style={{ fontSize: 20, fontWeight: '700', color: COLORS.cream, marginLeft: 8 }}>
                 AI Composer
               </Text>
             </View>
-            <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+            <Text style={{ fontSize: 12, color: COLORS.sand, marginTop: 4 }}>
               Create Sanskrit shlokas with AI
             </Text>
           </View>
@@ -223,31 +646,43 @@ export default function AIComposer() {
         >
           {generatedShloka ? (
             <GeneratedShlokaCard shloka={generatedShloka} onNewShloka={handleNewShloka} />
+          ) : isGenerating ? (
+            renderGenerationAnimation()
           ) : (
             <Animated.View style={{ opacity: fadeAnim }}>
               {/* Intro Card */}
               <View
                 style={{
-                  backgroundColor: '#fffbf5',
+                  backgroundColor: COLORS.warmWhite,
                   borderRadius: 16,
                   padding: 20,
                   marginBottom: 20,
                   borderWidth: 1,
-                  borderColor: '#fde68a',
+                  borderColor: COLORS.gold,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                  <Text style={{ fontSize: 28, marginRight: 12 }}>🪷</Text>
+                  <View style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: COLORS.sand,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 12,
+                  }}>
+                    <Ionicons name="flower" size={24} color={COLORS.saffron} />
+                  </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#92400e' }}>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: COLORS.primaryBrown }}>
                       Divine Verse Creator
                     </Text>
-                    <Text style={{ fontSize: 13, color: '#b45309', marginTop: 2 }}>
+                    <Text style={{ fontSize: 13, color: COLORS.copper, marginTop: 2 }}>
                       Powered by AI to craft meaningful shlokas
                     </Text>
                   </View>
                 </View>
-                <Text style={{ fontSize: 13, color: '#78716c', lineHeight: 20 }}>
+                <Text style={{ fontSize: 13, color: COLORS.primaryBrown, lineHeight: 20, opacity: 0.8 }}>
                   Enter a theme, select a mood, and let AI compose a beautiful Sanskrit shloka
                   with transliteration, meaning, and word-by-word analysis.
                 </Text>
@@ -255,7 +690,7 @@ export default function AIComposer() {
 
               {/* Quick Presets */}
               <View style={{ marginBottom: 20 }}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 12 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: COLORS.primaryBrown, marginBottom: 12 }}>
                   Quick Presets
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -267,20 +702,25 @@ export default function AIComposer() {
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
-                          backgroundColor: theme === preset.label ? '#fef3c7' : '#ffffff',
+                          backgroundColor: theme === preset.label ? COLORS.sand : COLORS.warmWhite,
                           borderRadius: 20,
                           paddingHorizontal: 14,
                           paddingVertical: 8,
                           borderWidth: 1,
-                          borderColor: theme === preset.label ? '#fcd34d' : '#e5e7eb',
+                          borderColor: theme === preset.label ? COLORS.gold : COLORS.copper,
                         }}
                       >
-                        <Text style={{ fontSize: 16, marginRight: 6 }}>{preset.icon}</Text>
+                        <Ionicons 
+                          name={preset.icon} 
+                          size={18} 
+                          color={theme === preset.label ? COLORS.saffron : COLORS.copper} 
+                          style={{ marginRight: 6 }}
+                        />
                         <Text
                           style={{
                             fontSize: 13,
                             fontWeight: '500',
-                            color: theme === preset.label ? '#92400e' : '#6b7280',
+                            color: theme === preset.label ? COLORS.primaryBrown : COLORS.copper,
                           }}
                         >
                           {preset.label}
@@ -293,31 +733,31 @@ export default function AIComposer() {
 
               {/* Theme Input */}
               <View style={{ marginBottom: 20 }}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: COLORS.primaryBrown, marginBottom: 8 }}>
                   Theme / Topic *
                 </Text>
                 <View
                   style={{
-                    backgroundColor: '#ffffff',
+                    backgroundColor: COLORS.warmWhite,
                     borderRadius: 12,
                     borderWidth: 1,
-                    borderColor: error && !theme.trim() ? '#ef4444' : '#e5e7eb',
+                    borderColor: error && !theme.trim() ? '#ef4444' : COLORS.copper,
                     flexDirection: 'row',
                     alignItems: 'center',
                     paddingHorizontal: 14,
                   }}
                 >
-                  <Ionicons name="bulb-outline" size={20} color="#9ca3af" />
+                  <Ionicons name="bulb-outline" size={20} color={COLORS.copper} />
                   <TextInput
                     style={{
                       flex: 1,
                       paddingVertical: 14,
                       paddingHorizontal: 10,
                       fontSize: 15,
-                      color: '#1f2937',
+                      color: COLORS.primaryBrown,
                     }}
                     placeholder="e.g., Peace, Knowledge, Morning Prayer..."
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={COLORS.copper}
                     value={theme}
                     onChangeText={(text) => {
                       setTheme(text);
@@ -329,31 +769,31 @@ export default function AIComposer() {
 
               {/* Deity Input */}
               <View style={{ marginBottom: 20 }}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: COLORS.primaryBrown, marginBottom: 8 }}>
                   Deity (Optional)
                 </Text>
                 <View
                   style={{
-                    backgroundColor: '#ffffff',
+                    backgroundColor: COLORS.warmWhite,
                     borderRadius: 12,
                     borderWidth: 1,
-                    borderColor: '#e5e7eb',
+                    borderColor: COLORS.copper,
                     flexDirection: 'row',
                     alignItems: 'center',
                     paddingHorizontal: 14,
                   }}
                 >
-                  <Ionicons name="star-outline" size={20} color="#9ca3af" />
+                  <Ionicons name="star-outline" size={20} color={COLORS.copper} />
                   <TextInput
                     style={{
                       flex: 1,
                       paddingVertical: 14,
                       paddingHorizontal: 10,
                       fontSize: 15,
-                      color: '#1f2937',
+                      color: COLORS.primaryBrown,
                     }}
                     placeholder="e.g., Ganesha, Krishna, Saraswati..."
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={COLORS.copper}
                     value={deity}
                     onChangeText={setDeity}
                   />
@@ -362,34 +802,39 @@ export default function AIComposer() {
 
               {/* Mood Selection */}
               <View style={{ marginBottom: 20 }}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 12 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: COLORS.primaryBrown, marginBottom: 12 }}>
                   Mood
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                  {MOODS.map((mood) => (
+                  {MOODS.map((moodItem) => (
                     <TouchableOpacity
-                      key={mood.id}
-                      onPress={() => setSelectedMood(mood.id)}
+                      key={moodItem.id}
+                      onPress={() => setSelectedMood(moodItem.id)}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: selectedMood === mood.id ? '#fef3c7' : '#ffffff',
+                        backgroundColor: selectedMood === moodItem.id ? COLORS.sand : COLORS.warmWhite,
                         borderRadius: 12,
                         paddingHorizontal: 14,
                         paddingVertical: 10,
                         borderWidth: 1,
-                        borderColor: selectedMood === mood.id ? '#fcd34d' : '#e5e7eb',
+                        borderColor: selectedMood === moodItem.id ? COLORS.gold : COLORS.copper,
                       }}
                     >
-                      <Text style={{ fontSize: 16, marginRight: 6 }}>{mood.icon}</Text>
+                      <Ionicons 
+                        name={moodItem.icon} 
+                        size={18} 
+                        color={selectedMood === moodItem.id ? COLORS.saffron : COLORS.copper} 
+                        style={{ marginRight: 6 }}
+                      />
                       <Text
                         style={{
                           fontSize: 13,
                           fontWeight: '500',
-                          color: selectedMood === mood.id ? '#92400e' : '#6b7280',
+                          color: selectedMood === moodItem.id ? COLORS.primaryBrown : COLORS.copper,
                         }}
                       >
-                        {mood.label}
+                        {moodItem.label}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -398,22 +843,22 @@ export default function AIComposer() {
 
               {/* Style Selection */}
               <View style={{ marginBottom: 24 }}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 12 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: COLORS.primaryBrown, marginBottom: 12 }}>
                   Style
                 </Text>
                 <View style={{ gap: 10 }}>
-                  {STYLES.map((style) => (
+                  {STYLES.map((styleItem) => (
                     <TouchableOpacity
-                      key={style.id}
-                      onPress={() => setSelectedStyle(style.id)}
+                      key={styleItem.id}
+                      onPress={() => setSelectedStyle(styleItem.id)}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: selectedStyle === style.id ? '#fef3c7' : '#ffffff',
+                        backgroundColor: selectedStyle === styleItem.id ? COLORS.sand : COLORS.warmWhite,
                         borderRadius: 12,
                         padding: 14,
                         borderWidth: 1,
-                        borderColor: selectedStyle === style.id ? '#fcd34d' : '#e5e7eb',
+                        borderColor: selectedStyle === styleItem.id ? COLORS.gold : COLORS.copper,
                       }}
                     >
                       <View
@@ -422,19 +867,19 @@ export default function AIComposer() {
                           height: 20,
                           borderRadius: 10,
                           borderWidth: 2,
-                          borderColor: selectedStyle === style.id ? '#f97316' : '#d1d5db',
+                          borderColor: selectedStyle === styleItem.id ? COLORS.saffron : COLORS.copper,
                           alignItems: 'center',
                           justifyContent: 'center',
                           marginRight: 12,
                         }}
                       >
-                        {selectedStyle === style.id && (
+                        {selectedStyle === styleItem.id && (
                           <View
                             style={{
                               width: 10,
                               height: 10,
                               borderRadius: 5,
-                              backgroundColor: '#f97316',
+                              backgroundColor: COLORS.saffron,
                             }}
                           />
                         )}
@@ -444,13 +889,13 @@ export default function AIComposer() {
                           style={{
                             fontSize: 14,
                             fontWeight: '600',
-                            color: selectedStyle === style.id ? '#92400e' : '#374151',
+                            color: selectedStyle === styleItem.id ? COLORS.primaryBrown : COLORS.copper,
                           }}
                         >
-                          {style.label}
+                          {styleItem.label}
                         </Text>
-                        <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
-                          {style.desc}
+                        <Text style={{ fontSize: 12, color: COLORS.copper, marginTop: 2 }}>
+                          {styleItem.desc}
                         </Text>
                       </View>
                     </TouchableOpacity>
@@ -484,7 +929,7 @@ export default function AIComposer() {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={isGenerating ? ['#9ca3af', '#6b7280'] : ['#f97316', '#ea580c']}
+                  colors={[COLORS.saffron, COLORS.copper]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{
@@ -495,65 +940,12 @@ export default function AIComposer() {
                     flexDirection: 'row',
                   }}
                 >
-                  {isGenerating ? (
-                    <>
-                      <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                        <Ionicons name="sync" size={22} color="#ffffff" />
-                      </Animated.View>
-                      <Animated.Text
-                        style={{
-                          marginLeft: 10,
-                          color: '#ffffff',
-                          fontSize: 16,
-                          fontWeight: '700',
-                          opacity: glowAnim,
-                        }}
-                      >
-                        Composing Shloka...
-                      </Animated.Text>
-                    </>
-                  ) : (
-                    <>
-                      <Ionicons name="sparkles" size={22} color="#ffffff" />
-                      <Text style={{ marginLeft: 10, color: '#ffffff', fontSize: 16, fontWeight: '700' }}>
-                        Generate Shloka
-                      </Text>
-                    </>
-                  )}
+                  <Ionicons name="sparkles" size={22} color={COLORS.cream} />
+                  <Text style={{ marginLeft: 10, color: COLORS.cream, fontSize: 16, fontWeight: '700' }}>
+                    Generate Shloka
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
-
-              {/* Loading Animation Overlay */}
-              {isGenerating && (
-                <Animated.View
-                  style={{
-                    marginTop: 30,
-                    alignItems: 'center',
-                    transform: [{ scale: pulseAnim }],
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 100,
-                      height: 100,
-                      borderRadius: 50,
-                      backgroundColor: '#fff7ed',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderWidth: 3,
-                      borderColor: '#fed7aa',
-                    }}
-                  >
-                    <Text style={{ fontSize: 40 }}>🪷</Text>
-                  </View>
-                  <Text style={{ marginTop: 16, fontSize: 14, color: '#78716c', textAlign: 'center' }}>
-                    The AI is crafting your Sanskrit verse...
-                  </Text>
-                  <Text style={{ marginTop: 6, fontSize: 12, color: '#9ca3af', textAlign: 'center' }}>
-                    This may take a few moments
-                  </Text>
-                </Animated.View>
-              )}
             </Animated.View>
           )}
         </ScrollView>
@@ -561,19 +953,3 @@ export default function AIComposer() {
     </SafeAreaView>
   );
 }
-
-// curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
-//   -H 'Content-Type: application/json' \
-//   -H 'X-goog-api-key: AIzaSyBSWbBtRK9Q69aY_SJ0muXvrqoIWAdt2kE' \
-//   -X POST \
-//   -d '{
-//     "contents": [
-//       {
-//         "parts": [
-//           {
-//             "text": "Explain how AI works in a few words"
-//           }
-//         ]
-//       }
-//     ]
-//   }'

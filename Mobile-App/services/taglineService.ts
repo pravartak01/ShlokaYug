@@ -1,25 +1,16 @@
 // Tagline Generator Service
-// Generates Sanskrit taglines for companies using Gemini AI
+// Generates Sanskrit taglines for companies using SvaramAI Backend
 
-import Constants from 'expo-constants';
+import axios from 'axios';
 
-// Get API key
-const getApiKey = (): string => {
-  // Try expo-constants first
-  const expoConfig = Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_AI_API_KEY;
-  if (expoConfig) return expoConfig;
-  
-  // Try process.env
-  if (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_GOOGLE_AI_API_KEY) {
-    return process.env.EXPO_PUBLIC_GOOGLE_AI_API_KEY;
-  }
-  
-  // Fallback key from .env
-  return process.env.EXPO_PUBLIC_GOOGLE_AI_API_KEY || '';
-};
+// API Configuration - Matches SvaramAI backend
+const LOCAL_IP = '10.245.97.46'; // Update this to match your machine's IP
+const getDevIP = () => LOCAL_IP;
 
-const GEMINI_API_KEY = getApiKey();
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+// SvaramAI Backend URL (Port 8000)
+const API_BASE_URL = __DEV__
+  ? `http://${getDevIP()}:8000`  // Development - SvaramAI runs on port 8000
+  : 'https://ai.shlokayug.com'; // Production
 
 // Company information interface
 export interface CompanyInfo {
@@ -34,11 +25,11 @@ export interface CompanyInfo {
 }
 
 export type TaglineTone = 
-  | 'inspirational'
-  | 'powerful'
-  | 'spiritual'
-  | 'modern'
+  | 'professional'
+  | 'inspiring'
   | 'traditional'
+  | 'modern'
+  | 'spiritual'
   | 'innovative';
 
 export interface GeneratedTagline {
@@ -55,28 +46,6 @@ export interface TaglineResult {
   companyName: string;
   generatedAt: Date;
 }
-
-// Tone descriptions for the AI
-const toneDescriptions: Record<TaglineTone, string> = {
-  inspirational: 'uplifting, motivating, and encouraging',
-  powerful: 'strong, impactful, and commanding',
-  spiritual: 'deep, philosophical, and transcendent',
-  modern: 'contemporary, fresh, and progressive',
-  traditional: 'classic, timeless, and rooted in heritage',
-  innovative: 'creative, forward-thinking, and revolutionary',
-};
-
-// Industry-specific Sanskrit terminology hints
-const industryHints: Record<string, string[]> = {
-  technology: ['विज्ञान (science)', 'तन्त्रज्ञान (technology)', 'नवीनता (innovation)', 'भविष्य (future)'],
-  education: ['विद्या (knowledge)', 'ज्ञान (wisdom)', 'शिक्षा (education)', 'गुरु (teacher)'],
-  healthcare: ['आरोग्य (health)', 'चिकित्सा (healing)', 'जीवन (life)', 'सेवा (service)'],
-  finance: ['धन (wealth)', 'समृद्धि (prosperity)', 'विश्वास (trust)', 'सुरक्षा (security)'],
-  retail: ['सेवा (service)', 'गुणवत्ता (quality)', 'संतुष्टि (satisfaction)', 'विविधता (variety)'],
-  food: ['स्वाद (taste)', 'पोषण (nutrition)', 'शुद्धता (purity)', 'आनन्द (joy)'],
-  travel: ['यात्रा (journey)', 'अन्वेषण (exploration)', 'साहस (adventure)', 'आनन्द (bliss)'],
-  default: ['उत्कृष्टता (excellence)', 'सफलता (success)', 'प्रगति (progress)', 'धर्म (duty)'],
-};
 
 // Fallback taglines when API is unavailable
 const fallbackTaglines: GeneratedTagline[] = [
@@ -151,113 +120,74 @@ const generateId = (): string => {
   return `tagline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 };
 
-// Main tagline generation function
+// Main tagline generation function using SvaramAI backend
 export const generateTaglines = async (
   companyInfo: CompanyInfo,
   count: number = 5
 ): Promise<TaglineResult> => {
   try {
-    const industryTerms = industryHints[companyInfo.industry.toLowerCase()] || industryHints.default;
-    const toneDescription = toneDescriptions[companyInfo.tone];
+    console.log('Calling SvaramAI tagline API...');
+    
+    // Convert core values string to array
+    const valuesArray = companyInfo.coreValues
+      .split(',')
+      .map(v => v.trim())
+      .filter(v => v.length > 0);
 
-    const prompt = `You are an expert Sanskrit scholar and branding specialist. Generate ${count} unique, creative Sanskrit taglines for a company.
-
-COMPANY INFORMATION:
-- Company Name: ${companyInfo.companyName}
-- Industry: ${companyInfo.industry}
-- Vision: ${companyInfo.vision}
-- Mission: ${companyInfo.mission}
-- Core Values: ${companyInfo.coreValues}
-- Target Audience: ${companyInfo.targetAudience}
-- Unique Selling Point: ${companyInfo.uniqueSellingPoint}
-- Desired Tone: ${toneDescription}
-
-RELEVANT SANSKRIT TERMS FOR THIS INDUSTRY:
-${industryTerms.join(', ')}
-
-REQUIREMENTS:
-1. Each tagline should be a SHORT, MEMORABLE Sanskrit phrase (3-7 words maximum)
-2. It should capture the essence of the company's vision and values
-3. It should be easy to pronounce and remember
-4. It should have deep meaning that resonates with the brand
-5. Provide accurate transliteration using standard IAST notation
-6. Explain why this tagline is relevant to this specific company
-
-RESPONSE FORMAT (JSON):
-{
-  "taglines": [
-    {
-      "sanskrit": "Sanskrit text in Devanagari script",
-      "transliteration": "Romanized transliteration with proper diacritics",
-      "meaning": "Direct English translation",
-      "explanation": "Deeper explanation of the phrase's significance",
-      "relevance": "Why this specific tagline fits this company"
-    }
-  ]
-}
-
-Generate exactly ${count} unique taglines. Respond ONLY with valid JSON, no additional text.`;
-
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await axios.post(
+      `${API_BASE_URL}/api/v1/tagline/generate`,
+      {
+        company_name: companyInfo.companyName,
+        industry: companyInfo.industry,
+        vision: companyInfo.vision,
+        values: valuesArray,
+        tone: companyInfo.tone,
       },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.8,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
+      {
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }),
-    });
+        timeout: 30000, // 30s timeout
+      }
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      // Return fallback taglines on API error
-      return {
-        taglines: fallbackTaglines.slice(0, count).map(t => ({ ...t, id: generateId() })),
-        companyName: companyInfo.companyName,
-        generatedAt: new Date(),
-      };
-    }
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    // Parse JSON response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.warn('Could not parse AI response, using fallbacks');
-      return {
-        taglines: fallbackTaglines.slice(0, count).map(t => ({ ...t, id: generateId() })),
-        companyName: companyInfo.companyName,
-        generatedAt: new Date(),
-      };
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
-    const taglines: GeneratedTagline[] = parsed.taglines.map((t: Record<string, string>) => ({
+    console.log('SvaramAI tagline response:', response.data);
+    
+    const data = response.data;
+    
+    // Primary tagline
+    const primaryTagline: GeneratedTagline = {
       id: generateId(),
-      sanskrit: t.sanskrit || '',
-      transliteration: t.transliteration || '',
-      meaning: t.meaning || '',
-      explanation: t.explanation || '',
-      relevance: t.relevance || '',
+      sanskrit: data.tagline || '',
+      transliteration: '',
+      meaning: data.english_translation || '',
+      explanation: data.meaning || '',
+      relevance: `Primary tagline for ${companyInfo.companyName}`,
+    };
+
+    // Variants
+    const variantTaglines: GeneratedTagline[] = (data.variants || []).map((variant: any) => ({
+      id: generateId(),
+      sanskrit: variant.tagline || '',
+      transliteration: '',
+      meaning: variant.translation || '',
+      explanation: variant.context || '',
+      relevance: variant.context || '',
     }));
 
     return {
-      taglines,
+      taglines: [primaryTagline, ...variantTaglines],
       companyName: companyInfo.companyName,
       generatedAt: new Date(),
     };
-  } catch (error) {
-    console.error('Error generating taglines:', error);
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const errorDetail = error.response?.data?.detail || error.message;
+      console.error('SvaramAI tagline API error:', error.response?.status, errorDetail);
+    } else {
+      console.error('Error generating taglines:', error);
+    }
+    
     // Return fallback taglines on error
     return {
       taglines: fallbackTaglines.slice(0, count).map(t => ({ ...t, id: generateId() })),
@@ -286,14 +216,14 @@ export const getIndustryOptions = (): string[] => [
   'Other',
 ];
 
-// Get tone options
+// Get tone options with Ionicons instead of emojis
 export const getToneOptions = (): { value: TaglineTone; label: string; icon: string }[] => [
-  { value: 'inspirational', label: 'Inspirational', icon: '✨' },
-  { value: 'powerful', label: 'Powerful', icon: '⚡' },
-  { value: 'spiritual', label: 'Spiritual', icon: '🕉️' },
-  { value: 'modern', label: 'Modern', icon: '🚀' },
-  { value: 'traditional', label: 'Traditional', icon: '📜' },
-  { value: 'innovative', label: 'Innovative', icon: '💡' },
+  { value: 'professional', label: 'Professional', icon: 'briefcase-outline' },
+  { value: 'inspiring', label: 'Inspiring', icon: 'sparkles-outline' },
+  { value: 'traditional', label: 'Traditional', icon: 'book-outline' },
+  { value: 'modern', label: 'Modern', icon: 'rocket-outline' },
+  { value: 'spiritual', label: 'Spiritual', icon: 'flower-outline' },
+  { value: 'innovative', label: 'Innovative', icon: 'bulb-outline' },
 ];
 
 // Validate company info

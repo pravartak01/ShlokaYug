@@ -67,7 +67,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Will be updated in next expo-image-picker version
       allowsMultipleSelection: true,
       selectionLimit: MAX_IMAGES - images.length,
       quality: 0.8,

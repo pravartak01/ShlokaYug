@@ -20,18 +20,40 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Vintage Theme Colors
+const COLORS = {
+  primaryBrown: '#4A2E1C',
+  copper: '#B87333',
+  gold: '#D4A017',
+  saffron: '#DD7A1F',
+  sand: '#F3E4C8',
+  cream: '#FFF8E7',
+  darkBrown: '#2D1810',
+  warmWhite: '#FFFDF7',
+};
+
+// Generation stages for animation
+const GENERATION_STAGES = [
+  { id: 1, label: 'Analyzing Brand', icon: 'analytics-outline', duration: 1200 },
+  { id: 2, label: 'Sanskrit Processing', icon: 'book-outline', duration: 1200 },
+  { id: 3, label: 'Cultural Mapping', icon: 'compass-outline', duration: 1200 },
+  { id: 4, label: 'Tagline Crafting', icon: 'create-outline', duration: 1200 },
+];
+
 type ViewState = 'form' | 'loading' | 'results';
 
 export default function TaglineGenerator() {
   const [viewState, setViewState] = useState<ViewState>('form');
   const [result, setResult] = useState<TaglineResult | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [currentStage, setCurrentStage] = useState(0);
 
   // Animations
   const headerAnim = useRef(new Animated.Value(0)).current;
   const loadingRotate = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const stageOpacityAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.spring(headerAnim, {
@@ -103,26 +125,62 @@ export default function TaglineGenerator() {
   const handleFormSubmit = async (companyInfo: CompanyInfo) => {
     setViewState('loading');
     setLoadingProgress(0);
+    setCurrentStage(0);
 
-    try {
-      const generatedResult = await generateTaglines(companyInfo, 5);
-      setLoadingProgress(100);
+    // Start the API call
+    const apiPromise = generateTaglines(companyInfo, 5);
+
+    // Progressive stage animation with minimum duration
+    const minStageDuration = 1200;
+    const totalMinDuration = minStageDuration * 4;
+    const startTime = Date.now();
+
+    // Animate through stages
+    for (let i = 0; i < GENERATION_STAGES.length; i++) {
+      setCurrentStage(i);
+      const stageProgress = ((i + 1) / GENERATION_STAGES.length) * 100;
       
-      // Small delay to show 100%
-      setTimeout(() => {
-        setResult(generatedResult);
-        setViewState('results');
-      }, 500);
-    } catch (error) {
-      console.error('Error generating taglines:', error);
-      setViewState('form');
+      // Fade animation for stage transition
+      Animated.sequence([
+        Animated.timing(stageOpacityAnim, {
+          toValue: 0.3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(stageOpacityAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      await new Promise(resolve => setTimeout(resolve, GENERATION_STAGES[i].duration));
+      setLoadingProgress(stageProgress);
     }
+
+    // Wait for minimum duration and API
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = Math.max(0, totalMinDuration - elapsedTime);
+    
+    const [generatedResult] = await Promise.all([
+      apiPromise,
+      new Promise(resolve => setTimeout(resolve, remainingTime)),
+    ]);
+
+    setLoadingProgress(100);
+    
+    // Small delay to show 100%
+    setTimeout(() => {
+      setResult(generatedResult);
+      setViewState('results');
+    }, 500);
   };
 
   const handleReset = () => {
     setResult(null);
     setViewState('form');
     setLoadingProgress(0);
+    setCurrentStage(0);
   };
 
   const spin = loadingRotate.interpolate({
@@ -135,19 +193,9 @@ export default function TaglineGenerator() {
     outputRange: [0, SCREEN_WIDTH - 80],
   });
 
-  const loadingMessages = [
-    'Consulting ancient Sanskrit texts...',
-    'Channeling vedic wisdom...',
-    'Crafting your perfect tagline...',
-    'Infusing meaning with tradition...',
-    'Almost there...',
-  ];
-
-  const currentMessage = loadingMessages[Math.min(Math.floor(loadingProgress / 25), loadingMessages.length - 1)];
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fafafa' }} edges={['top']}>
-      {/* Header */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.warmWhite }} edges={['top']}>
+      {/* Header with vintage theme */}
       <Animated.View
         style={{
           transform: [{ scale: headerAnim }],
@@ -155,7 +203,7 @@ export default function TaglineGenerator() {
         }}
       >
         <LinearGradient
-          colors={['#1f2937', '#374151']}
+          colors={[COLORS.primaryBrown, COLORS.darkBrown]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -193,23 +241,23 @@ export default function TaglineGenerator() {
               </Text>
             </View>
 
-            {/* AI Badge */}
+            {/* AI Badge with vintage colors */}
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: 'rgba(249,115,22,0.2)',
+                backgroundColor: `${COLORS.saffron}33`,
                 paddingHorizontal: 10,
                 paddingVertical: 6,
                 borderRadius: 12,
               }}
             >
-              <Ionicons name="sparkles" size={14} color="#fb923c" style={{ marginRight: 4 }} />
-              <Text style={{ fontSize: 11, color: '#fb923c', fontWeight: '700' }}>AI</Text>
+              <Ionicons name="sparkles" size={14} color={COLORS.gold} style={{ marginRight: 4 }} />
+              <Text style={{ fontSize: 11, color: COLORS.gold, fontWeight: '700' }}>AI</Text>
             </View>
           </View>
 
-          {/* Description */}
+          {/* Description with vintage theme */}
           <View
             style={{
               backgroundColor: 'rgba(255,255,255,0.1)',
@@ -224,13 +272,13 @@ export default function TaglineGenerator() {
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                backgroundColor: 'rgba(249,115,22,0.2)',
+                backgroundColor: `${COLORS.saffron}33`,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 14,
               }}
             >
-              <Text style={{ fontSize: 24 }}>🕉️</Text>
+              <Ionicons name="flower-outline" size={24} color={COLORS.gold} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', lineHeight: 20 }}>
@@ -249,7 +297,7 @@ export default function TaglineGenerator() {
 
         {viewState === 'loading' && (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 80 }}>
-            {/* Animated Icon */}
+            {/* Animated Icon with vintage colors */}
             <Animated.View
               style={{
                 transform: [{ rotate: spin }, { scale: pulseAnim }],
@@ -257,7 +305,7 @@ export default function TaglineGenerator() {
               }}
             >
               <LinearGradient
-                colors={['#ea580c', '#f97316', '#fb923c']}
+                colors={[COLORS.copper, COLORS.gold, COLORS.saffron]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -266,31 +314,56 @@ export default function TaglineGenerator() {
                   borderRadius: 50,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  shadowColor: '#ea580c',
+                  shadowColor: COLORS.saffron,
                   shadowOffset: { width: 0, height: 8 },
                   shadowOpacity: 0.4,
                   shadowRadius: 16,
                   elevation: 8,
                 }}
               >
-                <Text style={{ fontSize: 44 }}>✨</Text>
+                <Ionicons name="sparkles" size={48} color={COLORS.warmWhite} />
               </LinearGradient>
             </Animated.View>
 
-            {/* Loading Text */}
-            <Text style={{ fontSize: 18, fontWeight: '700', color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
-              {currentMessage}
-            </Text>
-            <Text style={{ fontSize: 14, color: '#9ca3af', marginBottom: 32, textAlign: 'center' }}>
-              This may take a few moments
-            </Text>
+            {/* Current Stage with animation */}
+            <Animated.View style={{ opacity: stageOpacityAnim, marginBottom: 24 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons 
+                  name={GENERATION_STAGES[currentStage]?.icon as any} 
+                  size={20} 
+                  color={COLORS.copper} 
+                  style={{ marginRight: 8 }} 
+                />
+                <Text style={{ fontSize: 18, fontWeight: '700', color: COLORS.primaryBrown }}>
+                  {GENERATION_STAGES[currentStage]?.label}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 14, color: COLORS.darkBrown, textAlign: 'center', opacity: 0.7 }}>
+                Processing your brand essence...
+              </Text>
+            </Animated.View>
 
-            {/* Progress Bar */}
+            {/* Stage Indicators */}
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 32 }}>
+              {GENERATION_STAGES.map((stage, index) => (
+                <View
+                  key={stage.id}
+                  style={{
+                    width: 40,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: index <= currentStage ? COLORS.copper : COLORS.sand,
+                  }}
+                />
+              ))}
+            </View>
+
+            {/* Progress Bar with vintage theme */}
             <View
               style={{
                 width: SCREEN_WIDTH - 80,
                 height: 8,
-                backgroundColor: '#e5e7eb',
+                backgroundColor: COLORS.sand,
                 borderRadius: 4,
                 overflow: 'hidden',
                 marginBottom: 12,
@@ -304,7 +377,7 @@ export default function TaglineGenerator() {
                 }}
               >
                 <LinearGradient
-                  colors={['#ea580c', '#f97316']}
+                  colors={[COLORS.copper, COLORS.gold]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{ flex: 1, borderRadius: 4 }}
@@ -312,26 +385,28 @@ export default function TaglineGenerator() {
               </Animated.View>
             </View>
 
-            <Text style={{ fontSize: 13, color: '#6b7280', fontWeight: '600' }}>
+            <Text style={{ fontSize: 13, color: COLORS.darkBrown, fontWeight: '600' }}>
               {Math.round(loadingProgress)}%
             </Text>
 
-            {/* Fun Facts */}
+            {/* Info Card with vintage theme */}
             <View
               style={{
                 marginTop: 48,
-                backgroundColor: '#fff7ed',
+                backgroundColor: COLORS.cream,
                 borderRadius: 16,
                 padding: 20,
                 width: '100%',
+                borderWidth: 1,
+                borderColor: COLORS.gold,
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                <Ionicons name="book-outline" size={18} color="#ea580c" style={{ marginRight: 8 }} />
-                <Text style={{ fontSize: 13, fontWeight: '700', color: '#ea580c' }}>Did You Know?</Text>
+                <Ionicons name="book-outline" size={18} color={COLORS.copper} style={{ marginRight: 8 }} />
+                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.copper }}>Sanskrit Wisdom</Text>
               </View>
-              <Text style={{ fontSize: 13, color: '#92400e', lineHeight: 20 }}>
-                Sanskrit is known as &ldquo;Devavani&rdquo; (language of the gods) and is considered one of the most scientific languages in the world, perfect for creating meaningful brand identities.
+              <Text style={{ fontSize: 13, color: COLORS.darkBrown, lineHeight: 20 }}>
+                Sanskrit is known as "Devavani" (language of the gods) and is considered one of the most scientific languages in the world, perfect for creating meaningful brand identities.
               </Text>
             </View>
           </View>

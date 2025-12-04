@@ -1,12 +1,34 @@
 /**
- * TrendingHashtags Component - Shows trending hashtags
- * Horizontal scrollable list with engagement stats
+ * TrendingHashtags Component - Vintage Theme
+ * Displays trending hashtags with elegant styling
  */
 
 import React, { memo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { TrendingHashtag } from '../../services/communityService';
+
+// Vintage Theme Colors
+const COLORS = {
+  primaryBrown: '#4A2E1C',
+  copper: '#B87333',
+  gold: '#D4A017',
+  saffron: '#DD7A1F',
+  sand: '#F3E4C8',
+  cream: '#FFF8E7',
+  darkBrown: '#2D1810',
+  warmWhite: '#FFFDF7',
+  deepMaroon: '#5D1A0B',
+  ivory: '#FFFFF0',
+  bronze: '#CD7F32',
+};
 
 interface TrendingHashtagsProps {
   hashtags: TrendingHashtag[];

@@ -42,34 +42,28 @@ const upload = multer({
 
 const createPostValidation = [
   body('text')
-    .optional()
-    .isLength({ max: 500 })
-    .withMessage('Post text cannot exceed 500 characters')
+    .optional({ checkFalsy: true })
+    .isLength({ max: 5000 })
+    .withMessage('Post text cannot exceed 5000 characters')
     .trim(),
     
   body('videoId')
-    .optional()
-    .isMongoId()
-    .withMessage('Invalid video ID'),
+    .optional({ checkFalsy: true }),
     
   body('hashtags')
-    .optional()
-    .isArray()
-    .withMessage('Hashtags must be an array'),
+    .optional({ checkFalsy: true }),
     
   body('mentions')
-    .optional()
-    .isArray()
-    .withMessage('Mentions must be an array'),
+    .optional({ checkFalsy: true }),
     
   body('visibility')
-    .optional()
+    .optional({ checkFalsy: true })
     .isIn(['public', 'followers', 'private'])
     .withMessage('Invalid visibility option'),
     
   body('location.name')
-    .optional()
-    .isLength({ max: 100 })
+    .optional({ checkFalsy: true })
+    .isLength({ max: 200 })
     .withMessage('Location name too long'),
 ];
 
