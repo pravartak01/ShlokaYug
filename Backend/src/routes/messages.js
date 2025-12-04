@@ -27,7 +27,11 @@ const {
   validateChandasAnalysis
 } = require('../middleware/messageValidation');
 
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
+
+// Debug: Check if auth is a function
+console.log('Auth middleware type:', typeof auth);
+console.log('Auth middleware:', auth);
 
 // Apply authentication middleware to all routes
 router.use(auth);
