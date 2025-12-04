@@ -21,6 +21,14 @@ import CommunityManagement from './pages/CommunityManagement';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import ApiTest from './pages/ApiTest';
+import ContentModeration from './pages/ContentModeration';
+import PaymentManagement from './pages/PaymentManagement';
+import SystemManagement from './pages/SystemManagement';
+import CourseManagement from './pages/CourseManagement';
+import VideoManagement from './pages/VideoManagement';
+import AssessmentManagement from './pages/AssessmentManagement';
+import CertificateManagement from './pages/CertificateManagement';
+import EnrollmentManagement from './pages/EnrollmentManagement';
 
 // Services
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -166,6 +174,62 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <ApiTest />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/content-moderation" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <ContentModeration />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/payment-management" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <PaymentManagement />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/system-management" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <SystemManagement />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/course-management" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <CourseManagement />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/video-management" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <VideoManagement />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/assessment-management" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <AssessmentManagement />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/certificate-management" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <CertificateManagement />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/enrollment-management" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <EnrollmentManagement />
                   </MainLayout>
                 </ProtectedRoute>
               } />

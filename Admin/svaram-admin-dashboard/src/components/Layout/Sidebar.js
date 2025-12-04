@@ -21,6 +21,14 @@ import {
   Analytics as AnalyticsIcon,
   Settings as SettingsIcon,
   AdminPanelSettings as AdminIcon,
+  Gavel as ModerationIcon,
+  Payment as PaymentIcon,
+  Computer as SystemIcon,
+  MenuBook as CourseIcon,
+  VideoLibrary as VideoIcon,
+  Quiz as AssessmentIcon,
+  EmojiEvents as CertificateIcon,
+  PersonAdd as EnrollmentIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
@@ -51,6 +59,46 @@ const menuItems = [
     text: 'Community',
     icon: <ForumIcon />,
     path: '/community',
+  },
+  {
+    text: 'Course Management',
+    icon: <CourseIcon />,
+    path: '/course-management',
+  },
+  {
+    text: 'Video Management',
+    icon: <VideoIcon />,
+    path: '/video-management',
+  },
+  {
+    text: 'Assessment Management',
+    icon: <AssessmentIcon />,
+    path: '/assessment-management',
+  },
+  {
+    text: 'Certificate Management',
+    icon: <CertificateIcon />,
+    path: '/certificate-management',
+  },
+  {
+    text: 'Enrollment Management',
+    icon: <EnrollmentIcon />,
+    path: '/enrollment-management',
+  },
+  {
+    text: 'Content Moderation',
+    icon: <ModerationIcon />,
+    path: '/content-moderation',
+  },
+  {
+    text: 'Payment Management',
+    icon: <PaymentIcon />,
+    path: '/payment-management',
+  },
+  {
+    text: 'System Management',
+    icon: <SystemIcon />,
+    path: '/system-management',
   },
   {
     text: 'Analytics',

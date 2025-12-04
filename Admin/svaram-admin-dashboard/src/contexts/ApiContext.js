@@ -286,6 +286,383 @@ export const ApiProvider = ({ children }) => {
     }
   };
 
+  // Content Moderation APIs
+  const getPendingContent = async () => {
+    try {
+      const response = await apiService.get('/admin/content/pending');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getFlaggedContent = async () => {
+    try {
+      const response = await apiService.get('/admin/content/flagged');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const approveContent = async (contentId) => {
+    try {
+      const response = await apiService.post(`/admin/content/${contentId}/approve`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const rejectContent = async (contentId, reason) => {
+    try {
+      const response = await apiService.post(`/admin/content/${contentId}/reject`, { reason });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Payment Management APIs
+  const getPaymentStats = async () => {
+    try {
+      const response = await apiService.get('/admin/payments/stats');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getPaymentHistory = async (params = {}) => {
+    try {
+      const response = await apiService.get('/admin/payments', { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const processRefund = async (paymentId, refundData) => {
+    try {
+      const response = await apiService.post(`/admin/payments/${paymentId}/refund`, refundData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getSubscriptions = async (params = {}) => {
+    try {
+      const response = await apiService.get('/admin/subscriptions', { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateSubscription = async (subscriptionId, updateData) => {
+    try {
+      const response = await apiService.put(`/admin/subscriptions/${subscriptionId}`, updateData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // System Management APIs
+  const getSystemHealth = async () => {
+    try {
+      const response = await apiService.get('/admin/system/health');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const toggleMaintenanceMode = async (enabled) => {
+    try {
+      const response = await apiService.post('/admin/system/maintenance', { enabled });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getSystemLogs = async (params = {}) => {
+    try {
+      const response = await apiService.get('/admin/system/logs', { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getPerformanceMetrics = async () => {
+    try {
+      const response = await apiService.get('/admin/system/metrics');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Course Management APIs
+  const getCourses = async () => {
+    try {
+      const response = await apiService.get('/admin/courses');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const createCourse = async (courseData) => {
+    try {
+      const response = await apiService.post('/admin/courses', courseData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateCourse = async (courseId, courseData) => {
+    try {
+      const response = await apiService.put(`/admin/courses/${courseId}`, courseData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const deleteCourse = async (courseId) => {
+    try {
+      const response = await apiService.delete(`/admin/courses/${courseId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const publishCourse = async (courseId) => {
+    try {
+      const response = await apiService.post(`/admin/courses/${courseId}/publish`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const unpublishCourse = async (courseId) => {
+    try {
+      const response = await apiService.post(`/admin/courses/${courseId}/unpublish`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Video Management APIs
+  const getVideos = async () => {
+    try {
+      const response = await apiService.get('/admin/videos');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getShorts = async () => {
+    try {
+      const response = await apiService.get('/admin/shorts');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const moderateVideo = async (videoId, action) => {
+    try {
+      const response = await apiService.post(`/admin/videos/${videoId}/moderate`, { action });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const deleteVideo = async (videoId) => {
+    try {
+      const response = await apiService.delete(`/admin/videos/${videoId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getVideoAnalytics = async (videoId) => {
+    try {
+      const response = await apiService.get(`/admin/videos/${videoId}/analytics`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Assessment Management APIs
+  const getAssessments = async () => {
+    try {
+      const response = await apiService.get('/admin/assessments');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const createAssessment = async (assessmentData) => {
+    try {
+      const response = await apiService.post('/admin/assessments', assessmentData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateAssessment = async (assessmentId, assessmentData) => {
+    try {
+      const response = await apiService.put(`/admin/assessments/${assessmentId}`, assessmentData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const deleteAssessment = async (assessmentId) => {
+    try {
+      const response = await apiService.delete(`/admin/assessments/${assessmentId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getAssessmentStats = async (assessmentId) => {
+    try {
+      const response = await apiService.get(`/admin/assessments/${assessmentId}/stats`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Certificate Management APIs
+  const getCertificates = async () => {
+    try {
+      const response = await apiService.get('/admin/certificates');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getCertificateTemplates = async () => {
+    try {
+      const response = await apiService.get('/admin/certificate-templates');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const createCertificateTemplate = async (templateData) => {
+    try {
+      const response = await apiService.post('/admin/certificate-templates', templateData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateCertificateTemplate = async (templateId, templateData) => {
+    try {
+      const response = await apiService.put(`/admin/certificate-templates/${templateId}`, templateData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const deleteCertificateTemplate = async (templateId) => {
+    try {
+      const response = await apiService.delete(`/admin/certificate-templates/${templateId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const revokeCertificate = async (certificateId) => {
+    try {
+      const response = await apiService.post(`/admin/certificates/${certificateId}/revoke`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const downloadCertificate = async (certificateId) => {
+    try {
+      const response = await apiService.get(`/admin/certificates/${certificateId}/download`, { responseType: 'blob' });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Enrollment Management APIs
+  const getEnrollments = async () => {
+    try {
+      const response = await apiService.get('/admin/enrollments');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const createEnrollment = async (enrollmentData) => {
+    try {
+      const response = await apiService.post('/admin/enrollments', enrollmentData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateEnrollment = async (enrollmentId, enrollmentData) => {
+    try {
+      const response = await apiService.put(`/admin/enrollments/${enrollmentId}`, enrollmentData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const cancelEnrollment = async (enrollmentId) => {
+    try {
+      const response = await apiService.post(`/admin/enrollments/${enrollmentId}/cancel`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getEnrollmentStats = async () => {
+    try {
+      const response = await apiService.get('/admin/enrollments/stats');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const value = {
     // Authentication
     login,
@@ -325,6 +702,63 @@ export const ApiProvider = ({ children }) => {
     getReportedContent,
     moderateContent,
     moderatePost,
+    
+    // Content Moderation
+    getPendingContent,
+    getFlaggedContent,
+    approveContent,
+    rejectContent,
+    
+    // Payment Management
+    getPaymentStats,
+    getPaymentHistory,
+    processRefund,
+    getSubscriptions,
+    updateSubscription,
+    
+    // System Management
+    getSystemHealth,
+    toggleMaintenanceMode,
+    getSystemLogs,
+    getPerformanceMetrics,
+    
+    // Course Management
+    getCourses,
+    createCourse,
+    updateCourse,
+    deleteCourse,
+    publishCourse,
+    unpublishCourse,
+    
+    // Video Management
+    getVideos,
+    getShorts,
+    moderateVideo,
+    deleteVideo,
+    getVideoAnalytics,
+    
+    // Assessment Management
+    getAssessments,
+    createAssessment,
+    updateAssessment,
+    deleteAssessment,
+    getAssessmentStats,
+    
+    // Certificate Management
+    getCertificates,
+    getCertificateTemplates,
+    createCertificateTemplate,
+    updateCertificateTemplate,
+    deleteCertificateTemplate,
+    revokeCertificate,
+    downloadCertificate,
+    
+    // Enrollment Management
+    getEnrollments,
+    createEnrollment,
+    updateEnrollment,
+    cancelEnrollment,
+    getEnrollmentStats,
     
     // Settings
     getSettings,
