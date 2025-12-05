@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   BrowserRouter as Router, 
   Routes, 
@@ -37,30 +37,52 @@ import { ApiProvider } from './contexts/ApiContext';
 // Styles
 import './App.css';
 
-// Theme Configuration
+// Luxury Theme Configuration
 const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#1976d2',
-      dark: '#115293',
-      light: '#42a5f5',
+      main: '#6366f1',
+      dark: '#4f46e5',
+      light: '#8b5cf6',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#ec4899',
+      dark: '#db2777',
+      light: '#f9a8d4',
     },
     background: {
-      default: '#f5f5f5',
+      default: '#f8fafc',
       paper: '#ffffff',
+    },
+    text: {
+      primary: '#1e293b',
+      secondary: '#64748b',
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h3: {
+      fontWeight: 700,
+      fontSize: '2rem',
+    },
     h4: {
       fontWeight: 600,
+      fontSize: '1.5rem',
     },
     h6: {
       fontWeight: 500,
+      fontSize: '1.125rem',
+    },
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        },
+      },
     },
   },
 });
@@ -79,24 +101,55 @@ const ProtectedRoute = ({ children }) => {
 // Main Layout Component
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [sidebarOpen]);
+
+  const handleSidebarToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f8fafc' }}>
+      <Sidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)}
+        collapsed={false}
+        isDesktop={!isMobile}
+      />
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           bgcolor: 'background.default',
-          transition: theme.transitions.create('margin', {
+          transition: theme.transitions.create(['margin', 'width'], {
             easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
+            duration: theme.transitions.duration.enteringScreen,
           }),
-          marginLeft: sidebarOpen ? '240px' : '60px',
+          marginLeft: isMobile ? 0 : (sidebarOpen ? '280px' : '72px'),
+          width: isMobile ? '100%' : `calc(100% - ${sidebarOpen ? '280px' : '72px'})`,
+          minHeight: '100vh',
         }}
       >
-        <TopBar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <Box sx={{ p: 3 }}>
+        <TopBar onMenuClick={handleSidebarToggle} />
+        <Box 
+          sx={{ 
+            p: { xs: 2, sm: 3, md: 4 },
+            maxWidth: '100%',
+            overflow: 'hidden',
+          }}
+        >
           {children}
         </Box>
       </Box>

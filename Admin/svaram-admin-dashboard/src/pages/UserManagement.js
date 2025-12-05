@@ -21,12 +21,24 @@ import {
   Card,
   CardContent,
   Pagination,
+  Container,
+  InputAdornment,
+  Fade,
+  useTheme,
+  alpha,
+  Tooltip,
+  Avatar,
+  LinearProgress,
 } from '@mui/material';
 import {
   Block as BlockIcon,
   CheckCircle as CheckCircleIcon,
   Visibility as ViewIcon,
   People as PeopleIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  Download as DownloadIcon,
+  Add as AddIcon,
 } from '@mui/icons-material';
 import { useApi } from '../contexts/ApiContext';
 

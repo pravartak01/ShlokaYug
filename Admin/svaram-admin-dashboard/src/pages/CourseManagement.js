@@ -34,10 +34,56 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Publish as PublishIcon,
-  UnpublishedIcon,
+  ArticleOutlined as DraftIcon,
   Analytics as AnalyticsIcon,
 } from '@mui/icons-material';
 import { useApi } from '../contexts/ApiContext';
+
+// Mock data for courses
+const mockCourses = [
+  {
+    id: 1,
+    title: 'Introduction to Sanskrit Pronunciation',
+    instructor: 'Dr. Priya Sharma',
+    category: 'Basics',
+    enrollments: 1234,
+    rating: 4.8,
+    duration: '8 weeks',
+    published: true,
+    createdAt: '2024-01-15',
+    description: 'Learn the fundamentals of Sanskrit pronunciation and basic grammar.',
+    price: 2999,
+    level: 'Beginner'
+  },
+  {
+    id: 2,
+    title: 'Advanced Vedic Chanting',
+    instructor: 'Guru Ramesh Acharya',
+    category: 'Advanced',
+    enrollments: 567,
+    rating: 4.9,
+    duration: '12 weeks',
+    published: true,
+    createdAt: '2024-02-01',
+    description: 'Master the art of Vedic chanting with proper intonation.',
+    price: 4999,
+    level: 'Advanced'
+  },
+  {
+    id: 3,
+    title: 'Sanskrit Literature Analysis',
+    instructor: 'Prof. Meera Devi',
+    category: 'Literature',
+    enrollments: 890,
+    rating: 4.7,
+    duration: '10 weeks',
+    published: false,
+    createdAt: '2024-03-10',
+    description: 'Deep dive into classical Sanskrit literature and texts.',
+    price: 3999,
+    level: 'Intermediate'
+  }
+];
 
 const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
@@ -58,11 +104,29 @@ const CourseManagement = () => {
     getCourseAnalytics 
   } = useApi();
 
+  // Helper function to show snackbar messages
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
   useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setCourses(mockCourses);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        showSnackbar('Error loading courses', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     fetchCourses();
   }, []);
 
-  const fetchCourses = async () => {
+  const refreshCourses = async () => {
     try {
       setLoading(true);
       const [coursesRes, analyticsRes] = await Promise.all([
@@ -70,18 +134,16 @@ const CourseManagement = () => {
         getCourseAnalytics()
       ]);
       
-      setCourses(coursesRes.data?.courses || []);
+      setCourses(coursesRes.data?.courses || mockCourses);
       setCourseStats(analyticsRes.data || {});
     } catch (error) {
       console.error('Failed to fetch courses:', error);
       showSnackbar('Failed to fetch courses', 'error');
+      // Fallback to mock data
+      setCourses(mockCourses);
     } finally {
       setLoading(false);
     }
-  };
-
-  const showSnackbar = (message, severity = 'success') => {
-    setSnackbar({ open: true, message, severity });
   };
 
   const handlePublishToggle = async (course) => {
@@ -93,7 +155,7 @@ const CourseManagement = () => {
         await publishCourse(course._id);
         showSnackbar('Course published successfully');
       }
-      fetchCourses();
+      refreshCourses();
     } catch (error) {
       console.error('Failed to toggle publish status:', error);
       showSnackbar('Failed to update course status', 'error');
@@ -105,7 +167,7 @@ const CourseManagement = () => {
       await deleteCourse(selectedCourse._id);
       showSnackbar('Course deleted successfully');
       setOpenDialog(false);
-      fetchCourses();
+      refreshCourses();
     } catch (error) {
       console.error('Failed to delete course:', error);
       showSnackbar('Failed to delete course', 'error');
@@ -152,8 +214,8 @@ const CourseManagement = () => {
               <Box display="flex" alignItems="center">
                 <CourseIcon color="primary" sx={{ mr: 2 }} />
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Total Courses
+                  <Typography color="text.secondary" gutterBottom>
+                    Draft Courses
                   </Typography>
                   <Typography variant="h6">
                     {courses.length}
@@ -184,9 +246,9 @@ const CourseManagement = () => {
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
-                <UnpublishedIcon color="warning" sx={{ mr: 2 }} />
+                <DraftIcon color="warning" sx={{ mr: 2 }} />
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="text.secondary" gutterBottom>
                     Drafts
                   </Typography>
                   <Typography variant="h6">
@@ -203,7 +265,7 @@ const CourseManagement = () => {
               <Box display="flex" alignItems="center">
                 <AnalyticsIcon color="info" sx={{ mr: 2 }} />
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="text.secondary" gutterBottom>
                     Total Enrollments
                   </Typography>
                   <Typography variant="h6">
@@ -256,7 +318,7 @@ const CourseManagement = () => {
                     <Typography variant="body2" fontWeight="bold">
                       {course.title}
                     </Typography>
-                    <Typography variant="caption" color="textSecondary">
+                    <Typography variant="caption" color="text.secondary">
                       {course.description?.substring(0, 50)}...
                     </Typography>
                   </Box>
@@ -299,7 +361,7 @@ const CourseManagement = () => {
                       color={course.published ? "warning" : "success"}
                       onClick={() => handlePublishToggle(course)}
                     >
-                      {course.published ? <UnpublishedIcon /> : <PublishIcon />}
+                      {course.published ? <DraftIcon /> : <PublishIcon />}
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Delete Course">
