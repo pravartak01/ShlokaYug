@@ -17,6 +17,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('adminToken');
+      if (token) {
+        setUser({ name: 'Admin User', email: 'admin@svaram.com' });
+        setIsAuthenticated(true);
+      }
+      setLoading(false);
+    };
+    
     checkAuthStatus();
   }, []);
 
