@@ -101,7 +101,7 @@ export const AnalyzingOverlay: React.FC<AnalyzingOverlayProps> = ({
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <LinearGradient
-        colors={['rgba(26, 26, 46, 0.98)', 'rgba(22, 33, 62, 0.98)'] as const}
+        colors={['rgba(10, 10, 10, 0.98)', 'rgba(26, 26, 26, 0.98)'] as const}
         style={styles.gradient}
       >
         {/* Main Animation */}
@@ -112,7 +112,7 @@ export const AnalyzingOverlay: React.FC<AnalyzingOverlayProps> = ({
           ]}
         >
           <LinearGradient
-            colors={['#FF6B6B', '#9333EA', '#3B82F6'] as const}
+            colors={['#8D6E63', '#6D4C41', '#4A2E1C'] as const}
             style={styles.outerRing}
           >
             <View style={styles.middleRing}>
@@ -153,7 +153,7 @@ export const AnalyzingOverlay: React.FC<AnalyzingOverlayProps> = ({
               ]}
             >
               <LinearGradient
-                colors={['#FF6B6B', '#9333EA'] as const}
+                colors={['#8D6E63', '#6D4C41'] as const}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.progressGradient}
@@ -223,7 +223,7 @@ export const AnalyzingOverlay: React.FC<AnalyzingOverlayProps> = ({
               (ANALYSIS_STAGES[currentStageIndex]?.icon || 'loading') as keyof typeof MaterialCommunityIcons.glyphMap
             }
             size={20}
-            color="#9333EA"
+            color="#8D6E63"
           />
           <Text style={styles.messageText}>
             {ANALYSIS_STAGES[currentStageIndex]?.label || 'Processing...'}
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 65,
-    backgroundColor: 'rgba(26, 26, 46, 0.95)',
+    backgroundColor: 'rgba(10, 10, 10, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -276,11 +276,11 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(147, 51, 234, 0.3)',
+    backgroundColor: 'rgba(141, 110, 99, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(147, 51, 234, 0.5)',
+    borderColor: 'rgba(141, 110, 99, 0.5)',
   },
   title: {
     fontSize: 22,
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   stageItemActive: {
-    backgroundColor: 'rgba(147, 51, 234, 0.2)',
+    backgroundColor: 'rgba(141, 110, 99, 0.2)',
   },
   stageItemCompleted: {
     opacity: 0.7,
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   stageIconActive: {
-    backgroundColor: '#9333EA',
+    backgroundColor: '#8D6E63',
   },
   stageIconCompleted: {
     backgroundColor: '#4CAF50',

@@ -19,10 +19,23 @@ export default function VideoPlayer({ lecture, onComplete }: VideoPlayerProps) {
   const [status, setStatus] = useState<any>({});
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Safety check for undefined lecture
+  if (!lecture) {
+    console.log('VideoPlayer - No lecture data provided');
+    return (
+      <View className="bg-black" style={{ height: 240, justifyContent: 'center', alignItems: 'center' }}>
+        <Ionicons name="film-outline" size={64} color="#4b5563" />
+        <Text className="text-gray-400 text-center mt-4 px-4">
+          No lecture selected
+        </Text>
+      </View>
+    );
+  }
+
   // Get the actual video URL from lecture content
   const videoUrl = lecture?.content?.videoUrl || lecture?.videoUrl || null;
   
-  console.log('VideoPlayer - Lecture data:', JSON.stringify(lecture, null, 2));
+  console.log('VideoPlayer - Lecture data:', lecture);
   console.log('VideoPlayer - Video URL:', videoUrl);
 
   const handlePlaybackStatusUpdate = (playbackStatus: AVPlaybackStatus) => {

@@ -143,7 +143,7 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
         )}
 
         <LinearGradient
-          colors={isLocked ? ['#2a2a3e', '#1a1a2e'] as const : challenge.gradient}
+          colors={isLocked ? ['#1A1A1A', '#0A0A0A'] as const : challenge.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.card, isCompleted && styles.completedCard]}
@@ -243,7 +243,7 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
           {!isLocked && (
             <View style={styles.playButtonContainer}>
               <LinearGradient
-                colors={isCompleted ? ['#4CAF50', '#2E7D32'] as const : ['#FF6B6B', '#FF4757'] as const}
+                colors={isCompleted ? ['#6D4C41', '#4A2E1C'] as const : ['#8D6E63', '#6D4C41'] as const}
                 style={styles.playButton}
               >
                 <MaterialCommunityIcons

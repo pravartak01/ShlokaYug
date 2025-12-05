@@ -458,7 +458,7 @@ const ShlokaList: React.FC<ShlokaListProps> = ({ onSelectShloka }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f0f1a',
+    backgroundColor: '#0A0A0A',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -470,27 +470,29 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#1A1A1A',
     borderRadius: 12,
     paddingHorizontal: 14,
     height: 48,
     gap: 10,
+    borderWidth: 1,
+    borderColor: '#4A2E1C',
   },
   searchInput: {
     flex: 1,
-    color: '#fff',
+    color: '#EFEBE9',
     fontSize: 15,
   },
   filterButton: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#1a1a2e',
+    width: 44,
+    height: 44,
+    backgroundColor: '#4A2E1C',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   filterButtonActive: {
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#6D4C41',
   },
   filtersContainer: {
     paddingHorizontal: 16,
@@ -498,7 +500,7 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: 12,
-    color: '#888',
+    color: '#BCAAA4',
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -512,14 +514,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#333333',
   },
   difficultyChipText: {
     fontSize: 12,
-    color: '#888',
+    color: '#D7CCC8',
   },
   difficultyChipTextActive: {
-    color: '#fff',
+    color: '#EFEBE9',
     fontWeight: '600',
   },
   categoriesList: {
@@ -533,18 +537,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#333333',
     marginRight: 8,
   },
   filterChipActive: {
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#4A2E1C',
+    borderColor: '#6D4C41',
   },
   filterChipText: {
     fontSize: 13,
-    color: '#888',
+    color: '#D7CCC8',
   },
   filterChipTextActive: {
-    color: '#fff',
+    color: '#EFEBE9',
     fontWeight: '600',
   },
   section: {
@@ -560,15 +567,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#EFEBE9',
   },
   seeAllText: {
     fontSize: 14,
-    color: '#FF6B35',
+    color: '#BCAAA4',
   },
   countText: {
     fontSize: 13,
-    color: '#888',
+    color: '#A1887F',
   },
   featuredList: {
     paddingHorizontal: 16,
@@ -674,11 +681,13 @@ const styles = StyleSheet.create({
   shlokaCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#1A1A1A',
     marginHorizontal: 16,
     marginBottom: 12,
     padding: 12,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   shlokaThumb: {
     width: 70,
@@ -712,7 +721,7 @@ const styles = StyleSheet.create({
   shlokaTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
+    color: '#EFEBE9',
     flex: 1,
   },
   difficultyDot: {
@@ -722,7 +731,7 @@ const styles = StyleSheet.create({
   },
   shlokaSubtitle: {
     fontSize: 13,
-    color: '#888',
+    color: '#BCAAA4',
     marginTop: 2,
   },
   shlokaMeta: {
@@ -733,7 +742,7 @@ const styles = StyleSheet.create({
   },
   shlokaSource: {
     fontSize: 11,
-    color: '#666',
+    color: '#A1887F',
   },
   shlokaStats: {
     flexDirection: 'row',
@@ -742,7 +751,7 @@ const styles = StyleSheet.create({
   },
   shlokaStatText: {
     fontSize: 11,
-    color: '#888',
+    color: '#BCAAA4',
     marginRight: 8,
   },
   tagsContainer: {
@@ -753,12 +762,14 @@ const styles = StyleSheet.create({
   tag: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    backgroundColor: '#252540',
+    backgroundColor: '#2A2A2A',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4A2E1C',
   },
   tagText: {
     fontSize: 10,
-    color: '#888',
+    color: '#D7CCC8',
   },
   playButton: {
     width: 44,
@@ -776,20 +787,22 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    backgroundColor: 'rgba(74, 46, 28, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(76, 175, 80, 0.3)',
+    borderColor: 'rgba(74, 46, 28, 0.5)',
   },
   listenButtonActive: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#4A2E1C',
+    borderColor: '#6D4C41',
   },
   audioTag: {
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    backgroundColor: 'rgba(74, 46, 28, 0.2)',
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 46, 28, 0.5)',
   },
   emptyState: {
     alignItems: 'center',
@@ -797,12 +810,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: '#A1887F',
     marginTop: 12,
   },
   emptySubtext: {
     fontSize: 13,
-    color: '#444',
+    color: '#8D6E63',
     marginTop: 4,
   },
 });

@@ -46,16 +46,26 @@ export default function CourseLearnScreen() {
       setLoading(true);
       const response = await courseService.getCourseById(id as string);
       const courseData = response.data?.course || response.course;
+      
+      console.log('📚 Course loaded:', courseData?.title);
+      console.log('📚 Course structure:', JSON.stringify(courseData?.structure, null, 2));
+      
       setCourse(courseData);
       
-      // Auto-select first lecture
-      if (courseData.structure?.units?.[0]?.lessons?.[0]?.lectures?.[0]) {
+      // Auto-select first lecture with better error handling
+      if (courseData?.structure?.units?.[0]?.lessons?.[0]?.lectures?.[0]) {
+        const firstLecture = courseData.structure.units[0].lessons[0].lectures[0];
+        console.log('📚 Auto-selecting first lecture:', firstLecture);
+        
         setSelectedLecture({
           unitIndex: 0,
           lessonIndex: 0,
           lectureIndex: 0,
-          lecture: courseData.structure.units[0].lessons[0].lectures[0],
+          lecture: firstLecture,
         });
+      } else {
+        console.warn('⚠️ No lectures found in course structure');
+        Alert.alert('No Content', 'This course does not have any lectures yet.');
       }
     } catch (error) {
       console.error('Error loading course:', error);
@@ -166,6 +176,14 @@ export default function CourseLearnScreen() {
 
   const handleSelectLecture = (unitIndex: number, lessonIndex: number, lectureIndex: number) => {
     const lecture = course.structure.units[unitIndex].lessons[lessonIndex].lectures[lectureIndex];
+    
+    if (!lecture) {
+      console.error('❌ Lecture not found at indices:', { unitIndex, lessonIndex, lectureIndex });
+      Alert.alert('Error', 'Lecture not found');
+      return;
+    }
+    
+    console.log('📚 Selecting lecture:', lecture.title || lecture.name);
     setSelectedLecture({ unitIndex, lessonIndex, lectureIndex, lecture });
     setShowCurriculum(false);
   };
@@ -248,19 +266,35 @@ export default function CourseLearnScreen() {
         ) : (
           <ScrollView className="flex-1">
             {/* Video Player */}
-            {selectedLecture && (
+            {selectedLecture?.lecture ? (
               <VideoPlayer
                 lecture={selectedLecture.lecture}
                 onComplete={handleLectureComplete}
               />
+            ) : (
+              <View className="bg-black" style={{ height: 240, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="film-outline" size={64} color="#4b5563" />
+                <Text className="text-gray-400 text-center mt-4">
+                  No lecture selected
+                </Text>
+              </View>
             )}
 
             {/* Lecture Content */}
-            {selectedLecture && (
+            {selectedLecture?.lecture ? (
               <LectureContent
                 lecture={selectedLecture.lecture}
                 courseId={course._id}
               />
+            ) : (
+              <View className="bg-gray-800 p-4">
+                <View className="items-center justify-center py-12">
+                  <Ionicons name="alert-circle-outline" size={64} color="#9ca3af" />
+                  <Text className="text-gray-400 text-center mt-4">
+                    No lecture content available
+                  </Text>
+                </View>
+              </View>
             )}
 
             {/* Navigation Buttons */}

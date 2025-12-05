@@ -80,7 +80,7 @@ export const SocialShareCard: React.FC<SocialShareCardProps> = ({
 
   const renderAchievementCard = () => (
     <LinearGradient
-      colors={challenge?.gradient || ['#667eea', '#764ba2']}
+      colors={challenge?.gradient || ['#8D6E63', '#6D4C41']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}
@@ -132,7 +132,7 @@ export const SocialShareCard: React.FC<SocialShareCardProps> = ({
 
   const renderBadgeCard = () => (
     <LinearGradient
-      colors={['#1a1a2e', '#16213e', '#0f3460']}
+      colors={['#0A0A0A', '#1A1A1A', '#2A2A2A']}
       style={styles.card}
     >
       {/* App Branding */}
@@ -167,7 +167,7 @@ export const SocialShareCard: React.FC<SocialShareCardProps> = ({
 
   const renderStreakCard = () => (
     <LinearGradient
-      colors={['#FF6B6B', '#FF8E53', '#FFA502']}
+      colors={['#8D6E63', '#6D4C41', '#4A2E1C']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}
@@ -229,7 +229,7 @@ export const SocialShareCard: React.FC<SocialShareCardProps> = ({
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        colors={['#0A0A0A', '#1A1A1A', '#2A2A2A']}
         style={StyleSheet.absoluteFill}
       />
 

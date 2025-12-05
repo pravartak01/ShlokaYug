@@ -2,14 +2,17 @@ import { Tabs, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Animated, Platform } from 'react-native';
 import { useEffect, useRef, useMemo } from 'react';
+import { useKidsMode } from '../../context/KidsModeContext';
+import { useTranslation } from 'react-i18next';
+import KidsHomeScreen from '../../components/kids/KidsHomeScreen';
 
 // Theme colors - Vintage Brown with Gold/Saffron/Copper highlights
 const COPPER = '#B87333';           // Copper for warmth (tab icons)
 const SAND = '#F3E4C8';             // Sand/Beige for backgrounds
 
 // Dark theme colors for Practice tab
-const DARK_BG = '#1a1a2e';          // Dark background matching Practice
-const DARK_ACCENT = '#667eea';      // Purple accent for Practice
+const DARK_BG = '#0A0A0A';          // Deep black background matching Practice
+const DARK_ACCENT = '#8D6E63';      // Brown accent for Practice
 const DARK_INACTIVE = 'rgba(255,255,255,0.5)';  // Inactive icon color in dark mode
 
 // Icon mapping - solid and outline variants
@@ -56,7 +59,7 @@ const TabIcon = ({ name, color, focused, isDarkMode }: { name: string; color: st
   // Dynamic colors based on dark mode
   const activeColor = isDarkMode ? DARK_ACCENT : COPPER;
   const inactiveColor = isDarkMode ? DARK_INACTIVE : '#64748b';
-  const pillBgColor = isDarkMode ? 'rgba(102, 126, 234, 0.2)' : SAND;
+  const pillBgColor = isDarkMode ? 'rgba(141, 110, 99, 0.2)' : SAND;
 
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', position: 'relative', width: 60, height: 40 }}>
@@ -106,6 +109,8 @@ const TabIcon = ({ name, color, focused, isDarkMode }: { name: string; color: st
 export default function TabLayout() {
   const pathname = usePathname();
   const isPracticeTab = pathname === '/practice';
+  const { isKidsMode } = useKidsMode();
+  const { t } = useTranslation();
   
   // Animated value for smooth color transition
   const bgColorAnim = useRef(new Animated.Value(0)).current;
@@ -138,8 +143,13 @@ export default function TabLayout() {
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     position: 'absolute' as const,
-    borderTopColor: isPracticeTab ? 'rgba(102, 126, 234, 0.3)' : 'transparent',
+    borderTopColor: isPracticeTab ? 'rgba(141, 110, 99, 0.3)' : 'transparent',
   }), [isPracticeTab]);
+
+  // If Kids Mode is active, show Kids Home Screen instead of tabs
+  if (isKidsMode) {
+    return <KidsHomeScreen />;
+  }
 
   return (
     <Tabs
@@ -161,7 +171,7 @@ export default function TabLayout() {
                 borderTopWidth: 1,
                 borderLeftWidth: 1,
                 borderRightWidth: 1,
-                borderColor: 'rgba(102, 126, 234, 0.2)',
+                borderColor: 'rgba(141, 110, 99, 0.3)',
               }),
             }}
           />
@@ -183,7 +193,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: ({ focused }) => (
             <TabIcon name="home" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),
@@ -192,7 +202,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="learn"
         options={{
-          title: 'Learn',
+          title: t('tabs.learn'),
           tabBarIcon: ({ focused }) => (
             <TabIcon name="book" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),
@@ -201,7 +211,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="videos"
         options={{
-          title: 'Videos',
+          title: t('tabs.videos'),
           tabBarIcon: ({ focused }) => (
             <TabIcon name="play-circle" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),
@@ -210,7 +220,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="practice"
         options={{
-          title: 'Practice',
+          title: t('tabs.practice'),
           tabBarIcon: ({ focused }) => (
             <TabIcon name="mic" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),
@@ -219,7 +229,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="community"
         options={{
-          title: 'Community',
+          title: t('tabs.community'),
           tabBarIcon: ({ focused }) => (
             <TabIcon name="people" color={COPPER} focused={focused} isDarkMode={isPracticeTab} />
           ),

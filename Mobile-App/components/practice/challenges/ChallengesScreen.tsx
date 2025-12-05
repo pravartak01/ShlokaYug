@@ -241,7 +241,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onBack }) =>
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        colors={['#0A0A0A', '#1A1A1A', '#2A2A2A']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -296,7 +296,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onBack }) =>
           ]}
         >
           <LinearGradient
-            colors={['rgba(147,51,234,0.3)', 'rgba(255,107,107,0.2)']}
+            colors={['rgba(141,110,99,0.3)', 'rgba(109,76,65,0.2)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.statsGradient}
@@ -340,7 +340,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onBack }) =>
                 <Text style={styles.statLabel}>Coins</Text>
               </View>
               <View style={styles.statItem}>
-                <MaterialCommunityIcons name="medal" size={20} color="#9333EA" />
+                <MaterialCommunityIcons name="medal" size={20} color="#8D6E63" />
                 <Text style={styles.statValue}>{userStats.badges.length}</Text>
                 <Text style={styles.statLabel}>Badges</Text>
               </View>

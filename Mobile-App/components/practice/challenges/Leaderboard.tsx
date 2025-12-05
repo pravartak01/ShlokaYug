@@ -94,7 +94,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 <MaterialCommunityIcons
                   name={getRankIcon(actualRank) as any || 'numeric'}
                   size={isFirst ? 28 : 20}
-                  color={actualRank <= 3 ? '#1a1a2e' : 'white'}
+                  color={actualRank <= 3 ? '#0A0A0A' : 'white'}
                 />
               </View>
 
@@ -117,7 +117,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
               {/* Streak */}
               <View style={styles.streakBadge}>
-                <MaterialCommunityIcons name="fire" size={12} color="#FF6B6B" />
+                <MaterialCommunityIcons name="fire" size={12} color="#8D6E63" />
                 <Text style={styles.streakText}>{entry.streak}</Text>
               </View>
             </Animated.View>
@@ -180,7 +180,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const renderCurrentUserCard = () => {
     return (
       <LinearGradient
-        colors={['rgba(147,51,234,0.3)', 'rgba(255,107,107,0.2)']}
+        colors={['rgba(141,110,99,0.3)', 'rgba(109,76,65,0.2)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.currentUserCard}
@@ -199,12 +199,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             <Text style={styles.currentUserStatLabel}>XP</Text>
           </View>
           <View style={styles.currentUserStatItem}>
-            <MaterialCommunityIcons name="fire" size={20} color="#FF6B6B" />
+            <MaterialCommunityIcons name="fire" size={20} color="#8D6E63" />
             <Text style={styles.currentUserStatValue}>{currentUserStats.currentStreak}</Text>
             <Text style={styles.currentUserStatLabel}>Streak</Text>
           </View>
           <View style={styles.currentUserStatItem}>
-            <MaterialCommunityIcons name="trophy" size={20} color="#4CAF50" />
+            <MaterialCommunityIcons name="trophy" size={20} color="#A1887F" />
             <Text style={styles.currentUserStatValue}>{currentUserStats.challengesCompleted}</Text>
             <Text style={styles.currentUserStatLabel}>Done</Text>
           </View>
@@ -216,7 +216,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        colors={['#0A0A0A', '#1A1A1A', '#2A2A2A']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   tabActive: {
-    backgroundColor: '#9333EA',
+    backgroundColor: '#8D6E63',
   },
   tabText: {
     color: 'rgba(255,255,255,0.6)',

@@ -226,7 +226,7 @@ export const ShlokaSelector: React.FC<ShlokaSelectorProps> = ({
               <LinearGradient
                 colors={
                   selectedShloka?.id === shloka.id
-                    ? ['rgba(147,51,234,0.3)', 'rgba(59,130,246,0.3)'] as const
+                    ? ['rgba(141,110,99,0.3)', 'rgba(109,76,65,0.3)'] as const
                     : ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)'] as const
                 }
                 style={styles.shlokaCardGradient}
@@ -234,7 +234,7 @@ export const ShlokaSelector: React.FC<ShlokaSelectorProps> = ({
                 {/* Shloka Icon */}
                 <View style={styles.shlokaIconContainer}>
                   <LinearGradient
-                    colors={['#FF6B6B', '#9333EA'] as const}
+                    colors={['#8D6E63', '#6D4C41'] as const}
                     style={styles.shlokaIcon}
                   >
                     <Text style={styles.shlokaIconText}>
@@ -250,11 +250,11 @@ export const ShlokaSelector: React.FC<ShlokaSelectorProps> = ({
                   
                   <View style={styles.shlokaMetaRow}>
                     <View style={styles.shlokaMetaItem}>
-                      <MaterialCommunityIcons name="music-note" size={12} color="#9333EA" />
+                      <MaterialCommunityIcons name="music-note" size={12} color="#8D6E63" />
                       <Text style={styles.shlokaMetaText}>{shloka.chandas}</Text>
                     </View>
                     <View style={styles.shlokaMetaItem}>
-                      <MaterialCommunityIcons name="clock-outline" size={12} color="#3B82F6" />
+                      <MaterialCommunityIcons name="clock-outline" size={12} color="#A1887F" />
                       <Text style={styles.shlokaMetaText}>
                         {Math.floor(shloka.expectedDuration / 1000)}s
                       </Text>
@@ -280,7 +280,7 @@ export const ShlokaSelector: React.FC<ShlokaSelectorProps> = ({
                 {/* Selection Indicator */}
                 {selectedShloka?.id === shloka.id && (
                   <View style={styles.selectedIndicator}>
-                    <MaterialCommunityIcons name="check-circle" size={24} color="#4CAF50" />
+                    <MaterialCommunityIcons name="check-circle" size={24} color="#8D6E63" />
                   </View>
                 )}
               </LinearGradient>
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   categoryChipActive: {
-    backgroundColor: '#9333EA',
+    backgroundColor: '#8D6E63',
   },
   categoryText: {
     fontSize: 13,
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   shlokaCardSelected: {
-    borderColor: '#9333EA',
+    borderColor: '#8D6E63',
   },
   shlokaCardGradient: {
     flexDirection: 'row',

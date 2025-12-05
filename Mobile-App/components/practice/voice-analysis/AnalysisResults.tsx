@@ -122,7 +122,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   const renderChandasAnalysis = () => (
     <View style={styles.sectionCard}>
       <View style={styles.sectionHeader}>
-        <MaterialCommunityIcons name="music-note" size={22} color="#9333EA" />
+        <MaterialCommunityIcons name="music-note" size={22} color="#8D6E63" />
         <Text style={styles.sectionTitle}>Chandas Analysis</Text>
       </View>
 
@@ -192,7 +192,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   const renderPronunciationAnalysis = () => (
     <View style={styles.sectionCard}>
       <View style={styles.sectionHeader}>
-        <MaterialCommunityIcons name="account-voice" size={22} color="#3B82F6" />
+        <MaterialCommunityIcons name="account-voice" size={22} color="#A1887F" />
         <Text style={styles.sectionTitle}>Pronunciation Analysis</Text>
       </View>
 
@@ -297,14 +297,14 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             <Text style={styles.quickStatLabel}>Duration</Text>
           </View>
           <View style={styles.quickStatItem}>
-            <MaterialCommunityIcons name="music-note-eighth" size={20} color="#9333EA" />
+            <MaterialCommunityIcons name="music-note-eighth" size={20} color="#8D6E63" />
             <Text style={styles.quickStatValue}>
               {result.chandasAnalysis.chandasName}
             </Text>
             <Text style={styles.quickStatLabel}>Chandas</Text>
           </View>
           <View style={styles.quickStatItem}>
-            <MaterialCommunityIcons name="chart-line" size={20} color="#3B82F6" />
+            <MaterialCommunityIcons name="chart-line" size={20} color="#A1887F" />
             <Text style={styles.quickStatValue}>
               {result.metrics.pronunciation.label}
             </Text>
@@ -344,7 +344,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             onPress={onRetry}
           >
             <LinearGradient
-              colors={['#FF6B6B', '#9333EA'] as const}
+              colors={['#8D6E63', '#6D4C41'] as const}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.retryButtonGradient}
@@ -382,8 +382,8 @@ const SuggestionCard: React.FC<{ suggestion: Suggestion }> = ({ suggestion }) =>
 
   const getCategoryGradient = (category: string): readonly [string, string] => {
     switch (category) {
-      case 'pronunciation': return ['#3B82F6', '#60A5FA'] as const;
-      case 'chandas': return ['#9333EA', '#A855F7'] as const;
+      case 'pronunciation': return ['#8D6E63', '#A1887F'] as const;
+      case 'chandas': return ['#6D4C41', '#8D6E63'] as const;
       case 'rhythm': return ['#FF6B6B', '#F87171'] as const;
       case 'breathing': return ['#10B981', '#34D399'] as const;
       case 'expression': return ['#F59E0B', '#FBBF24'] as const;
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0A0A0A',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -493,13 +493,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 16,
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    backgroundColor: 'rgba(141, 110, 99, 0.2)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   confidenceText: {
-    color: '#4CAF50',
+    color: '#8D6E63',
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 6,
@@ -508,9 +508,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#1A1A1A',
     borderRadius: 16,
     padding: 16,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   quickStatItem: {
     alignItems: 'center',
@@ -527,10 +529,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   sectionCard: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#1A1A1A',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -616,10 +620,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   meterPatternContainer: {
-    backgroundColor: 'rgba(147, 51, 234, 0.2)',
+    backgroundColor: 'rgba(141, 110, 99, 0.2)',
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(141, 110, 99, 0.3)',
   },
   meterPatternLabel: {
     fontSize: 12,
@@ -634,7 +640,7 @@ const styles = StyleSheet.create({
   },
   meterPatternText: {
     fontSize: 16,
-    color: '#9333EA',
+    color: '#8D6E63',
     fontFamily: 'monospace',
     textAlign: 'center',
     letterSpacing: 2,
@@ -701,13 +707,13 @@ const styles = StyleSheet.create({
   },
   pronunciationScoreFill: {
     height: '100%',
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#8D6E63',
     borderRadius: 4,
   },
   pronunciationScoreValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#3B82F6',
+    color: '#8D6E63',
     width: 40,
     textAlign: 'right',
   },

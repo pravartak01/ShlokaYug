@@ -1,5 +1,6 @@
 export { default as SideDrawer } from './SideDrawer';
 export type { DrawerMenuItem } from './SideDrawer';
+export { LanguageSelector } from './LanguageSelector';
 
 // Typography Components
 export {

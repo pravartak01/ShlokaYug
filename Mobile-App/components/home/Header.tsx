@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { getHinduDate, getDailySanskritQuote, getFormattedDate, fetchPanchangData, PanchangData } from './utils';
 import { useAuth } from '../../context/AuthContext';
-import { SideDrawer } from '../common';
+import { SideDrawer, LanguageSelector } from '../common';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
   children?: React.ReactNode;
@@ -13,9 +14,11 @@ interface HeaderProps {
 export default function Header({ children }: HeaderProps) {
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation();
   const [panchangData, setPanchangData] = useState<PanchangData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const [isLanguageSelectorVisible, setIsLanguageSelectorVisible] = useState(false);
   const [quoteExpanded, setQuoteExpanded] = useState(false);
   const hinduDate = getHinduDate();
   const dailyQuote = getDailySanskritQuote();
@@ -30,51 +33,56 @@ export default function Header({ children }: HeaderProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
-  // Get engaging, motivational greeting
+  // Get Sanskrit greeting based on time of day
   const getGreeting = () => {
     const hour = new Date().getHours();
     const dayOfWeek = new Date().getDay();
     const random = Math.floor(Date.now() / 86400000) % 10; // Changes daily
     
-    // Morning greetings (before 12)
+    // Morning greetings (before 12) - प्रातःकाल (Prātaḥkāla)
     const morningGreetings = [
-      'Rise & Shine',
-      'New Day, New Verse',
-      'Awaken Your Mind',
-      'Start Strong',
-      'Fresh Beginning',
+      'सुप्रभातम्', // Suprabhatam - Good Morning
+      'प्रभाते नमः', // Prabhate Namah - Salutations to the Morning
+      'उषसः स्वागतम्', // Ushasah Swagatam - Welcome to Dawn
+      'प्रातः शुभम्', // Pratah Shubham - Auspicious Morning
+      'नूतन दिवसः', // Nutan Divasah - New Day
     ];
     
-    // Afternoon greetings (12-17)
+    // Afternoon greetings (12-17) - मध्याह्न (Madhyāhna)
     const afternoonGreetings = [
-      'Keep Going',
-      'Stay Inspired',
-      'Midday Wisdom',
-      'Power Through',
-      'Stay Focused',
+      'मध्याह्न नमः', // Madhyahna Namah - Afternoon Salutations
+      'दिवा शुभम्', // Diva Shubham - Blessed Day
+      'मध्याह्न स्वागतम्', // Madhyahna Swagatam - Welcome Afternoon
+      'दिवसस्य मध्ये', // Divasasya Madhye - Midst of Day
+      'सूर्य तेजः', // Surya Tejah - Solar Radiance
     ];
     
-    // Evening greetings (17-20)
+    // Evening greetings (17-20) - सायंकाल (Sāyaṅkāla)
     const eveningGreetings = [
-      'Wind Down',
-      'Reflect & Relax',
-      'Evening Peace',
-      'Peaceful Vibes',
-      'Calm Your Mind',
+      'शुभ सायंकाल', // Shubha Sayamkala - Good Evening
+      'सायं शुभम्', // Sayam Shubham - Auspicious Evening
+      'सन्ध्या नमः', // Sandhya Namah - Salutations to Twilight
+      'सायंकाल स्वागतम्', // Sayamkala Swagatam - Welcome Evening
+      'दिवसान्तः', // Divasantah - Day's End
     ];
     
-    // Night greetings (after 20)
+    // Night greetings (after 20) - रात्रि (Rātri)
     const nightGreetings = [
-      'Rest Well',
-      'Sweet Dreams',
-      'Night Wisdom',
-      'Peaceful Night',
-      'Unwind Time',
+      'शुभ रात्रिः', // Shubha Ratri - Good Night
+      'रात्रि शान्तिः', // Ratri Shantih - Peaceful Night
+      'निशा नमः', // Nisha Namah - Salutations to Night
+      'रात्रि स्वागतम्', // Ratri Swagatam - Welcome Night
+      'चन्द्र दर्शनम्', // Chandra Darshanam - Moon Viewing
     ];
     
-    // Weekend special
+    // Weekend special - शनि/रवि वार (Shani/Ravi Vara)
     if (dayOfWeek === 0 || dayOfWeek === 6) {
-      const weekendGreetings = ['Weekend Vibes', 'Relax & Learn', 'Soul Sunday', 'Sacred Saturday'];
+      const weekendGreetings = [
+        'विश्राम दिवसः', // Vishrama Divasah - Day of Rest
+        'पवित्र दिनम्', // Pavitra Dinam - Sacred Day
+        'रवि वारः', // Ravi Varah - Sunday
+        'शनि वारः', // Shani Varah - Saturday
+      ];
       return weekendGreetings[random % weekendGreetings.length];
     }
     
@@ -191,6 +199,12 @@ export default function Header({ children }: HeaderProps) {
         onClose={() => setIsDrawerVisible(false)}
       />
 
+      {/* Language Selector Modal */}
+      <LanguageSelector
+        visible={isLanguageSelectorVisible}
+        onClose={() => setIsLanguageSelectorVisible(false)}
+      />
+
       <View className="bg-white px-5 pt-3 pb-4">
         {/* Top Row - User Info & Actions */}
         <Animated.View 
@@ -223,13 +237,27 @@ export default function Header({ children }: HeaderProps) {
                 <Text className="text-gray-500 text-sm ml-1.5 font-poppins-medium">{getGreeting()}</Text>
               </View>
               <Text className="text-gray-900 text-xl font-playfair-bold tracking-tight">
-                {user?.profile?.firstName || user?.username || 'Guest'}
+                {user?.profile?.firstName || user?.username || t('header.guest')}
               </Text>
             </View>
           </View>
           
           {/* Action Buttons */}
           <View className="flex-row items-center gap-3">
+            <TouchableOpacity 
+              className="w-12 h-12 bg-gray-50 rounded-2xl items-center justify-center"
+              onPress={() => setIsLanguageSelectorVisible(true)}
+              activeOpacity={0.7}
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
+              <Ionicons name="language" size={24} color="#374151" />
+            </TouchableOpacity>
             <TouchableOpacity 
               className="w-12 h-12 bg-gray-50 rounded-2xl items-center justify-center"
               activeOpacity={0.7}
@@ -285,7 +313,7 @@ export default function Header({ children }: HeaderProps) {
             <View className="flex-1">
               <Text className="text-gray-800 text-sm font-poppins-semibold">{formattedDate}</Text>
               <Text className="text-gray-500 text-xs mt-0.5 font-poppins">
-                {loading ? 'Loading...' : (panchangData?.tithi || hinduDate.tithi)}
+                {loading ? t('header.loading') : (panchangData?.tithi || hinduDate.tithi)}
               </Text>
             </View>
           </View>
@@ -346,7 +374,7 @@ export default function Header({ children }: HeaderProps) {
                     </View>
                     <View>
                       <Text className="text-gray-900 text-xs font-poppins-bold uppercase tracking-wider">
-                        Quote of the Day
+                        {t('header.quoteOfTheDay')}
                       </Text>
                       <Text className="text-gray-400 text-[10px] font-poppins-medium">
                         {dailyQuote.source}
@@ -381,7 +409,7 @@ export default function Header({ children }: HeaderProps) {
                 {quoteExpanded && dailyQuote.meaning && dailyQuote.meaning !== dailyQuote.translation && (
                   <View className="mt-3 pt-3 border-t border-gray-100">
                     <Text className="text-xs font-poppins-semibold text-gray-500 uppercase tracking-wider mb-2">
-                      Deeper Meaning
+                      {t('header.deeperMeaning')}
                     </Text>
                     <Text className="text-gray-600 text-sm leading-5 font-poppins">
                       {dailyQuote.meaning}
@@ -393,11 +421,11 @@ export default function Header({ children }: HeaderProps) {
                 <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-100">
                   <TouchableOpacity className="flex-row items-center">
                     <Ionicons name="heart-outline" size={16} color="#9ca3af" />
-                    <Text className="text-gray-400 text-xs ml-1 font-poppins-medium">Save</Text>
+                    <Text className="text-gray-400 text-xs ml-1 font-poppins-medium">{t('header.save')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity className="flex-row items-center">
                     <Ionicons name="share-social-outline" size={16} color="#9ca3af" />
-                    <Text className="text-gray-400 text-xs ml-1 font-poppins-medium">Share</Text>
+                    <Text className="text-gray-400 text-xs ml-1 font-poppins-medium">{t('header.share')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     className="flex-row items-center px-3 py-1.5 rounded-lg"
@@ -405,7 +433,7 @@ export default function Header({ children }: HeaderProps) {
                   >
                     <Ionicons name="play" size={12} color={timeAccent.primary} />
                     <Text className="text-xs ml-1 font-poppins-semibold" style={{ color: timeAccent.primary }}>
-                      Listen
+                      {t('header.listen')}
                     </Text>
                   </TouchableOpacity>
                 </View>

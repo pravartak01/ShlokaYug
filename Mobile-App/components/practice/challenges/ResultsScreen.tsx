@@ -168,7 +168,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
   const renderConfetti = () => {
     if (!isPassed || progress.percentage < 70) return null;
 
-    const colors = ['#FF6B6B', '#4CAF50', '#FFD700', '#9333EA', '#00BCD4'];
+    const colors = ['#8D6E63', '#6D4C41', '#FFD700', '#A1887F', '#BCAAA4'];
 
     return confettiAnims.map((anim, index) => (
       <Animated.View
@@ -201,7 +201,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={isPassed ? ['#1a1a2e', '#16213e', '#0f3460'] : ['#1a1a2e', '#2d1f2d', '#1a1a2e']}
+        colors={isPassed ? ['#0A0A0A', '#1A1A1A', '#2A2A2A'] : ['#0A0A0A', '#1A1010', '#0A0A0A']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -326,7 +326,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
                   colors={['#FFD700', '#FFA000']}
                   style={styles.actionButtonGradient}
                 >
-                  <MaterialCommunityIcons name="certificate" size={24} color="#1a1a2e" />
+                  <MaterialCommunityIcons name="certificate" size={24} color="#0A0A0A" />
                   <Text style={styles.certificateButtonText}>View Certificate</Text>
                 </LinearGradient>
               </TouchableOpacity>

@@ -1,4 +1,4 @@
-// VoiceRecorder Component - Real-time voice recording with waveform visualization
+// VoiceRecorder Component - Real-time voice recording with waveform visualization and playback
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
@@ -35,6 +35,13 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     Array(WAVEFORM_BARS).fill(0.1)
   );
   const [permissionGranted, setPermissionGranted] = useState(false);
+  
+  // Playback state
+  const [recordedUri, setRecordedUri] = useState<string | null>(null);
+  const [playbackSound, setPlaybackSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackPosition, setPlaybackPosition] = useState(0);
+  const [playbackDuration, setPlaybackDuration] = useState(0);
 
   const recordingRef = useRef<Audio.Recording | null>(null);
   const durationIntervalRef = useRef<number | null>(null);
@@ -69,7 +76,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     }
   };
 
-  const cleanup = () => {
+  const cleanup = async () => {
     if (durationIntervalRef.current) {
       clearInterval(durationIntervalRef.current);
     }
@@ -77,7 +84,10 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       clearInterval(waveformIntervalRef.current);
     }
     if (recordingRef.current) {
-      recordingRef.current.stopAndUnloadAsync();
+      await recordingRef.current.stopAndUnloadAsync();
+    }
+    if (playbackSound) {
+      await playbackSound.unloadAsync();
     }
   };
 
@@ -196,6 +206,21 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       const uri = recordingRef.current.getURI();
       
       if (uri) {
+        setRecordedUri(uri);
+        
+        // Load audio for playback
+        try {
+          const { sound } = await Audio.Sound.createAsync(
+            { uri },
+            { shouldPlay: false },
+            onPlaybackStatusUpdate
+          );
+          setPlaybackSound(sound);
+        } catch (error) {
+          console.error('Failed to load playback:', error);
+        }
+        
+        // Keep for compatibility - call the completion handler
         onRecordingComplete(uri, recordingDuration);
       }
 
@@ -214,6 +239,55 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     } catch (error) {
       console.error('Failed to stop recording:', error);
     }
+  };
+
+  // Playback status update
+  const onPlaybackStatusUpdate = (status: any) => {
+    if (status.isLoaded) {
+      setPlaybackPosition(status.positionMillis);
+      setPlaybackDuration(status.durationMillis || 0);
+      setIsPlaying(status.isPlaying);
+      
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+        setPlaybackPosition(0);
+      }
+    }
+  };
+
+  // Play recorded audio
+  const playRecording = async () => {
+    if (!playbackSound) return;
+    
+    try {
+      await playbackSound.setPositionAsync(0);
+      await playbackSound.playAsync();
+    } catch (error) {
+      console.error('Playback error:', error);
+    }
+  };
+
+  // Pause playback
+  const pausePlayback = async () => {
+    if (!playbackSound) return;
+    
+    try {
+      await playbackSound.pauseAsync();
+    } catch (error) {
+      console.error('Pause error:', error);
+    }
+  };
+
+  // Clear recording
+  const clearRecording = async () => {
+    if (playbackSound) {
+      await playbackSound.unloadAsync();
+      setPlaybackSound(null);
+    }
+    setRecordedUri(null);
+    setPlaybackPosition(0);
+    setPlaybackDuration(0);
+    setRecordingDuration(0);
   };
 
   const formatDuration = (ms: number) => {
@@ -235,7 +309,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           {/* Large Waveform */}
           <View style={styles.waveformLarge}>
             <LinearGradient
-              colors={['rgba(255,59,48,0.2)', 'rgba(255,59,48,0.05)']}
+              colors={['rgba(141,110,99,0.2)', 'rgba(141,110,99,0.05)']}
               style={styles.waveformGradientLarge}
             >
               <View style={styles.waveformBarsLarge}>
@@ -246,7 +320,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
                       styles.waveformBarLarge,
                       {
                         transform: [{ scaleY: anim }],
-                        backgroundColor: `hsl(${(index / WAVEFORM_BARS) * 30 + 350}, 80%, 55%)`,
+                        backgroundColor: `hsl(${(index / WAVEFORM_BARS) * 15 + 20}, 40%, 45%)`,
                       },
                     ]}
                   />
@@ -274,7 +348,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             activeOpacity={0.7}
           >
             <LinearGradient
-              colors={['#FF3B30', '#CC2D26', '#AA1E15']}
+              colors={['#8D6E63', '#6D4C41', '#4A2E1C']}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={styles.stopButtonBigGradient}
@@ -293,14 +367,14 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             onPress={stopRecording}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="stop-circle-outline" size={28} color="#FF3B30" />
+            <MaterialCommunityIcons name="stop-circle-outline" size={28} color="#8D6E63" />
             <Text style={styles.stopButtonBottomText}>Stop Recording</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Not Recording State */}
-      {!isRecording && (
+      {!isRecording && !recordedUri && (
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
@@ -313,7 +387,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           {/* Waveform Visualization */}
           <View style={styles.waveformContainer}>
             <LinearGradient
-              colors={['rgba(255,107,107,0.1)', 'rgba(147,51,234,0.1)', 'rgba(59,130,246,0.1)']}
+              colors={['rgba(141,110,99,0.1)', 'rgba(109,76,65,0.1)', 'rgba(74,46,28,0.1)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.waveformGradient}
@@ -361,7 +435,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
               <LinearGradient
                 colors={isAnalyzing 
                   ? ['#888888', '#666666'] as const
-                  : ['#FF6B6B', '#9333EA'] as const
+                  : ['#8D6E63', '#6D4C41'] as const
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -389,6 +463,123 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             <Text style={styles.tipText}>• Hold phone 6-8 inches from mouth</Text>
             <Text style={styles.tipText}>• Chant at a steady pace</Text>
             <Text style={styles.tipText}>• Pronounce each syllable clearly</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Playback State - After Recording */}
+      {!isRecording && recordedUri && (
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Recording Complete! 🎉</Text>
+            <Text style={styles.subtitle}>
+              Listen to your recording or analyze it
+            </Text>
+          </View>
+
+          {/* Playback Waveform */}
+          <View style={styles.waveformContainer}>
+            <LinearGradient
+              colors={['rgba(76,175,80,0.1)', 'rgba(139,195,74,0.1)', 'rgba(205,220,57,0.1)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.waveformGradient}
+            >
+              <View style={styles.waveformBars}>
+                {barAnims.map((anim, index) => (
+                  <Animated.View
+                    key={index}
+                    style={[
+                      styles.waveformBar,
+                      {
+                        transform: [{ scaleY: isPlaying ? anim : new Animated.Value(0.3) }],
+                        backgroundColor: 'rgba(76,175,80,0.5)',
+                      },
+                    ]}
+                  />
+                ))}
+              </View>
+            </LinearGradient>
+          </View>
+
+          {/* Playback Progress */}
+          <View style={styles.playbackProgress}>
+            <Text style={styles.playbackTime}>
+              {formatDuration(playbackPosition)} / {formatDuration(playbackDuration)}
+            </Text>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${playbackDuration > 0 ? (playbackPosition / playbackDuration) * 100 : 0}%` }
+                ]} 
+              />
+            </View>
+          </View>
+
+          {/* Playback Controls */}
+          <View style={styles.playbackControlsContainer}>
+            <TouchableOpacity
+              style={styles.playbackButton}
+              onPress={isPlaying ? pausePlayback : playRecording}
+            >
+              <LinearGradient
+                colors={['#4CAF50', '#8BC34A']}
+                style={styles.playbackButtonGradient}
+              >
+                <MaterialCommunityIcons
+                  name={isPlaying ? 'pause' : 'play'}
+                  size={40}
+                  color="white"
+                />
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <Text style={styles.playbackLabel}>
+              {isPlaying ? 'Pause' : 'Play Recording'}
+            </Text>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={styles.actionButtonSecondary}
+              onPress={clearRecording}
+            >
+              <MaterialCommunityIcons name="refresh" size={24} color="#8D6E63" />
+              <Text style={styles.actionButtonSecondaryText}>Re-record</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButtonPrimary}
+              onPress={() => recordedUri && onRecordingComplete(recordedUri, recordingDuration)}
+              disabled={isAnalyzing}
+            >
+              <LinearGradient
+                colors={['#FF9800', '#F57C00']}
+                style={styles.actionButtonPrimaryGradient}
+              >
+                <MaterialCommunityIcons 
+                  name={isAnalyzing ? "loading" : "chart-line"} 
+                  size={24} 
+                  color="white" 
+                />
+                <Text style={styles.actionButtonPrimaryText}>
+                  {isAnalyzing ? 'Analyzing...' : 'Analyze Now'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {/* Recording Info */}
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>
+              📊 Duration: {formatDuration(recordingDuration)}
+            </Text>
+            <Text style={styles.infoText}>
+              ✅ Recording saved successfully
+            </Text>
           </View>
         </View>
       )}
@@ -424,7 +615,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,59,48,0.3)',
+    borderColor: 'rgba(141,110,99,0.3)',
     borderRadius: 20,
   },
   waveformBarsLarge: {
@@ -448,11 +639,11 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#8D6E63',
     marginRight: 10,
   },
   liveText: {
-    color: '#FF3B30',
+    color: '#8D6E63',
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 2,
@@ -632,6 +823,105 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
     marginVertical: 2,
+  },
+  
+  // Playback styles
+  playbackProgress: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  playbackTime: {
+    fontSize: 24,
+    fontWeight: '300',
+    color: 'white',
+    marginBottom: 12,
+    fontFamily: 'monospace',
+  },
+  progressBar: {
+    width: '100%',
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
+    borderRadius: 3,
+  },
+  playbackControlsContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  playbackButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: 'hidden',
+  },
+  playbackButtonGradient: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playbackLabel: {
+    marginTop: 16,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '600',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+    marginBottom: 20,
+  },
+  actionButtonSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(141,110,99,0.3)',
+  },
+  actionButtonSecondaryText: {
+    color: '#8D6E63',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  actionButtonPrimary: {
+    flex: 2,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  actionButtonPrimaryGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
+  actionButtonPrimaryText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  infoContainer: {
+    width: '100%',
+    backgroundColor: 'rgba(76,175,80,0.1)',
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+  },
+  infoText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
   },
 });
 

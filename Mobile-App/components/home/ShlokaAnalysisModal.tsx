@@ -47,12 +47,27 @@ interface SyllableBreakdown {
   position: number;
 }
 
+interface IdentificationStep {
+  step_number: number;
+  step_name: string;
+  description: string;
+  result: string;
+}
+
 interface ChandasAPIResponse {
   chandas_name: string;
   syllable_breakdown: SyllableBreakdown[];
   laghu_guru_pattern: string;
   explanation: string;
   confidence: number;
+  identification_process: IdentificationStep[];
+}
+
+interface MeaningExtractionResponse {
+  translation: string;
+  word_meanings: { [key: string]: string };
+  context: string;
+  notes: string;
 }
 
 interface AnalysisResult {
@@ -65,6 +80,7 @@ interface AnalysisResult {
   totalSyllables: number;
   guruCount: number;
   laghuCount: number;
+  identificationProcess: IdentificationStep[];
 }
 
 // Analysis Stage for progressive animation
@@ -634,9 +650,153 @@ const PatternDisplay = ({ pattern }: { pattern: string }) => {
   );
 };
 
+// Process Step Card Component - Creative Timeline Display
+const ProcessStepCard = ({ step, index, total }: { 
+  step: IdentificationStep; 
+  index: number;
+  total: number;
+}) => {
+  const stepColors = [
+    { bg: '#EEF2FF', border: '#818CF8', icon: '#4F46E5' }, // Indigo
+    { bg: '#F0FDF4', border: '#86EFAC', icon: '#16A34A' }, // Green
+    { bg: '#FEF3C7', border: '#FCD34D', icon: '#D97706' }, // Amber
+    { bg: '#FCE7F3', border: '#F9A8D4', icon: '#DB2777' }, // Pink
+    { bg: '#DBEAFE', border: '#93C5FD', icon: '#2563EB' }, // Blue
+  ];
+  
+  const color = stepColors[index % stepColors.length];
+  const isLast = index === total - 1;
+  
+  const stepIcons = ['document-text-outline', 'cut-outline', 'analytics-outline', 'git-compare-outline', 'checkmark-done-outline'];
+  const icon = stepIcons[index] || 'ellipse-outline';
+  
+  return (
+    <View style={{ marginBottom: isLast ? 0 : 20 }}>
+      <View style={{ flexDirection: 'row' }}>
+        {/* Timeline indicator */}
+        <View style={{ alignItems: 'center', marginRight: 16 }}>
+          <View style={{
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            backgroundColor: color.bg,
+            borderWidth: 3,
+            borderColor: color.border,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: color.icon,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
+            elevation: 5,
+          }}>
+            <Ionicons name={icon as any} size={24} color={color.icon} />
+          </View>
+          {!isLast && (
+            <View style={{
+              width: 3,
+              flex: 1,
+              backgroundColor: color.border,
+              marginTop: 8,
+              minHeight: 60,
+              opacity: 0.4,
+            }} />
+          )}
+        </View>
+        
+        {/* Content card */}
+        <View style={{ flex: 1 }}>
+          <View style={{
+            backgroundColor: '#FFF',
+            borderRadius: 16,
+            padding: 16,
+            borderLeftWidth: 4,
+            borderLeftColor: color.border,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 4,
+            elevation: 3,
+          }}>
+            {/* Step header */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{
+                backgroundColor: color.bg,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 8,
+                marginRight: 10,
+              }}>
+                <Text style={{ 
+                  color: color.icon, 
+                  fontWeight: '800', 
+                  fontSize: 12 
+                }}>
+                  STEP {step.step_number}
+                </Text>
+              </View>
+              <Text style={{
+                color: COLORS.primaryBrown,
+                fontSize: 16,
+                fontWeight: '700',
+                flex: 1,
+              }}>
+                {step.step_name}
+              </Text>
+            </View>
+            
+            {/* Description */}
+            <Text style={{
+              color: COLORS.copper,
+              fontSize: 13,
+              lineHeight: 20,
+              marginBottom: 12,
+            }}>
+              {step.description}
+            </Text>
+            
+            {/* Result box */}
+            <View style={{
+              backgroundColor: color.bg,
+              borderRadius: 12,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: color.border,
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                <Ionicons name="checkmark-circle" size={16} color={color.icon} />
+                <Text style={{
+                  color: color.icon,
+                  fontSize: 11,
+                  fontWeight: '700',
+                  marginLeft: 6,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                }}>
+                  Result
+                </Text>
+              </View>
+              <Text style={{
+                color: COLORS.primaryBrown,
+                fontSize: 13,
+                lineHeight: 20,
+                fontWeight: '500',
+              }}>
+                {step.result}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysisModalProps) {
   const [inputShloka, setInputShloka] = useState('');
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [meaningResult, setMeaningResult] = useState<MeaningExtractionResponse | null>(null);
+  const [isExtractingMeaning, setIsExtractingMeaning] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analysisStage, setAnalysisStage] = useState<AnalysisStage>('idle');
@@ -792,6 +952,55 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
     }
   };
 
+  const extractMeaning = async (text: string) => {
+    if (!text.trim()) {
+      Alert.alert('Error', 'No text to extract meaning from');
+      return;
+    }
+
+    setIsExtractingMeaning(true);
+    setError(null);
+
+    try {
+      console.log('🔍 Extracting meaning from:', text.trim());
+      
+      const response = await aiApi.post('/meaning/extract', {
+        verse: text.trim(),
+        include_word_meanings: true,
+        include_context: true,
+      });
+      
+      console.log('✅ Meaning response:', response.data);
+      setMeaningResult(response.data);
+      
+      // Scroll to show meaning section
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 300);
+      
+    } catch (err: unknown) {
+      console.error('❌ Meaning extraction error:', err);
+      let errorMessage = 'Failed to extract meaning';
+      
+      if (err && typeof err === 'object') {
+        const error = err as any;
+        
+        if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+          errorMessage = `Cannot connect to AI server.\n\nPlease ensure the AI backend is running on port 8000`;
+        } else if (error.response?.data?.detail) {
+          errorMessage = error.response.data.detail[0]?.msg || error.response.data.message || errorMessage;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
+      Alert.alert('Meaning Extraction Error', errorMessage);
+    } finally {
+      setIsExtractingMeaning(false);
+    }
+  };
+
   const analyzeShloka = async (text: string) => {
     if (!text.trim()) {
       Alert.alert('Error', 'Please enter a shloka to analyze');
@@ -857,6 +1066,7 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
         totalSyllables: data.syllable_breakdown.length,
         guruCount,
         laghuCount,
+        identificationProcess: data.identification_process || [],
       };
       
       // Calculate how long to wait to complete minimum animation duration
@@ -906,6 +1116,7 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
   const handleClose = () => {
     setInputShloka('');
     setAnalysisResult(null);
+    setMeaningResult(null);
     setError(null);
     setAnalysisStage('idle');
     fadeAnim.setValue(0);
@@ -914,6 +1125,7 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
 
   const clearResults = () => {
     setAnalysisResult(null);
+    setMeaningResult(null);
     setError(null);
     setAnalysisStage('idle');
     fadeAnim.setValue(0);
@@ -1364,6 +1576,257 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
                 </View>
               </LinearGradient>
 
+              {/* Shloka Meaning Card - NEW SECTION */}
+              <View style={{
+                backgroundColor: '#FFF',
+                borderRadius: 24,
+                padding: 20,
+                marginBottom: 16,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                elevation: 4,
+                borderWidth: 2,
+                borderColor: meaningResult ? COLORS.gold : COLORS.sand,
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                  <View style={{
+                    backgroundColor: `${COLORS.saffron}20`,
+                    borderRadius: 12,
+                    padding: 10,
+                    marginRight: 12,
+                  }}>
+                    <Ionicons name="language" size={22} color={COLORS.saffron} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: COLORS.primaryBrown, fontSize: 18, fontWeight: '700' }}>
+                      Shloka Meaning & Translation
+                    </Text>
+                    <Text style={{ color: COLORS.lightCopper, fontSize: 12, marginTop: 2 }}>
+                      Complete interpretation with word-by-word breakdown
+                    </Text>
+                  </View>
+                </View>
+
+                {!meaningResult ? (
+                  <TouchableOpacity
+                    onPress={() => extractMeaning(analysisResult.inputText)}
+                    disabled={isExtractingMeaning}
+                    style={{
+                      borderRadius: 16,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <LinearGradient
+                      colors={isExtractingMeaning ? [COLORS.sand, COLORS.sand] : [COLORS.saffron, COLORS.copper]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{
+                        paddingVertical: 16,
+                        paddingHorizontal: 24,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Ionicons 
+                        name={isExtractingMeaning ? 'hourglass-outline' : 'book-outline'} 
+                        size={22} 
+                        color={isExtractingMeaning ? COLORS.copper : '#FFF'} 
+                        style={{ marginRight: 10 }} 
+                      />
+                      <Text style={{ 
+                        color: isExtractingMeaning ? COLORS.copper : '#FFF', 
+                        fontSize: 17, 
+                        fontWeight: '700',
+                      }}>
+                        {isExtractingMeaning ? 'Extracting Meaning...' : 'Get Complete Meaning'}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ) : (
+                  <View>
+                    {/* Translation */}
+                    <View style={{
+                      backgroundColor: `${COLORS.gold}10`,
+                      borderRadius: 16,
+                      padding: 16,
+                      marginBottom: 16,
+                      borderLeftWidth: 4,
+                      borderLeftColor: COLORS.gold,
+                    }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                        <Ionicons name="chatbox-ellipses" size={18} color={COLORS.gold} />
+                        <Text style={{
+                          color: COLORS.gold,
+                          fontSize: 13,
+                          fontWeight: '700',
+                          marginLeft: 8,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                        }}>
+                          Translation
+                        </Text>
+                      </View>
+                      <Text style={{
+                        color: COLORS.primaryBrown,
+                        fontSize: 15,
+                        lineHeight: 24,
+                        fontWeight: '500',
+                      }}>
+                        {meaningResult.translation}
+                      </Text>
+                    </View>
+
+                    {/* Word-by-Word Meanings */}
+                    {Object.keys(meaningResult.word_meanings).length > 0 && (
+                      <View style={{
+                        backgroundColor: COLORS.cream,
+                        borderRadius: 16,
+                        padding: 16,
+                        marginBottom: 16,
+                      }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                          <Ionicons name="list" size={18} color={COLORS.copper} />
+                          <Text style={{
+                            color: COLORS.copper,
+                            fontSize: 13,
+                            fontWeight: '700',
+                            marginLeft: 8,
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                          }}>
+                            Word Meanings (शब्दार्थ)
+                          </Text>
+                        </View>
+                        <View style={{ gap: 8 }}>
+                          {Object.entries(meaningResult.word_meanings).map(([word, meaning], index) => (
+                            <View
+                              key={index}
+                              style={{
+                                flexDirection: 'row',
+                                backgroundColor: '#FFF',
+                                borderRadius: 12,
+                                padding: 12,
+                                borderWidth: 1,
+                                borderColor: COLORS.sand,
+                              }}
+                            >
+                              <Text style={{
+                                color: COLORS.saffron,
+                                fontSize: 16,
+                                fontWeight: '700',
+                                marginRight: 12,
+                                minWidth: 80,
+                              }}>
+                                {word}
+                              </Text>
+                              <Text style={{
+                                color: COLORS.primaryBrown,
+                                fontSize: 14,
+                                flex: 1,
+                                lineHeight: 20,
+                              }}>
+                                {meaning}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Context */}
+                    {meaningResult.context && (
+                      <View style={{
+                        backgroundColor: `${COLORS.copper}10`,
+                        borderRadius: 16,
+                        padding: 16,
+                        marginBottom: 16,
+                        borderLeftWidth: 4,
+                        borderLeftColor: COLORS.copper,
+                      }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                          <Ionicons name="time-outline" size={18} color={COLORS.copper} />
+                          <Text style={{
+                            color: COLORS.copper,
+                            fontSize: 13,
+                            fontWeight: '700',
+                            marginLeft: 8,
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                          }}>
+                            Historical Context
+                          </Text>
+                        </View>
+                        <Text style={{
+                          color: COLORS.primaryBrown,
+                          fontSize: 14,
+                          lineHeight: 22,
+                        }}>
+                          {meaningResult.context}
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Grammatical Notes */}
+                    {meaningResult.notes && (
+                      <View style={{
+                        backgroundColor: `${COLORS.primaryBrown}08`,
+                        borderRadius: 16,
+                        padding: 16,
+                        borderWidth: 1,
+                        borderColor: COLORS.sand,
+                      }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                          <Ionicons name="school-outline" size={18} color={COLORS.primaryBrown} />
+                          <Text style={{
+                            color: COLORS.primaryBrown,
+                            fontSize: 13,
+                            fontWeight: '700',
+                            marginLeft: 8,
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                          }}>
+                            Grammatical Notes (व्याकरण टिप्पणी)
+                          </Text>
+                        </View>
+                        <Text style={{
+                          color: COLORS.copper,
+                          fontSize: 14,
+                          lineHeight: 22,
+                          fontStyle: 'italic',
+                        }}>
+                          {meaningResult.notes}
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Refresh button */}
+                    <TouchableOpacity
+                      onPress={() => extractMeaning(analysisResult.inputText)}
+                      disabled={isExtractingMeaning}
+                      style={{
+                        marginTop: 12,
+                        backgroundColor: COLORS.cream,
+                        borderRadius: 12,
+                        padding: 12,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 1,
+                        borderColor: COLORS.sand,
+                      }}
+                    >
+                      <Ionicons name="refresh" size={18} color={COLORS.copper} style={{ marginRight: 8 }} />
+                      <Text style={{ color: COLORS.copper, fontSize: 14, fontWeight: '600' }}>
+                        Refresh Meaning
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
               {/* Syllable Breakdown Card */}
               <View style={{
                 backgroundColor: '#FFF',
@@ -1455,6 +1918,90 @@ export default function ShlokaAnalysisModal({ visible, onClose }: ShlokaAnalysis
                   <PatternDisplay pattern={analysisResult.laghuGuruPattern} />
                 </View>
               </View>
+
+              {/* AI Process Journey - NEW SECTION */}
+              {analysisResult.identificationProcess && analysisResult.identificationProcess.length > 0 && (
+                <View style={{
+                  backgroundColor: '#FFF',
+                  borderRadius: 24,
+                  padding: 20,
+                  marginBottom: 16,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+                    <View style={{
+                      backgroundColor: `${COLORS.saffron}20`,
+                      borderRadius: 12,
+                      padding: 10,
+                      marginRight: 12,
+                    }}>
+                      <Ionicons name="git-network-outline" size={22} color={COLORS.saffron} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: COLORS.primaryBrown, fontSize: 18, fontWeight: '700' }}>
+                        AI Analysis Journey
+                      </Text>
+                      <Text style={{ color: COLORS.lightCopper, fontSize: 12, marginTop: 2 }}>
+                        Step-by-step identification process (विश्लेषण प्रक्रिया)
+                      </Text>
+                    </View>
+                  </View>
+                  
+                  {/* Process Timeline */}
+                  <View style={{ marginTop: 8 }}>
+                    {analysisResult.identificationProcess.map((step, index) => (
+                      <ProcessStepCard
+                        key={step.step_number}
+                        step={step}
+                        index={index}
+                        total={analysisResult.identificationProcess.length}
+                      />
+                    ))}
+                  </View>
+                  
+                  {/* Journey completion badge */}
+                  <View style={{
+                    marginTop: 20,
+                    padding: 16,
+                    backgroundColor: `${COLORS.gold}10`,
+                    borderRadius: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 2,
+                    borderColor: COLORS.gold,
+                    borderStyle: 'dashed',
+                  }}>
+                    <View style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: COLORS.gold,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginRight: 12,
+                    }}>
+                      <Ionicons name="trophy" size={22} color="#FFF" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ 
+                        color: COLORS.primaryBrown, 
+                        fontWeight: '700', 
+                        fontSize: 15,
+                        marginBottom: 2,
+                      }}>
+                        Analysis Complete!
+                      </Text>
+                      <Text style={{ color: COLORS.copper, fontSize: 12 }}>
+                        All {analysisResult.identificationProcess.length} steps processed successfully with {(analysisResult.confidence * 100).toFixed(0)}% confidence
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
 
               {/* Explanation Card */}
               <View style={{

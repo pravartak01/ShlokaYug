@@ -3,6 +3,12 @@ const { withNativeWind } = require('nativewind/metro');
  
 const config = getDefaultConfig(__dirname);
 
+// Add resolver configuration for i18next modules
+config.resolver = {
+  ...config.resolver,
+  sourceExts: [...(config.resolver?.sourceExts || []), 'mjs', 'cjs'],
+};
+
 // Configure Metro to handle symbolication errors gracefully
 config.server = {
   ...config.server,

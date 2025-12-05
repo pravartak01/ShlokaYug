@@ -328,7 +328,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        colors={['#0A0A0A', '#1A1A1A', '#2A2A2A']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -354,7 +354,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
         </View>
 
         <View style={styles.headerRight}>
-          <MaterialCommunityIcons name="clock-outline" size={18} color={timeLeft < 30 ? '#FF6B6B' : 'white'} />
+          <MaterialCommunityIcons name="clock-outline" size={18} color={timeLeft < 30 ? '#8D6E63' : 'white'} />
           <Text style={[styles.timerText, timeLeft < 30 && styles.timerWarning]}>
             {formatTime(timeLeft)}
           </Text>
@@ -370,7 +370,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Streak</Text>
           <View style={styles.streakContainer}>
-            <MaterialCommunityIcons name="fire" size={18} color={streak > 0 ? '#FF6B6B' : '#666'} />
+            <MaterialCommunityIcons name="fire" size={18} color={streak > 0 ? '#8D6E63' : '#666'} />
             <Text style={[styles.statValue, streak > 0 && styles.streakActive]}>{streak}</Text>
           </View>
         </View>
@@ -404,7 +404,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
               styles.questionTimerFill,
               {
                 width: `${(questionTimeLeft / 30) * 100}%`,
-                backgroundColor: questionTimeLeft < 10 ? '#FF6B6B' : '#4CAF50',
+                backgroundColor: questionTimeLeft < 10 ? '#8D6E63' : '#6D4C41',
               },
             ]}
           />
@@ -484,10 +484,10 @@ export const QuizGame: React.FC<QuizGameProps> = ({
                 </View>
                 <Text style={styles.optionText}>{option}</Text>
                 {isAnswered && option === currentQuestion.correctAnswer && (
-                  <MaterialCommunityIcons name="check-circle" size={24} color="#4CAF50" />
+                  <MaterialCommunityIcons name="check-circle" size={24} color="#8D6E63" />
                 )}
                 {isAnswered && option === selectedAnswer && !isCorrect && (
-                  <MaterialCommunityIcons name="close-circle" size={24} color="#FF6B6B" />
+                  <MaterialCommunityIcons name="close-circle" size={24} color="#A1887F" />
                 )}
               </TouchableOpacity>
             </Animated.View>
@@ -501,7 +501,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
               <MaterialCommunityIcons 
                 name={isCorrect ? 'check-circle' : 'information'} 
                 size={24} 
-                color={isCorrect ? '#4CAF50' : '#FF9800'} 
+                color={isCorrect ? '#8D6E63' : '#A1887F'} 
               />
               <Text style={styles.explanationTitle}>
                 {isCorrect ? 'Correct!' : 'Explanation'}
@@ -540,7 +540,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
         {isAnswered && (
           <TouchableOpacity style={styles.nextButton} onPress={handleNextQuestion}>
             <LinearGradient
-              colors={['#FF6B6B', '#9333EA']}
+              colors={['#8D6E63', '#6D4C41']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.nextButtonGradient}
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#8D6E63',
     borderRadius: 4,
   },
   headerRight: {

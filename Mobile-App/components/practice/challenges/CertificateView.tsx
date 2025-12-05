@@ -60,7 +60,7 @@ export const CertificateView: React.FC<CertificateViewProps> = ({
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        colors={['#0A0A0A', '#1A1A1A', '#2A2A2A']}
         style={StyleSheet.absoluteFill}
       />
 

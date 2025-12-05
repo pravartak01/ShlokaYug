@@ -2,10 +2,13 @@ import { useEffect, useCallback } from 'react';
 import { Slot, useRouter, useSegments } from "expo-router";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { KidsModeProvider } from '../context/KidsModeContext';
+import { LanguageProvider } from '../context/LanguageContext';
 import { View, ActivityIndicator, Text } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from '../hooks/useFonts';
 import "../global.css";
+import '../i18n.config'; // Initialize i18n
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -71,9 +74,13 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <RootLayoutNav />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <KidsModeProvider>
+            <RootLayoutNav />
+          </KidsModeProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }

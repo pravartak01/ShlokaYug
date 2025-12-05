@@ -3,18 +3,21 @@ import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
-  Animated,
   ScrollView,
+  Alert,
+  Animated,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Audio, AVPlaybackStatus } from 'expo-av';
-import { ShlokaData, ShlokaLine } from '../../../data/shlokas';
+import { Audio } from 'expo-av';
+import { ShlokaData } from '../../../data/shlokas';
 import { hasAudio, getAudioUrl } from '../../../data/shlokaAudioMap';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { analyzeVoice, transformAnalysisResponse } from '../../../services/voiceAnalysisService';
+import { LyricsDisplay } from './LyricsDisplay';
+import { RecordingControls } from './RecordingControls';
+import { AnalyzingAnimation } from './AnalyzingAnimation';
+import { AnalysisResults } from '../voice-analysis/AnalysisResults';
 
 interface KaraokePlayerProps {
   shloka: ShlokaData;
@@ -22,860 +25,471 @@ interface KaraokePlayerProps {
   onComplete?: (score: number) => void;
 }
 
+type ViewMode = 'practice' | 'analyzing' | 'results';
+
 const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
   shloka,
   onBack,
   onComplete,
 }) => {
-  // Audio state
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  const demoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Reference Audio state (background guide audio at low volume)
+  // View state
+  const [viewMode, setViewMode] = useState<ViewMode>('practice');
+  
+  // Reference audio state (for preview only)
   const [referenceSound, setReferenceSound] = useState<Audio.Sound | null>(null);
-  const [isReferenceEnabled, setIsReferenceEnabled] = useState(false);
-  const [referenceVolume, setReferenceVolume] = useState(0.3); // 30% volume by default
   const [hasReferenceAudio, setHasReferenceAudio] = useState(false);
+  const [isPlayingReference, setIsPlayingReference] = useState(false);
 
-  // Lyric state
-  const [currentLineIndex, setCurrentLineIndex] = useState(-1);
-  const [currentWordIndex, setCurrentWordIndex] = useState(-1);
+  // Recording state
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [recordedUri, setRecordedUri] = useState<string | null>(null);
+  const [recordedSound, setRecordedSound] = useState<Audio.Sound | null>(null);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Analysis state
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+
+  // Lyric display state
+  const [currentLineIndex, setCurrentLineIndex] = useState(0);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [showTransliteration, setShowTransliteration] = useState(true);
   const [showTranslation, setShowTranslation] = useState(true);
 
   // Animation
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
-  const scrollViewRef = useRef<ScrollView>(null);
   const wordPulseAnim = useRef(new Animated.Value(1)).current;
-
-  // Settings
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const speeds = [0.5, 0.75, 1, 1.25, 1.5];
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Initialize audio
   useEffect(() => {
     const initAudio = async () => {
-      await loadAudio();
-      // Check if reference audio is available
       setHasReferenceAudio(hasAudio(shloka.id));
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+      });
     };
     
     initAudio();
     
-    // Entrance animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
     return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-      if (referenceSound) {
-        referenceSound.unloadAsync();
-      }
-      if (demoTimerRef.current) {
-        clearInterval(demoTimerRef.current);
-      }
+      cleanupAudio();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [shloka.id]);
 
-  const loadAudio = async () => {
-    try {
-      // Skip audio loading if no audio file provided
-      if (!shloka.audioFile) {
-        console.log('No audio file provided, running in demo mode');
-        setDuration(shloka.duration * 1000);
-        setIsDemoMode(true);
-        return;
-      }
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        shouldDuckAndroid: true,
-      });
-
-      // For demo purposes, we'll handle the case where audio might not exist
-      const { sound: audioSound } = await Audio.Sound.createAsync(
-        shloka.audioFile,
-        { shouldPlay: false, progressUpdateIntervalMillis: 50 },
-        onPlaybackStatusUpdate
-      );
-
-      setSound(audioSound);
-    } catch (error) {
-      console.log('Audio load error:', error);
-      // Continue without audio for demo
-      setDuration(shloka.duration * 1000);
-    }
-  };
-
-  // Load reference audio (background guide audio at low volume)
-  const loadReferenceAudio = async () => {
-    try {
-      const audioUrl = getAudioUrl(shloka.id);
-      if (!audioUrl) {
-        console.log('No reference audio available for this shloka');
-        return;
-      }
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        shouldDuckAndroid: true,
-      });
-
-      const { sound: refSound } = await Audio.Sound.createAsync(
-        { uri: audioUrl },
-        { shouldPlay: false, volume: referenceVolume }
-      );
-
-      setReferenceSound(refSound);
-      console.log('Reference audio loaded successfully');
-    } catch (error) {
-      console.log('Reference audio load error:', error);
-    }
-  };
-
-  // Toggle reference audio on/off
-  const toggleReferenceAudio = async () => {
-    if (!hasReferenceAudio) return;
-
-    if (isReferenceEnabled) {
-      // Disable reference audio
-      if (referenceSound) {
-        await referenceSound.pauseAsync();
-      }
-      setIsReferenceEnabled(false);
-    } else {
-      // Enable reference audio
-      if (!referenceSound) {
-        await loadReferenceAudio();
-      }
-      setIsReferenceEnabled(true);
-    }
-  };
-
-  // Effect to sync reference audio when enabled and playback state changes
+  // Word pulse animation
   useEffect(() => {
-    const syncReferenceAudio = async () => {
-      if (!isReferenceEnabled || !referenceSound) return;
-      
-      try {
-        if (isPlaying) {
-          await referenceSound.setPositionAsync(currentTime);
-          await referenceSound.playAsync();
-        } else {
-          await referenceSound.pauseAsync();
-        }
-      } catch (error) {
-        console.log('Error syncing reference audio:', error);
-      }
-    };
-
-    syncReferenceAudio();
-  }, [isReferenceEnabled, isPlaying, referenceSound]);
-
-  const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
-    if (status.isLoaded) {
-      setCurrentTime(status.positionMillis);
-      setDuration(status.durationMillis || shloka.duration * 1000);
-      setIsPlaying(status.isPlaying);
-
-      // Update current line and word based on position
-      updateLyricPosition(status.positionMillis);
-
-      if (status.didJustFinish) {
-        handlePlaybackComplete();
-      }
-    }
-  };
-
-  const updateLyricPosition = (positionMs: number) => {
-    // Find current line
-    let lineIdx = -1;
-    let wordIdx = -1;
-
-    for (let i = 0; i < shloka.lines.length; i++) {
-      const line = shloka.lines[i];
-      if (positionMs >= line.startTime && positionMs < line.endTime) {
-        lineIdx = i;
-        
-        // Find current word in line
-        for (let j = 0; j < line.words.length; j++) {
-          const word = line.words[j];
-          if (positionMs >= word.startTime && positionMs < word.endTime) {
-            wordIdx = j;
-            break;
-          }
-        }
-        break;
-      }
-    }
-
-    if (lineIdx !== currentLineIndex) {
-      setCurrentLineIndex(lineIdx);
-      // Auto-scroll to current line
-      if (lineIdx >= 0 && scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({
-          y: lineIdx * 140,
-          animated: true,
-        });
-      }
-    }
-
-    if (wordIdx !== currentWordIndex) {
-      setCurrentWordIndex(wordIdx);
-      // Pulse animation for current word
+    const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(wordPulseAnim, {
-          toValue: 1.15,
-          duration: 100,
+          toValue: 1.1,
+          duration: 500,
           useNativeDriver: true,
         }),
         Animated.timing(wordPulseAnim, {
           toValue: 1,
-          duration: 100,
+          duration: 500,
           useNativeDriver: true,
         }),
-      ]).start();
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [wordPulseAnim]);
+
+  // Cleanup audio
+  const cleanupAudio = async () => {
+    try {
+      if (referenceSound) {
+        await referenceSound.stopAsync();
+        await referenceSound.unloadAsync();
+      }
+      if (recordedSound) {
+        await recordedSound.stopAsync();
+        await recordedSound.unloadAsync();
+      }
+      if (recording) {
+        await recording.stopAndUnloadAsync();
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
     }
   };
 
-  const handlePlaybackComplete = async () => {
-    setIsPlaying(false);
-    setCurrentLineIndex(-1);
-    setCurrentWordIndex(-1);
-    if (demoTimerRef.current) {
-      clearInterval(demoTimerRef.current);
+  // Load reference audio
+  const loadReferenceAudio = async () => {
+    try {
+      const audioUrl = getAudioUrl(shloka.id);
+      if (!audioUrl) return;
+
+      const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
+      setReferenceSound(sound);
+    } catch (error) {
+      console.error('Error loading reference audio:', error);
     }
-    // Stop reference audio when playback completes
-    if (referenceSound) {
-      await referenceSound.pauseAsync();
-      await referenceSound.setPositionAsync(0);
-    }
-    onComplete?.(95); // Mock score for demo
   };
 
-  // Demo mode timer for simulating playback
-  const startDemoPlayback = () => {
-    if (demoTimerRef.current) {
-      clearInterval(demoTimerRef.current);
-    }
-    
-    setIsPlaying(true);
-    const startTime = currentTime;
-    const startTimestamp = Date.now();
-    
-    demoTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTimestamp;
-      const newTime = startTime + (elapsed * playbackSpeed);
-      
-      if (newTime >= duration) {
-        handlePlaybackComplete();
+  // Play/pause reference audio
+  const toggleReferenceAudio = async () => {
+    try {
+      if (!referenceSound) {
+        await loadReferenceAudio();
         return;
       }
-      
-      setCurrentTime(newTime);
-      updateLyricPosition(newTime);
-    }, 50);
-  };
 
-  const stopDemoPlayback = () => {
-    if (demoTimerRef.current) {
-      clearInterval(demoTimerRef.current);
-    }
-    setIsPlaying(false);
-  };
-
-  const togglePlay = async () => {
-    if (isDemoMode) {
-      // Demo mode without audio - use timer
-      if (isPlaying) {
-        stopDemoPlayback();
-        // Also pause reference audio if enabled
-        if (isReferenceEnabled && referenceSound) {
+      const status = await referenceSound.getStatusAsync();
+      if (status.isLoaded) {
+        if (status.isPlaying) {
           await referenceSound.pauseAsync();
-        }
-      } else {
-        startDemoPlayback();
-        // Also play reference audio if enabled
-        if (isReferenceEnabled) {
-          if (!referenceSound) {
-            await loadReferenceAudio();
-          }
-          if (referenceSound) {
-            await referenceSound.setPositionAsync(currentTime);
-            await referenceSound.playAsync();
-          }
-        }
-      }
-      return;
-    }
-
-    if (!sound) {
-      return;
-    }
-
-    if (isPlaying) {
-      await sound.pauseAsync();
-      // Also pause reference audio if enabled
-      if (isReferenceEnabled && referenceSound) {
-        await referenceSound.pauseAsync();
-      }
-    } else {
-      await sound.playAsync();
-      // Also play reference audio if enabled
-      if (isReferenceEnabled) {
-        if (!referenceSound) {
-          await loadReferenceAudio();
-        }
-        if (referenceSound) {
-          await referenceSound.setPositionAsync(currentTime);
+          setIsPlayingReference(false);
+        } else {
           await referenceSound.playAsync();
+          setIsPlayingReference(true);
         }
       }
+    } catch (error) {
+      console.error('Error toggling reference audio:', error);
+      Alert.alert('Error', 'Failed to play reference audio');
     }
   };
 
-  const restart = async () => {
-    setCurrentTime(0);
-    setCurrentLineIndex(-1);
-    setCurrentWordIndex(-1);
-    
-    if (isDemoMode) {
-      if (isPlaying) {
-        stopDemoPlayback();
-        setTimeout(() => startDemoPlayback(), 100);
+  // Recording functions
+  const startRecording = async () => {
+    try {
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording: newRecording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      
+      setRecording(newRecording);
+      setIsRecording(true);
+      setRecordingDuration(0);
+      setCurrentLineIndex(0);
+      setCurrentWordIndex(0);
+
+      // Start duration timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+
+      // Auto-scroll lyrics
+      startLyricsAnimation();
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      Alert.alert('Error', 'Failed to start recording');
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      if (!recording) return;
+
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      
+      setRecording(null);
+      setIsRecording(false);
+      setRecordedUri(uri);
+      
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
       }
-      // Also restart reference audio if enabled
-      if (isReferenceEnabled && referenceSound) {
-        await referenceSound.setPositionAsync(0);
-        if (isPlaying) {
-          await referenceSound.playAsync();
-        }
+
+      // Load recorded audio for playback
+      if (uri) {
+        const { sound } = await Audio.Sound.createAsync({ uri });
+        setRecordedSound(sound);
       }
+    } catch (error) {
+      console.error('Failed to stop recording:', error);
+      Alert.alert('Error', 'Failed to stop recording');
+    }
+  };
+
+  const playRecording = async () => {
+    try {
+      if (!recordedSound) return;
+
+      const status = await recordedSound.getStatusAsync();
+      if (status.isLoaded) {
+        await recordedSound.replayAsync();
+      }
+    } catch (error) {
+      console.error('Error playing recording:', error);
+      Alert.alert('Error', 'Failed to play recording');
+    }
+  };
+
+  const analyzeRecording = async () => {
+    if (!recordedUri) {
+      Alert.alert('Error', 'No recording found');
       return;
     }
+
+    setViewMode('analyzing');
+
+    try {
+      const shlokaText = shloka.lines.map(line => 
+        line.words.map(word => word.text).join(' ')
+      ).join(' ');
+      const rawResponse = await analyzeVoice(recordedUri, shlokaText);
+      const transformedResponse = transformAnalysisResponse(rawResponse);
+      
+      setAnalysisResult(transformedResponse);
+      setViewMode('results');
+      
+      if (onComplete && transformedResponse.overallScore) {
+        onComplete(transformedResponse.overallScore);
+      }
+    } catch (error) {
+      console.error('Analysis error:', error);
+      Alert.alert('Error', 'Failed to analyze recording. Please try again.');
+      setViewMode('practice');
+    }
+  };
+
+  // Lyrics animation
+  const startLyricsAnimation = () => {
+    const totalWords = shloka.lines.reduce((acc, line) => acc + line.words.length, 0);
+    const wordsPerSecond = totalWords / (recordingDuration || 30);
     
-    if (sound) {
-      await sound.setPositionAsync(0);
-      await sound.playAsync();
-    }
-    // Also restart reference audio if enabled
-    if (isReferenceEnabled && referenceSound) {
-      await referenceSound.setPositionAsync(0);
-      await referenceSound.playAsync();
-    }
+    const interval = setInterval(() => {
+      setCurrentWordIndex(prev => {
+        const currentLine = shloka.lines[currentLineIndex];
+        if (!currentLine) return prev;
+
+        if (prev < currentLine.words.length - 1) {
+          return prev + 1;
+        } else {
+          setCurrentLineIndex(prevLine => {
+            if (prevLine < shloka.lines.length - 1) {
+              setCurrentWordIndex(0);
+              return prevLine + 1;
+            }
+            clearInterval(interval);
+            return prevLine;
+          });
+          return prev;
+        }
+      });
+    }, 1000 / wordsPerSecond);
+
+    return () => clearInterval(interval);
   };
 
-  const seekTo = async (position: number) => {
-    setCurrentTime(position);
-    updateLyricPosition(position);
-    
-    if (sound) {
-      await sound.setPositionAsync(position);
-    }
-    // Also seek reference audio if enabled
-    if (isReferenceEnabled && referenceSound) {
-      await referenceSound.setPositionAsync(position);
-    }
-  };
-
-  const changeSpeed = async () => {
-    const currentIdx = speeds.indexOf(playbackSpeed);
-    const nextIdx = (currentIdx + 1) % speeds.length;
-    const newSpeed = speeds[nextIdx];
-    setPlaybackSpeed(newSpeed);
-    if (sound) {
-      await sound.setRateAsync(newSpeed, true);
-    }
-  };
-
-  const formatTime = (ms: number) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  // Render lyric line
-  const renderLine = (line: ShlokaLine, index: number) => {
-    const isCurrentLine = index === currentLineIndex;
-    const isPastLine = index < currentLineIndex;
-    const isFutureLine = index > currentLineIndex;
-
+  // Render based on view mode
+  if (viewMode === 'analyzing') {
     return (
-      <TouchableOpacity
-        key={line.id}
-        style={[
-          styles.lineContainer,
-          isCurrentLine && styles.currentLineContainer,
-        ]}
-        onPress={() => seekTo(line.startTime)}
-        activeOpacity={0.8}
-      >
-        {/* Sanskrit Text with word highlighting */}
-        <View style={styles.wordsContainer}>
-          {line.words.map((word, wordIndex) => {
-            const isCurrentWord = isCurrentLine && wordIndex === currentWordIndex;
-            const isPastWord = isCurrentLine && wordIndex < currentWordIndex;
-
-            return (
-              <Animated.Text
-                key={word.id}
-                style={[
-                  styles.wordText,
-                  isPastLine && styles.pastText,
-                  isPastWord && styles.pastText,
-                  isFutureLine && styles.futureText,
-                  isCurrentWord && styles.currentWordText,
-                  isCurrentWord && { transform: [{ scale: wordPulseAnim }] },
-                ]}
-              >
-                {word.text}{' '}
-              </Animated.Text>
-            );
-          })}
-        </View>
-
-        {/* Transliteration */}
-        {showTransliteration && (
-          <View style={styles.wordsContainer}>
-            {line.words.map((word, wordIndex) => {
-              const isCurrentWord = isCurrentLine && wordIndex === currentWordIndex;
-              const isPastWord = isCurrentLine && wordIndex < currentWordIndex;
-
-              return (
-                <Text
-                  key={`trans-${word.id}`}
-                  style={[
-                    styles.transliterationText,
-                    isPastLine && styles.pastTransliteration,
-                    isPastWord && styles.pastTransliteration,
-                    isFutureLine && styles.futureTransliteration,
-                    isCurrentWord && styles.currentTransliteration,
-                  ]}
-                >
-                  {word.transliteration}{' '}
-                </Text>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Translation */}
-        {showTranslation && isCurrentLine && (
-          <Animated.Text
-            style={[
-              styles.translationText,
-              { opacity: fadeAnim },
-            ]}
-          >
-            {line.translation}
-          </Animated.Text>
-        )}
-      </TouchableOpacity>
+      <View style={styles.container}>
+        <AnalyzingAnimation message="Analyzing your pronunciation..." />
+      </View>
     );
-  };
+  }
 
+  if (viewMode === 'results' && analysisResult) {
+    return (
+      <View style={styles.container}>
+        <AnalysisResults
+          result={analysisResult}
+          onClose={() => {
+            setViewMode('practice');
+            setAnalysisResult(null);
+            setRecordedUri(null);
+          }}
+        />
+      </View>
+    );
+  }
+
+  // Main practice view
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
-    >
-      {/* Background Gradient */}
-      <LinearGradient
-        colors={[shloka.thumbnailColor, '#1a1a2e', '#16213e']}
-        style={styles.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={onBack}>
-          <MaterialCommunityIcons name="chevron-down" size={32} color="#fff" />
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#EFEBE9" />
         </TouchableOpacity>
         
         <View style={styles.headerCenter}>
-          <Text style={styles.nowPlaying}>NOW PLAYING</Text>
-          <Text style={styles.title} numberOfLines={1}>{shloka.title}</Text>
+          <Text style={styles.title} numberOfLines={1}>
+            {shloka.title}
+          </Text>
           <Text style={styles.source}>{shloka.source}</Text>
         </View>
 
-        <TouchableOpacity style={styles.settingsButton}>
-          <MaterialCommunityIcons name="cog" size={24} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          {hasReferenceAudio && (
+            <TouchableOpacity
+              onPress={toggleReferenceAudio}
+              style={styles.referenceButton}
+            >
+              <LinearGradient
+                colors={isPlayingReference ? ['#4CAF50', '#388E3C'] : ['rgba(141, 110, 99, 0.3)', 'rgba(109, 76, 65, 0.3)']}
+                style={styles.referenceButtonGradient}
+              >
+                <MaterialCommunityIcons
+                  name={isPlayingReference ? 'pause' : 'play'}
+                  size={20}
+                  color="#EFEBE9"
+                />
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      {/* Lyrics Display */}
+      {/* Scrollable Lyrics */}
       <ScrollView
         ref={scrollViewRef}
-        style={styles.lyricsContainer}
-        contentContainerStyle={styles.lyricsContent}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Spacer for centering */}
-        <View style={{ height: 100 }} />
-        
-        {shloka.lines.map((line, index) => renderLine(line, index))}
-        
-        {/* Bottom spacer */}
-        <View style={{ height: 200 }} />
-      </ScrollView>
+        <LyricsDisplay
+          lines={shloka.lines}
+          currentLineIndex={currentLineIndex}
+          currentWordIndex={currentWordIndex}
+          showTransliteration={showTransliteration}
+          showTranslation={showTranslation}
+          wordPulseAnim={wordPulseAnim}
+        />
 
-      {/* Toggle Buttons */}
-      <View style={styles.toggleContainer}>
-        <TouchableOpacity
-          style={[styles.toggleButton, showTransliteration && styles.toggleActive]}
-          onPress={() => setShowTransliteration(!showTransliteration)}
-        >
-          <MaterialCommunityIcons
-            name="alphabetical"
-            size={20}
-            color={showTransliteration ? '#fff' : '#888'}
-          />
-          <Text style={[styles.toggleText, showTransliteration && styles.toggleTextActive]}>
-            Romanized
-          </Text>
-        </TouchableOpacity>
+        {/* Recording Controls */}
+        <RecordingControls
+          isRecording={isRecording}
+          recordingDuration={recordingDuration}
+          hasRecording={!!recordedUri}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          onPlayRecording={playRecording}
+          onAnalyze={analyzeRecording}
+        />
 
-        <TouchableOpacity
-          style={[styles.toggleButton, showTranslation && styles.toggleActive]}
-          onPress={() => setShowTranslation(!showTranslation)}
-        >
-          <MaterialCommunityIcons
-            name="translate"
-            size={20}
-            color={showTranslation ? '#fff' : '#888'}
-          />
-          <Text style={[styles.toggleText, showTranslation && styles.toggleTextActive]}>
-            Translation
-          </Text>
-        </TouchableOpacity>
-
-        {hasReferenceAudio && (
+        {/* Display Options */}
+        <View style={styles.displayOptions}>
           <TouchableOpacity
-            style={[styles.toggleButton, isReferenceEnabled && styles.toggleActive]}
-            onPress={toggleReferenceAudio}
+            style={styles.optionButton}
+            onPress={() => setShowTransliteration(!showTransliteration)}
           >
             <MaterialCommunityIcons
-              name={isReferenceEnabled ? 'volume-high' : 'volume-low'}
+              name={showTransliteration ? 'eye' : 'eye-off'}
               size={20}
-              color={isReferenceEnabled ? '#fff' : '#888'}
+              color={showTransliteration ? '#8D6E63' : '#666'}
             />
-            <Text style={[styles.toggleText, isReferenceEnabled && styles.toggleTextActive]}>
-              Guide
+            <Text style={[styles.optionText, !showTransliteration && styles.optionTextDisabled]}>
+              Transliteration
             </Text>
           </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
-        <TouchableOpacity
-          style={styles.progressBarBg}
-          activeOpacity={0.9}
-          onPress={(e) => {
-            const { locationX } = e.nativeEvent;
-            const percentage = locationX / (SCREEN_WIDTH - 100);
-            seekTo(percentage * duration);
-          }}
-        >
-          <View style={[styles.progressBarFill, { width: `${progress}%` }]}>
-            <View style={styles.progressKnob} />
-          </View>
-        </TouchableOpacity>
-        <Text style={styles.timeText}>{formatTime(duration)}</Text>
-      </View>
-
-      {/* Controls */}
-      <View style={styles.controlsContainer}>
-        {/* Speed Control */}
-        <TouchableOpacity style={styles.sideControl} onPress={changeSpeed}>
-          <Text style={styles.speedText}>{playbackSpeed}x</Text>
-        </TouchableOpacity>
-
-        {/* Main Controls */}
-        <View style={styles.mainControls}>
-          <TouchableOpacity
-            style={styles.controlButton}
-            onPress={() => seekTo(Math.max(0, currentTime - 10000))}
-          >
-            <MaterialCommunityIcons name="rewind-10" size={32} color="#fff" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.playButton} onPress={togglePlay}>
-            <LinearGradient
-              colors={[shloka.thumbnailColor, shloka.thumbnailColor + 'CC']}
-              style={styles.playButtonGradient}
-            >
-              <MaterialCommunityIcons
-                name={isPlaying ? 'pause' : 'play'}
-                size={36}
-                color="#fff"
-              />
-            </LinearGradient>
-          </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.controlButton}
-            onPress={() => seekTo(Math.min(duration, currentTime + 10000))}
+            style={styles.optionButton}
+            onPress={() => setShowTranslation(!showTranslation)}
           >
-            <MaterialCommunityIcons name="fast-forward-10" size={32} color="#fff" />
+            <MaterialCommunityIcons
+              name={showTranslation ? 'eye' : 'eye-off'}
+              size={20}
+              color={showTranslation ? '#8D6E63' : '#666'}
+            />
+            <Text style={[styles.optionText, !showTranslation && styles.optionTextDisabled]}>
+              Translation
+            </Text>
           </TouchableOpacity>
         </View>
-
-        {/* Restart */}
-        <TouchableOpacity style={styles.sideControl} onPress={restart}>
-          <MaterialCommunityIcons name="restart" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Bottom Safe Area */}
-      <View style={{ height: 34 }} />
-    </Animated.View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
-  },
-  gradient: {
-    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#0A0A0A',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
+    paddingVertical: 12,
+    backgroundColor: '#1A1A1A',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2A2A',
   },
-  closeButton: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
+  backButton: {
+    padding: 8,
   },
   headerCenter: {
     flex: 1,
     alignItems: 'center',
-  },
-  nowPlaying: {
-    fontSize: 10,
-    color: '#ffffff80',
-    letterSpacing: 2,
-    marginBottom: 4,
+    marginHorizontal: 16,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
+    fontWeight: '700',
+    color: '#EFEBE9',
   },
   source: {
     fontSize: 12,
-    color: '#ffffff80',
+    color: '#A1887F',
     marginTop: 2,
   },
-  settingsButton: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lyricsContainer: {
-    flex: 1,
-  },
-  lyricsContent: {
-    paddingHorizontal: 24,
-  },
-  lineContainer: {
-    marginVertical: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-  },
-  currentLineContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  wordsContainer: {
+  headerActions: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginBottom: 6,
+    gap: 8,
   },
-  wordText: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: '#ffffff60',
-  },
-  pastText: {
-    color: '#ffffff40',
-  },
-  futureText: {
-    color: '#ffffff50',
-  },
-  currentWordText: {
-    color: '#fff',
-    textShadowColor: 'rgba(255, 107, 53, 0.8)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
-  },
-  transliterationText: {
-    fontSize: 16,
-    color: '#ffffff50',
-    fontStyle: 'italic',
-  },
-  pastTransliteration: {
-    color: '#ffffff30',
-  },
-  futureTransliteration: {
-    color: '#ffffff40',
-  },
-  currentTransliteration: {
-    color: '#FF6B35',
-  },
-  translationText: {
-    fontSize: 14,
-    color: '#ffffff70',
-    textAlign: 'center',
-    marginTop: 8,
-    fontStyle: 'italic',
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-  },
-  toggleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  referenceButton: {
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
-  toggleActive: {
-    backgroundColor: 'rgba(255, 107, 53, 0.3)',
-  },
-  toggleText: {
-    fontSize: 12,
-    color: '#888',
-  },
-  toggleTextActive: {
-    color: '#fff',
-  },
-  progressContainer: {
-    flexDirection: 'row',
+  referenceButtonGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
-    paddingHorizontal: 24,
-    gap: 12,
-  },
-  timeText: {
-    fontSize: 12,
-    color: '#ffffff80',
-    fontFamily: 'monospace',
-    minWidth: 40,
-  },
-  progressBarBg: {
-    flex: 1,
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 2,
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#FF6B35',
-    borderRadius: 2,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  progressKnob: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#fff',
-    marginRight: -7,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  controlsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 32,
-    paddingVertical: 24,
-  },
-  sideControl: {
-    width: 48,
-    height: 48,
     justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4A2E1C',
   },
-  speedText: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 120, // Extra space for bottom navbar
+  },
+  displayOptions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+  },
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
+  },
+  optionText: {
     fontSize: 14,
-    color: '#fff',
+    color: '#D7CCC8',
     fontWeight: '600',
   },
-  mainControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 24,
-  },
-  controlButton: {
-    width: 56,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    overflow: 'hidden',
-  },
-  playButtonGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  optionTextDisabled: {
+    color: '#666',
   },
 });
 

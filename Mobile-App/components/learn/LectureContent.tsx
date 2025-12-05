@@ -15,6 +15,20 @@ interface LectureContentProps {
 export default function LectureContent({ lecture, courseId }: LectureContentProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'resources'>('overview');
 
+  // Safety check for undefined lecture
+  if (!lecture) {
+    return (
+      <View className="bg-gray-800 p-4">
+        <View className="items-center justify-center py-12">
+          <Ionicons name="alert-circle-outline" size={64} color="#9ca3af" />
+          <Text className="text-gray-400 text-center mt-4">
+            No lecture selected. Please select a lecture from the curriculum.
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   const handleDownloadResource = async (url: string, name: string) => {
     try {
       await Linking.openURL(url);

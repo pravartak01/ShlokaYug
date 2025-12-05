@@ -1,254 +1,283 @@
-// VoiceAnalysisScreen - Main Voice Analysis screen with complete flow
 import React, { useState, useCallback } from 'react';
 import {
   View,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
   Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { VoiceRecorder } from './VoiceRecorder';
 import { ShlokaSelector } from './ShlokaSelector';
+import { RecordingControls } from '../karaoke/RecordingControls';
+import { AnalyzingAnimation } from '../karaoke/AnalyzingAnimation';
 import { AnalysisResults } from './AnalysisResults';
-import { AnalyzingOverlay } from './AnalyzingOverlay';
-import { analyzeVoice } from '../../../services/geminiService';
-import { VoiceAnalysisResult, ShlokaForAnalysis } from '../../../types/voiceAnalysis';
+import { analyzeVoice, transformAnalysisResponse } from '../../../services/voiceAnalysisService';
+import { ShlokaForAnalysis } from '../../../types/voiceAnalysis';
+import { Audio } from 'expo-av';
 
-type AnalysisStep = 'select' | 'record' | 'analyzing' | 'results';
+type ViewMode = 'select' | 'practice' | 'analyzing' | 'results';
 
-interface VoiceAnalysisScreenProps {
-  onBack?: () => void;
-}
-
-const ANALYSIS_STAGES = ['audio', 'speech', 'pronunciation', 'chandas', 'rhythm', 'ai', 'report'];
-
-export const VoiceAnalysisScreen: React.FC<VoiceAnalysisScreenProps> = ({
-  onBack,
-}) => {
-  const [currentStep, setCurrentStep] = useState<AnalysisStep>('select');
+export const VoiceAnalysisScreen: React.FC = () => {
+  // View state
+  const [viewMode, setViewMode] = useState<ViewMode>('select');
   const [selectedShloka, setSelectedShloka] = useState<ShlokaForAnalysis | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<VoiceAnalysisResult | null>(null);
-  const [analysisProgress, setAnalysisProgress] = useState(0);
-  const [analysisStage, setAnalysisStage] = useState('audio');
+
+  // Recording state
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [recordedUri, setRecordedUri] = useState<string | null>(null);
+  const [recordedSound, setRecordedSound] = useState<Audio.Sound | null>(null);
+  const recordingTimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Analysis state
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+
+  // Initialize audio
+  React.useEffect(() => {
+    const initAudio = async () => {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+      });
+    };
+    
+    initAudio();
+    
+    return () => {
+      cleanupAudio();
+    };
+  }, []);
+
+  // Cleanup audio
+  const cleanupAudio = async () => {
+    try {
+      if (recordedSound) {
+        await recordedSound.stopAsync();
+        await recordedSound.unloadAsync();
+      }
+      if (recording) {
+        await recording.stopAndUnloadAsync();
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+    }
+  };
 
   const handleShlokaSelect = useCallback((shloka: ShlokaForAnalysis) => {
     setSelectedShloka(shloka);
+    setViewMode('practice');
   }, []);
 
-  const handleStartRecording = useCallback(() => {
-    if (!selectedShloka) return;
-    setCurrentStep('record');
-  }, [selectedShloka]);
+  const handleBackToSelection = useCallback(() => {
+    setViewMode('select');
+    setSelectedShloka(null);
+    setRecordedUri(null);
+    setRecordingDuration(0);
+  }, []);
 
-  const handleRecordingComplete = useCallback(async (uri: string, duration: number) => {
-    if (!selectedShloka) return;
-
-    setCurrentStep('analyzing');
-    setAnalysisProgress(0);
-    setAnalysisStage('audio');
-
-    // Simulate progressive analysis stages
-    const stageInterval = setInterval(() => {
-      setAnalysisProgress((prev) => {
-        const newProgress = prev + (100 / (ANALYSIS_STAGES.length * 5));
-        
-        // Update stage based on progress
-        const stageIndex = Math.min(
-          Math.floor((newProgress / 100) * ANALYSIS_STAGES.length),
-          ANALYSIS_STAGES.length - 1
-        );
-        setAnalysisStage(ANALYSIS_STAGES[stageIndex]);
-
-        if (newProgress >= 100) {
-          clearInterval(stageInterval);
-          return 100;
-        }
-        return newProgress;
+  // Recording functions
+  const startRecording = async () => {
+    try {
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
       });
-    }, 300);
+
+      const { recording: newRecording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      
+      setRecording(newRecording);
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      // Start duration timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      Alert.alert('Error', 'Failed to start recording');
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      if (!recording) return;
+
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      
+      setRecording(null);
+      setIsRecording(false);
+      setRecordedUri(uri);
+      
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+
+      // Load recorded audio for playback
+      if (uri) {
+        const { sound } = await Audio.Sound.createAsync({ uri });
+        setRecordedSound(sound);
+      }
+    } catch (error) {
+      console.error('Failed to stop recording:', error);
+      Alert.alert('Error', 'Failed to stop recording');
+    }
+  };
+
+  const playRecording = async () => {
+    try {
+      if (!recordedSound) return;
+
+      const status = await recordedSound.getStatusAsync();
+      if (status.isLoaded) {
+        await recordedSound.replayAsync();
+      }
+    } catch (error) {
+      console.error('Error playing recording:', error);
+      Alert.alert('Error', 'Failed to play recording');
+    }
+  };
+
+  const analyzeRecording = async () => {
+    if (!recordedUri || !selectedShloka) {
+      Alert.alert('Error', 'No recording found');
+      return;
+    }
+
+    setViewMode('analyzing');
 
     try {
-      // Call Gemini API for analysis
-      const result = await analyzeVoice(selectedShloka, duration);
+      const rawResponse = await analyzeVoice(recordedUri, selectedShloka.text);
+      const transformedResponse = transformAnalysisResponse(rawResponse);
       
-      // Ensure progress completes
-      clearInterval(stageInterval);
-      setAnalysisProgress(100);
-      setAnalysisStage('report');
-
-      // Small delay to show complete state
-      setTimeout(() => {
-        setAnalysisResult(result);
-        setCurrentStep('results');
-      }, 500);
+      setAnalysisResult(transformedResponse);
+      setViewMode('results');
     } catch (error) {
       console.error('Analysis error:', error);
-      clearInterval(stageInterval);
-      // Could show error state here
-      setCurrentStep('record');
+      Alert.alert('Error', 'Failed to analyze recording. Please try again.');
+      setViewMode('practice');
     }
-  }, [selectedShloka]);
+  };
 
-  const handleRetry = useCallback(() => {
-    setAnalysisResult(null);
-    setCurrentStep('record');
-    setAnalysisProgress(0);
-  }, []);
-
-  const handleBackToSelect = useCallback(() => {
-    setSelectedShloka(null);
-    setAnalysisResult(null);
-    setCurrentStep('select');
-    setAnalysisProgress(0);
-  }, []);
-
-  const renderHeader = () => {
-    if (currentStep === 'results') return null;
-
+  // Render based on view mode
+  if (viewMode === 'analyzing') {
     return (
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={currentStep === 'select' ? onBack : handleBackToSelect}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <AnalyzingAnimation message="Analyzing your pronunciation..." />
+      </View>
+    );
+  }
 
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Voice Analysis</Text>
-          <View style={styles.stepIndicator}>
-            {['select', 'record', 'results'].map((step, index) => (
-              <View key={step} style={styles.stepContainer}>
-                <View
-                  style={[
-                    styles.stepDot,
-                    (currentStep === step || 
-                      (currentStep === 'analyzing' && step === 'record')) && 
-                      styles.stepDotActive,
-                    index < ['select', 'record', 'analyzing', 'results'].indexOf(currentStep) &&
-                      styles.stepDotCompleted,
-                  ]}
-                >
-                  {index < ['select', 'record', 'analyzing', 'results'].indexOf(currentStep) && (
-                    <MaterialCommunityIcons name="check" size={10} color="white" />
-                  )}
-                </View>
-                {index < 2 && (
-                  <View
-                    style={[
-                      styles.stepLine,
-                      index < ['select', 'record', 'analyzing', 'results'].indexOf(currentStep) &&
-                        styles.stepLineCompleted,
-                    ]}
-                  />
-                )}
-              </View>
-            ))}
+  if (viewMode === 'results' && analysisResult) {
+    return (
+      <View style={styles.container}>
+        <AnalysisResults
+          result={analysisResult}
+          onClose={() => {
+            setViewMode('select');
+            setAnalysisResult(null);
+            setRecordedUri(null);
+            setSelectedShloka(null);
+          }}
+        />
+      </View>
+    );
+  }
+
+  if (viewMode === 'select') {
+    return (
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerCenter}>
+            <Text style={styles.title}>Voice Analysis</Text>
+            <Text style={styles.subtitle}>Select a shloka to practice</Text>
           </View>
         </View>
 
-        <View style={styles.headerRight} />
+        {/* Shloka Selection */}
+        <ShlokaSelector onSelect={handleShlokaSelect} />
       </View>
     );
-  };
+  }
 
-  const renderContent = () => {
-    switch (currentStep) {
-      case 'select':
-        return (
-          <View style={styles.content}>
-            <ShlokaSelector
-              onSelect={handleShlokaSelect}
-              selectedShloka={selectedShloka || undefined}
-            />
-            
-            {selectedShloka && (
-              <View style={styles.selectedShlokaPreview}>
-                <View style={styles.previewHeader}>
-                  <Text style={styles.previewTitle}>Selected Shloka</Text>
-                </View>
-                <Text style={styles.previewDevanagari}>
-                  {selectedShloka.devanagariText}
-                </Text>
-                <Text style={styles.previewTransliteration}>
-                  {selectedShloka.transliteration}
-                </Text>
-                <TouchableOpacity
-                  style={styles.startButton}
-                  onPress={handleStartRecording}
-                >
-                  <LinearGradient
-                    colors={['#FF6B6B', '#9333EA'] as const}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.startButtonGradient}
-                  >
-                    <MaterialCommunityIcons name="microphone" size={24} color="white" />
-                    <Text style={styles.startButtonText}>Start Recording</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        );
-
-      case 'record':
-        return (
-          <View style={styles.content}>
-            {selectedShloka && (
-              <View style={styles.shlokaDisplayCard}>
-                <Text style={styles.shlokaDisplayTitle}>{selectedShloka.title}</Text>
-                <Text style={styles.shlokaDisplayDevanagari}>
-                  {selectedShloka.devanagariText}
-                </Text>
-                <Text style={styles.shlokaDisplayTransliteration}>
-                  {selectedShloka.transliteration}
-                </Text>
-              </View>
-            )}
-            <VoiceRecorder
-              onRecordingComplete={handleRecordingComplete}
-              shlokaTitle={selectedShloka?.title}
-              isAnalyzing={false}
-            />
-          </View>
-        );
-
-      case 'results':
-        return analysisResult ? (
-          <AnalysisResults
-            result={analysisResult}
-            onRetry={handleRetry}
-            onClose={handleBackToSelect}
-          />
-        ) : null;
-
-      default:
-        return null;
-    }
-  };
-
+  // Practice view with selected shloka
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460'] as const}
-        style={styles.gradient}
-      >
-        <SafeAreaView style={styles.safeArea}>
-          {renderHeader()}
-          {renderContent()}
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBackToSelection} style={styles.backButton}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#EFEBE9" />
+        </TouchableOpacity>
+        
+        <View style={styles.headerCenter}>
+          <Text style={styles.title} numberOfLines={1}>
+            {selectedShloka?.title}
+          </Text>
+          <Text style={styles.subtitle}>{selectedShloka?.source}</Text>
+        </View>
 
-          {/* Analyzing Overlay */}
-          <AnalyzingOverlay
-            visible={currentStep === 'analyzing'}
-            progress={analysisProgress}
-            stage={analysisStage}
-            shlokaTitle={selectedShloka?.title}
-          />
-        </SafeAreaView>
-      </LinearGradient>
+        <View style={styles.headerActions} />
+      </View>
+
+      {/* Scrollable Content */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Shloka Display */}
+        <View style={styles.shlokaCard}>
+          <LinearGradient
+            colors={['rgba(141, 110, 99, 0.1)', 'rgba(109, 76, 65, 0.05)']}
+            style={styles.shlokaGradient}
+          >
+            <Text style={styles.shlokaText}>{selectedShloka?.text}</Text>
+            {selectedShloka?.transliteration && (
+              <Text style={styles.transliteration}>
+                {selectedShloka.transliteration}
+              </Text>
+            )}
+            {selectedShloka?.translation && (
+              <Text style={styles.translation}>
+                {selectedShloka.translation}
+              </Text>
+            )}
+          </LinearGradient>
+        </View>
+
+        {/* Recording Instructions */}
+        <View style={styles.instructionsCard}>
+          <MaterialCommunityIcons name="information" size={20} color="#8D6E63" />
+          <Text style={styles.instructionsText}>
+            Read the shloka aloud clearly. Your pronunciation, rhythm, and accuracy will be analyzed.
+          </Text>
+        </View>
+
+        {/* Recording Controls */}
+        <RecordingControls
+          isRecording={isRecording}
+          recordingDuration={recordingDuration}
+          hasRecording={!!recordedUri}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          onPlayRecording={playRecording}
+          onAnalyze={analyzeRecording}
+        />
+      </ScrollView>
     </View>
   );
 };
@@ -256,12 +285,7 @@ export const VoiceAnalysisScreen: React.FC<VoiceAnalysisScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
+    backgroundColor: '#0A0A0A',
   },
   header: {
     flexDirection: 'row',
@@ -269,143 +293,85 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: '#1A1A1A',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: '#2A2A2A',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 8,
   },
   headerCenter: {
+    flex: 1,
     alignItems: 'center',
+    marginHorizontal: 16,
   },
-  headerTitle: {
+  headerActions: {
+    width: 40,
+  },
+  title: {
     fontSize: 18,
-    fontWeight: '600',
-    color: 'white',
-    marginBottom: 8,
+    fontWeight: '700',
+    color: '#EFEBE9',
   },
-  stepIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  subtitle: {
+    fontSize: 12,
+    color: '#A1887F',
+    marginTop: 2,
   },
-  stepContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  stepDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepDotActive: {
-    backgroundColor: '#9333EA',
-  },
-  stepDotCompleted: {
-    backgroundColor: '#4CAF50',
-  },
-  stepLine: {
-    width: 40,
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  stepLineCompleted: {
-    backgroundColor: '#4CAF50',
-  },
-  headerRight: {
-    width: 40,
-  },
-  content: {
+  scrollView: {
     flex: 1,
   },
-  selectedShlokaPreview: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    marginHorizontal: 20,
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 120,
+  },
+  shlokaCard: {
     marginBottom: 20,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(147, 51, 234, 0.3)',
-  },
-  previewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  previewTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#9333EA',
-  },
-  previewDevanagari: {
-    fontSize: 18,
-    color: 'white',
-    lineHeight: 28,
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  previewTransliteration: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
-    fontStyle: 'italic',
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  startButton: {
     borderRadius: 16,
     overflow: 'hidden',
   },
-  startButtonGradient: {
+  shlokaGradient: {
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#4A2E1C',
+    borderRadius: 16,
+  },
+  shlokaText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#EFEBE9',
+    lineHeight: 32,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  transliteration: {
+    fontSize: 16,
+    color: '#BCAAA4',
+    fontStyle: 'italic',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  translation: {
+    fontSize: 14,
+    color: '#A1887F',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  instructionsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-  },
-  startButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 10,
-  },
-  shlokaDisplayCard: {
-    backgroundColor: 'rgba(147, 51, 234, 0.15)',
-    marginHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 10,
-    borderRadius: 16,
+    gap: 12,
     padding: 16,
+    backgroundColor: 'rgba(141, 110, 99, 0.1)',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(147, 51, 234, 0.3)',
+    borderColor: 'rgba(141, 110, 99, 0.3)',
+    marginBottom: 20,
   },
-  shlokaDisplayTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#9333EA',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  shlokaDisplayDevanagari: {
-    fontSize: 18,
-    color: 'white',
-    lineHeight: 28,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  shlokaDisplayTransliteration: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    lineHeight: 18,
+  instructionsText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#D7CCC8',
+    lineHeight: 20,
   },
 });
-
-export default VoiceAnalysisScreen;
