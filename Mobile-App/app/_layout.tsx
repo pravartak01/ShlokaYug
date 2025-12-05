@@ -4,6 +4,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { KidsModeProvider } from '../context/KidsModeContext';
 import { LanguageProvider } from '../context/LanguageContext';
+import { ChatBotProvider } from '../context/ChatBotContext';
+import { FloatingChatBot } from '../components/chatbot/FloatingChatBot';
 import { View, ActivityIndicator, Text } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from '../hooks/useFonts';
@@ -77,7 +79,10 @@ export default function RootLayout() {
       <LanguageProvider>
         <AuthProvider>
           <KidsModeProvider>
-            <RootLayoutNav />
+            <ChatBotProvider>
+              <RootLayoutNav />
+              <FloatingChatBot />
+            </ChatBotProvider>
           </KidsModeProvider>
         </AuthProvider>
       </LanguageProvider>
